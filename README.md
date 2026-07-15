@@ -2,6 +2,8 @@
 
 Umbra is an operations safety co-pilot for outdoor crews. It turns live UV/heat conditions, worksite context, crew exposure tiers, and optional site photos into a supervisor-approved rotation plan.
 
+Umbra continuously monitors the current operational state, but it rebuilds recommendations only when new evidence is submitted or an incident is explicitly reported. Use **Morning Brief** for the daily decision, **Live Incident** for event response, and **Planning Workspace** for preparation and the facility map. Reasoning is clearly labeled as simulated unless `OPENAI_API_KEY` is configured.
+
 ## Run locally
 
 Requires Node.js 20+.

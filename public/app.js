@@ -1,234 +1,113 @@
 let state;
+let shownDecisionId;
+let currentMode = "brief";
 const placements = new Map();
-const $ = (selector) => document.querySelector(selector);
-async function request(path, options = {}) {
-  const response = await fetch(path, {
-    headers: { "Content-Type": "application/json" },
-    ...options,
-  });
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.error);
-  return data;
-}
-const escape = (value) =>
-  String(value)
+const $ = (s) => document.querySelector(s);
+const esc = (v) =>
+  String(v || "")
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;");
-function time(value) {
-  return new Date(value).toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
+async function request(path, options = {}) {
+  const res = await fetch(path, {
+    headers: { "Content-Type": "application/json" },
+    ...options,
   });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error);
+  return data;
+}
+const clock = (value) =>
+  value
+    ? new Date(value).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : "—";
+function activeDecision() {
+  return (
+    state.decisions.find((item) => item.id === shownDecisionId) ||
+    state.decisions[0]
+  );
 }
 function render() {
-  $("#portfolioCount").textContent = state.sites.length;
-  $("#decisionCount").textContent = state.decisions.length;
-  $("#eventCount").textContent = state.events.length;
-  $("#agentStatus").textContent = state.events[0]
-    ? `Last event: ${state.events[0].type.replaceAll("_", " ")}`
-    : "Monitoring live inputs";
-  $("#portfolio").innerHTML = state.portfolio
+  const decision = activeDecision();
+  const topSite = state.portfolio[0];
+  $("#siteCount").textContent = state.sites.length;
+  $("#riskScore").textContent = topSite?.exposureScore ?? "—";
+  $("#lastCycle").textContent = clock(state.agent?.lastCycleAt);
+  $("#activeCount").textContent = state.decisions.filter(
+    (item) => item.status !== "approved",
+  ).length;
+  $("#agentState").innerHTML =
+    `<i></i><span>${esc(state.agent?.status === "monitoring" ? "Monitoring outdoor operations" : state.agent?.status || "Reasoning")}</span>`;
+  $("#reasoningMode").textContent =
+    state.agent?.mode || "Simulated reasoning for demo";
+  if (decision) renderDecision(decision);
+  else {
+    $("#recommendationBody").innerHTML =
+      '<p class="loading">Monitoring for new operational evidence...</p>';
+  }
+  $("#activityStream").innerHTML = (state.activity || [])
+    .slice(0, 8)
     .map(
-      (site, index) =>
-        `<button class="priorityRow" data-site="${site.siteId}"><span class="rank">0${index + 1}</span><span><b>${escape(site.name)}</b><small>${site.activeCrew} active crew · UVI ${site.uvi} · ${site.setting}</small></span><span class="severity ${site.status}">${site.exposureScore}</span><span class="recommendation">${escape(site.recommendation)}</span></button>`,
+      (item) =>
+        `<div class="activityItem ${item.phase}"><time>${clock(item.at)}</time><div><b>${esc(item.message)}</b><small>${esc(item.detail)}</small></div></div>`,
     )
     .join("");
-  document
-    .querySelectorAll(".priorityRow")
-    .forEach(
-      (button) =>
-        (button.onclick = () =>
-          showDecision(
-            state.decisions.find(
-              (decision) => decision.siteId === button.dataset.site,
-            ),
-          )),
-    );
-  showDecision(state.decisions[0], true);
-  $("#timeline").innerHTML =
-    state.decisions
-      .slice(0, 7)
-      .map(
-        (decision) =>
-          `<button class="timelineItem" data-decision="${decision.id}"><time>${time(decision.createdAt)}</time><div><b>${escape(decision.siteName || "Portfolio")}</b><p>${escape(decision.recommendation)}</p></div><span class="status ${decision.status}">${decision.status.replaceAll("_", " ")}</span></button>`,
-      )
-      .join("") ||
-    '<p class="empty">No events yet. Refresh conditions or run a scenario to begin.</p>';
-  document
-    .querySelectorAll(".timelineItem")
-    .forEach(
-      (button) =>
-        (button.onclick = () =>
-          showDecision(
-            state.decisions.find(
-              (decision) => decision.id === button.dataset.decision,
-            ),
-          )),
-    );
-  const template = $("#siteInput");
-  const target = $("#siteInputs");
-  target.innerHTML = "";
-  state.sites.forEach((site) => {
-    const node = template.content.cloneNode(true);
-    node.querySelector(".siteName").textContent = site.name;
-    node.querySelector(".siteMeta").textContent =
-      `${site.task} · ${site.forecast.source}`;
-    node.querySelector(".refresh").onclick = () => refresh(site.id);
-    node.querySelector(".absence").onclick = () =>
-      scenario("worker_absent", {
-        workerId: state.workers.find(
-          (worker) => worker.siteId === site.id && worker.status === "active",
-        )?.id,
-      });
-    node.querySelector(".failure").onclick = () =>
-      scenario("equipment_failed", { siteId: site.id });
-    node.querySelector(".photo").onchange = (event) => photo(site.id, event);
-    target.append(node);
-  });
+  $("#portfolioList").innerHTML = state.portfolio
+    .map(
+      (site, index) =>
+        `<button class="siteRow" data-site="${site.siteId}"><span class="rank">0${index + 1}</span><span><b>${esc(site.name)}</b><small>UVI ${site.uvi} · ${site.activeCrew} active crew · ${esc(site.setting)}</small></span><span class="siteRisk">${site.exposureScore}</span><span class="siteAction">${esc(site.recommendation)}</span></button>`,
+    )
+    .join("");
+  document.querySelectorAll(".siteRow").forEach(
+    (row) =>
+      (row.onclick = () => {
+        shownDecisionId = state.decisions.find(
+          (decision) => decision.siteId === row.dataset.site,
+        )?.id;
+        render();
+      }),
+  );
   [$("#propertySite"), $("#memberSite")].forEach((select) => {
-    const current = select.value;
-    select.innerHTML = `<option value="">Select job site</option>${state.sites.map((site) => `<option value="${site.id}">${escape(site.name)}</option>`).join("")}`;
-    select.value = current;
+    const saved = select.value;
+    select.innerHTML = `<option value="">Select job site</option>${state.sites.map((site) => `<option value="${site.id}">${esc(site.name)}</option>`).join("")}`;
+    select.value = saved;
   });
-  renderSunStage();
+  const incidentSite = $("#incidentSite");
+  incidentSite.innerHTML = state.sites
+    .map((site) => `<option value="${site.id}">${esc(site.name)}</option>`)
+    .join("");
+  $("#incidentStream").innerHTML = (state.activity || [])
+    .slice(0, 12)
+    .map(
+      (item) =>
+        `<div class="incidentItem"><time>${clock(item.at)}</time><span>${esc(item.message)}</span><small>${esc(item.detail)}</small></div>`,
+    )
+    .join("");
+  renderFacility();
 }
-function showDecision(decision, preserve = false) {
-  if (!decision && preserve) return;
-  const target = $("#activeDecision");
-  if (!decision) {
-    target.className = "empty";
-    target.textContent = "No decision selected.";
-    return;
-  }
-  target.className = "decision";
-  target.innerHTML = `<span class="status ${decision.status}">${decision.status.replaceAll("_", " ")}</span><h2>${escape(decision.recommendation)}</h2><p class="decisionSite">${escape(decision.siteName || "Portfolio")} · exposure score ${decision.severity}</p><div class="chain"><p class="eyebrow">EXPLAINABLE DECISION CHAIN</p><ol>${decision.reasoningChain.map((item) => `<li>${escape(item)}</li>`).join("")}</ol></div>`;
+function renderDecision(decision) {
+  $("#missionTitle").textContent = decision.recommendation;
+  $("#missionSub").textContent =
+    `${decision.siteName} is the highest current operational priority.`;
+  $("#confidence").textContent = decision.confidence;
+  $("#recommendationBody").innerHTML =
+    `<p class="trigger">Triggered by <b>${esc(decision.triggeringEvent)}</b></p><h2>${esc(decision.recommendation)}</h2><p class="whyNow">${esc(decision.whyNow)}</p><dl><div><dt>What changed</dt><dd>${esc(decision.whatChanged)}</dd></div><div><dt>Operational impact</dt><dd>${esc(decision.operationalImpact)}</dd></div></dl>`;
+  $("#reasoningBody").innerHTML =
+    `<section><p class="label">EVIDENCE</p><ul>${decision.reasoningChain.map((item) => `<li>${esc(item)}</li>`).join("")}</ul></section><section><p class="label">REASONING</p><p>${esc(decision.whyWorker)}</p><p>${esc(decision.whyNow)}</p></section><section><p class="label">TRADEOFF</p><p>${esc(decision.operationalImpact)}</p><p>${esc(decision.alternative)}</p></section><section class="final"><p class="label">DECISION</p><strong>${esc(decision.recommendation)}</strong><span>Supervisor approval required.</span></section>`;
+  const button = $("#approve");
+  button.hidden = decision.status === "approved";
+  button.onclick = () => approve(decision.planId);
 }
-async function refresh(siteId) {
-  try {
-    const data = await request("/api/refresh-conditions", {
-      method: "POST",
-      body: JSON.stringify({ siteId }),
-    });
-    state = data.state;
-    render();
-  } catch (error) {
-    alert(error.message);
-  }
-}
-async function scenario(type, payload) {
-  try {
-    if (!payload.workerId && type === "worker_absent")
-      return alert("No active worker remains at this site.");
-    const data = await request("/api/scenario", {
-      method: "POST",
-      body: JSON.stringify({ type, payload }),
-    });
-    state = data.state;
-    render();
-  } catch (error) {
-    alert(error.message);
-  }
-}
-async function photo(siteId, event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = async () => {
-    try {
-      const data = await request("/api/photo", {
-        method: "POST",
-        body: JSON.stringify({
-          siteId,
-          image: reader.result,
-          note: "Operational site photo uploaded",
-        }),
-      });
-      state = data.state;
-      render();
-    } catch (error) {
-      alert(error.message);
-    }
-  };
-  reader.readAsDataURL(file);
-}
-function selectedStageSite() {
-  return (
-    state.sites.find((site) => site.propertyPhotos?.length) || state.sites[0]
-  );
-}
-function renderSunStage() {
-  const site = selectedStageSite();
-  const target = $("#sunStage");
-  if (!site?.propertyPhotos?.length) return;
-  const photo = site.propertyPhotos[0];
-  const hour = Number($("#sunTime").value);
-  const angle = 20 + ((hour - 6) / 12) * 140;
-  const workers = state.workers.filter(
-    (worker) => worker.siteId === site.id && worker.status === "active",
-  );
-  target.innerHTML = `<img src="${photo.image}" alt="Property view: ${escape(photo.angle)}" /><div class="sunRay" style="--angle:${angle}deg"></div><div class="shadow" style="--angle:${angle}deg"></div><div class="stageCaption">${escape(site.name)} · ${escape(photo.angle)} · ${escape(site.propertyAssessment?.summary || "Awaiting vision assessment")}</div>`;
-  workers.forEach((worker, index) => {
-    const placement = placements.get(worker.id) || {
-      x: 24 + index * 18,
-      y: 66,
-    };
-    const icon = document.createElement("button");
-    icon.className = "workerIcon";
-    icon.dataset.worker = worker.id;
-    icon.style.left = `${placement.x}%`;
-    icon.style.top = `${placement.y}%`;
-    icon.innerHTML = `<span>◆</span>${escape(worker.name.split(" ")[0])}`;
-    icon.onpointerdown = (event) => dragWorker(event, icon, worker, site);
-    target.append(icon);
+async function approve(planId) {
+  const data = await request("/api/approve", {
+    method: "POST",
+    body: JSON.stringify({ planId }),
   });
-  assessPlacement(site);
-}
-function dragWorker(event, icon, worker, site) {
-  icon.setPointerCapture(event.pointerId);
-  const move = (pointer) => {
-    const bounds = $("#sunStage").getBoundingClientRect();
-    const x = Math.max(
-      4,
-      Math.min(92, ((pointer.clientX - bounds.left) / bounds.width) * 100),
-    );
-    const y = Math.max(
-      12,
-      Math.min(84, ((pointer.clientY - bounds.top) / bounds.height) * 100),
-    );
-    placements.set(worker.id, { x, y });
-    icon.style.left = `${x}%`;
-    icon.style.top = `${y}%`;
-    assessPlacement(site);
-  };
-  icon.onpointermove = move;
-  icon.onpointerup = () => {
-    icon.onpointermove = null;
-    icon.onpointerup = null;
-  };
-}
-function assessPlacement(site) {
-  const hour = Number($("#sunTime").value);
-  const shadeBoundary = 38 + Math.abs(hour - 12) * 3;
-  const exposed = state.workers
-    .filter((worker) => worker.siteId === site.id && worker.status === "active")
-    .filter((worker) => (placements.get(worker.id)?.x ?? 50) > shadeBoundary);
-  const high = exposed.filter(
-    (worker) =>
-      worker.exposureProfile?.photosensitivity === "high" ||
-      worker.tier === "high",
-  );
-  const label = $("#placementRisk");
-  if (high.length) {
-    label.className = "status needs_review";
-    label.textContent = `${high.map((worker) => worker.name).join(", ")} placed in higher-exposure area`;
-  } else if (exposed.length) {
-    label.className = "status needs_review";
-    label.textContent = `${exposed.length} crew member(s) in direct-exposure area`;
-  } else {
-    label.className = "status approved_candidate";
-    label.textContent = "Crew placement is within the approximate shade zone";
-  }
+  state = data.state;
+  render();
 }
 function readFile(file) {
   return new Promise((resolve, reject) => {
@@ -247,7 +126,7 @@ $("#propertyForm").onsubmit = async (event) => {
     const photos = await Promise.all(
       files.map(async (file, index) => ({
         image: await readFile(file),
-        angle: `${angle}${files.length > 1 ? ` ${index + 1}` : ""}`,
+        angle: `${angle} ${index + 1}`,
       })),
     );
     const data = await request("/api/property/assess", {
@@ -259,8 +138,8 @@ $("#propertyForm").onsubmit = async (event) => {
       }),
     });
     state = data.state;
-    event.target.reset();
     render();
+    event.target.reset();
   } catch (error) {
     alert(error.message);
   }
@@ -268,47 +147,164 @@ $("#propertyForm").onsubmit = async (event) => {
 $("#memberForm").onsubmit = async (event) => {
   event.preventDefault();
   try {
-    const form = new FormData(event.target);
-    const photoFile = form.get("photo");
-    const photo = photoFile?.size ? await readFile(photoFile) : null;
     const data = await request("/api/team-member", {
       method: "POST",
-      body: JSON.stringify({ ...Object.fromEntries(form), photo }),
+      body: JSON.stringify(Object.fromEntries(new FormData(event.target))),
     });
     state = data.state;
+    render();
     event.target.reset();
+  } catch (error) {
+    alert(error.message);
+  }
+};
+$("#copilotForm").onsubmit = (event) => {
+  event.preventDefault();
+  const question = $("#copilotInput").value.trim();
+  if (!question) return;
+  const top = activeDecision();
+  const uv11 = /uv.*11|11.*uv/i.test(question);
+  const river = /riverfront|moves? to river/i.test(question);
+  const crane = /crane|delay/i.test(question);
+  const change = uv11
+    ? "At UV 11, the agent would elevate every open or reflective site and shorten the next rotation."
+    : river
+      ? "Moving Maya to Riverfront shifts the highest-sensitivity worker away from the reflective roof, but adds a coverage gap at North Tower."
+      : crane
+        ? "A crane delay reduces roof completion capacity; Umbra would keep only essential crew in direct exposure and advance relief rotations."
+        : "Umbra would compare the requested change against active exposure, coverage, and equipment constraints.";
+  $("#copilotAnswer").innerHTML =
+    `<b>Simulated operational assessment</b><p>${esc(change)}</p><small>Current tradeoff: ${esc(top?.alternative || "No active alternative available.")}</small>`;
+};
+async function sync() {
+  try {
+    const next = await request("/api/state");
+    const changed = next.activity?.[0]?.id !== state?.activity?.[0]?.id;
+    state = next;
+    if (changed || !shownDecisionId) render();
+  } catch {}
+}
+
+function switchMode(mode) {
+  currentMode = mode;
+  $("#briefMode").hidden = mode !== "brief";
+  $("#incidentMode").hidden = mode !== "incident";
+  $("#workspaceMode").hidden = mode !== "workspace";
+  document
+    .querySelectorAll(".modeNav button")
+    .forEach((button) =>
+      button.classList.toggle("active", button.dataset.mode === mode),
+    );
+  if (mode === "workspace") renderFacility();
+}
+
+function facilitySite() {
+  return (
+    state.sites.find((site) => site.propertyPhotos?.length) || state.sites[0]
+  );
+}
+function renderFacility() {
+  const site = facilitySite();
+  const map = $("#facilityMap");
+  if (!site?.propertyPhotos?.length) {
+    map.innerHTML =
+      '<div class="mapEmpty">Upload property imagery to create a site map.</div>';
+    return;
+  }
+  const hour = Number($("#sunTime").value);
+  const angle = 25 + ((hour - 6) / 12) * 130;
+  const image = site.propertyPhotos[0];
+  $("#mapTitle").textContent = `${site.name} placement preview`;
+  map.innerHTML = `<img src="${image.image}" alt="${esc(image.angle)}" /><div class="sunVector" style="--sun:${angle}deg"></div><div class="shadeZone" style="--sun:${angle}deg"></div><div class="mapCaption">${esc(site.name)} · ${esc(image.angle)} · ${esc(site.propertyAssessment?.summary || "Property evidence pending")}</div>`;
+  state.workers
+    .filter((worker) => worker.siteId === site.id && worker.status === "active")
+    .forEach((worker, index) => {
+      const p = placements.get(worker.id) || { x: 25 + index * 18, y: 66 };
+      const icon = document.createElement("button");
+      icon.className = "mapWorker";
+      icon.style.left = `${p.x}%`;
+      icon.style.top = `${p.y}%`;
+      icon.innerHTML = `<span>◆</span>${esc(worker.name.split(" ")[0])}`;
+      icon.onpointerdown = (event) => dragWorker(event, icon, worker, site);
+      map.append(icon);
+    });
+  assessPlacement(site);
+}
+function dragWorker(event, icon, worker, site) {
+  icon.setPointerCapture(event.pointerId);
+  icon.onpointermove = (move) => {
+    const rect = $("#facilityMap").getBoundingClientRect();
+    const x = Math.max(
+      4,
+      Math.min(94, ((move.clientX - rect.left) / rect.width) * 100),
+    );
+    const y = Math.max(
+      10,
+      Math.min(86, ((move.clientY - rect.top) / rect.height) * 100),
+    );
+    placements.set(worker.id, { x, y });
+    icon.style.left = `${x}%`;
+    icon.style.top = `${y}%`;
+    assessPlacement(site);
+  };
+  icon.onpointerup = () => {
+    icon.onpointermove = null;
+    icon.onpointerup = null;
+  };
+}
+function assessPlacement(site) {
+  const boundary = 38 + Math.abs(Number($("#sunTime").value) - 12) * 3;
+  const exposed = state.workers
+    .filter((worker) => worker.siteId === site.id && worker.status === "active")
+    .filter((worker) => (placements.get(worker.id)?.x ?? 50) > boundary);
+  const high = exposed.filter(
+    (worker) =>
+      worker.tier === "high" ||
+      worker.exposureProfile?.photosensitivity === "high",
+  );
+  const output = $("#placementRisk");
+  output.textContent = high.length
+    ? `${high.map((worker) => worker.name).join(", ")} is placed in an approximate direct-exposure area.`
+    : exposed.length
+      ? `${exposed.length} crew member(s) are in an approximate direct-exposure area.`
+      : "Crew is within the approximate shade zone.";
+  output.className = `mapRisk ${exposed.length ? "risk" : "safe"}`;
+}
+document
+  .querySelectorAll(".modeNav button")
+  .forEach(
+    (button) => (button.onclick = () => switchMode(button.dataset.mode)),
+  );
+$("#sunTime").oninput = () => {
+  $("#sunLabel").textContent =
+    `${String($("#sunTime").value).padStart(2, "0")}:00`;
+  renderFacility();
+};
+$("#incidentForm").onsubmit = async (event) => {
+  event.preventDefault();
+  try {
+    const type = $("#incidentType").value;
+    const siteId = $("#incidentSite").value;
+    const payload =
+      type === "worker_absent"
+        ? {
+            workerId: state.workers.find(
+              (worker) =>
+                worker.siteId === siteId && worker.status === "active",
+            )?.id,
+          }
+        : { siteId };
+    const data = await request("/api/scenario", {
+      method: "POST",
+      body: JSON.stringify({ type, payload }),
+    });
+    state = data.state;
+    shownDecisionId = data.decisions[0]?.id;
     render();
   } catch (error) {
     alert(error.message);
   }
 };
-$("#sunTime").oninput = () => {
-  $("#sunLabel").textContent =
-    `${String($("#sunTime").value).padStart(2, "0")}:00`;
-  renderSunStage();
-};
-$("#heatWave").onclick = () => scenario("heat_wave", {});
-$("#reset").onclick = async () => {
-  state = await request("/api/reset", { method: "POST" });
-  render();
-};
-$("#roster").onchange = (event) => {
-  const file = event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = async () => {
-    try {
-      const data = await request("/api/roster/import", {
-        method: "POST",
-        body: JSON.stringify({ csv: reader.result }),
-      });
-      state = data.state;
-      render();
-    } catch (error) {
-      alert(error.message);
-    }
-  };
-  reader.readAsText(file);
-};
 state = await request("/api/state");
 render();
+setInterval(sync, 2200);

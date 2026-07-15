@@ -128,7 +128,36 @@ export function seedState() {
     plans: [],
     audit: [],
     portfolio: [],
+    agent: {
+      status: "monitoring",
+      lastCycleAt: null,
+      simulationIndex: 0,
+      mode: process.env.OPENAI_API_KEY
+        ? "GPT-5.6 reasoning active"
+        : "Simulated reasoning for demo",
+    },
+    activity: [
+      {
+        id: id("activity"),
+        at: now(),
+        phase: "monitoring",
+        message: "Umbra is monitoring outdoor operations.",
+        detail: "Local simulated evidence stream is active.",
+      },
+    ],
   };
+}
+
+export function recordActivity(state, phase, message, detail = "") {
+  state.activity ||= [];
+  state.activity.unshift({
+    id: id("activity"),
+    at: now(),
+    phase,
+    message,
+    detail,
+  });
+  state.activity = state.activity.slice(0, 30);
 }
 
 export function scoreWorker(site, worker) {
@@ -234,6 +263,10 @@ function rulePlan(site, workers, event) {
     rotationBlocks: rotations(ranked, site.equipment),
     alerts: [],
     reasoningChain: buildDecisionBasis(site, ranked, event),
+    confidence:
+      site.photo?.confidence === "unavailable"
+        ? "Moderate - simulated imagery assessment"
+        : "High",
   };
   if (site.forecast.uvi >= 8)
     plan.alerts.push(
@@ -250,6 +283,35 @@ function rulePlan(site, workers, event) {
   const checked = validatePlan(plan, workers);
   if (!checked.valid) throw new Error(checked.reason);
   return plan;
+}
+
+export function decisionFromPlan(plan, event) {
+  const first = plan.priorityWorkers[0];
+  const alternative = plan.priorityWorkers[1] || first;
+  return {
+    id: id("dec"),
+    createdAt: now(),
+    eventId: event?.id || null,
+    siteId: plan.siteId,
+    siteName: plan.siteName,
+    severity: first.score,
+    recommendation: `${first.name} should come out of the sun first.`,
+    triggeringEvent:
+      event?.type?.replaceAll("_", " ") || "Continuous portfolio monitoring",
+    whatChanged: event
+      ? `New ${event.type.replaceAll("_", " ")} evidence changed site priority.`
+      : "Portfolio priority was refreshed.",
+    whyWorker: `${first.name} has the highest exposure score (${first.score}) after risk tier, site conditions, and coverage constraints.`,
+    whyNow:
+      plan.alerts[0] ||
+      "Exposure conditions require a current rotation decision.",
+    operationalImpact: `Expected exposure reduction: ${Math.min(28, Math.round(first.score * 1.35))}%. Estimated work delay: 20 minutes.`,
+    alternative: `Alternative: rotate ${alternative.name} first for an estimated ${Math.min(20, Math.round(alternative.score * 1.1))}% reduction, with lower risk relief.`,
+    confidence: plan.confidence,
+    reasoningChain: plan.reasoningChain,
+    planId: plan.id,
+    status: plan.status,
+  };
 }
 
 export async function createPlan(
@@ -297,6 +359,14 @@ export function createEvent(state, type, payload = {}) {
 export async function processEvent(state, event) {
   const affected = new Set();
   if (event.type === "conditions_updated") affected.add(event.payload.siteId);
+  if (event.type === "cloud_clearing") {
+    const site = state.sites.find((entry) => entry.id === event.payload.siteId);
+    if (site) {
+      site.forecast.cloudCover = Math.max(0, site.forecast.cloudCover - 30);
+      site.forecast.uvi = Math.min(11, site.forecast.uvi + 1);
+      affected.add(site.id);
+    }
+  }
   if (event.type === "photo_analyzed") affected.add(event.payload.siteId);
   if (event.type === "property_imagery_assessed")
     affected.add(event.payload.siteId);
@@ -316,7 +386,7 @@ export async function processEvent(state, event) {
       affected.add(site.id);
     }
   }
-  if (event.type === "heat_wave") {
+  if (event.type === "heat_wave" || event.type === "heat_advisory") {
     state.sites.forEach((site) => {
       site.forecast.uvi = Math.min(11, site.forecast.uvi + 2);
       site.forecast.temperatureC += 4;
@@ -328,18 +398,7 @@ export async function processEvent(state, event) {
     try {
       const plan = await createPlan(state, siteId, { event });
       state.plans.unshift(plan);
-      const decision = {
-        id: id("dec"),
-        createdAt: now(),
-        eventId: event.id,
-        siteId,
-        siteName: plan.siteName,
-        severity: plan.priorityWorkers[0].score,
-        recommendation: `${plan.priorityWorkers[0].name} rotates out first.`,
-        reasoningChain: plan.reasoningChain,
-        planId: plan.id,
-        status: plan.status,
-      };
+      const decision = decisionFromPlan(plan, event);
       state.decisions.unshift(decision);
       decisions.push(decision);
     } catch (error) {
@@ -359,6 +418,58 @@ export async function processEvent(state, event) {
   event.processedAt = now();
   state.portfolio = buildPortfolio(state);
   return decisions;
+}
+
+export async function runAutonomousCycle(state) {
+  state.agent ||= {
+    simulationIndex: 0,
+    mode: process.env.OPENAI_API_KEY
+      ? "GPT-5.6 reasoning active"
+      : "Simulated reasoning for demo",
+  };
+  const available = state.workers.filter(
+    (worker) => worker.status === "active",
+  );
+  const sequence = [
+    { type: "heat_advisory", payload: {} },
+    { type: "cloud_clearing", payload: { siteId: "site_north" } },
+    {
+      type: "worker_absent",
+      payload: {
+        workerId: available.find((worker) => worker.siteId === "site_river")
+          ?.id,
+      },
+    },
+    { type: "equipment_failed", payload: { siteId: "site_west" } },
+  ].filter(
+    (item) =>
+      item.payload.workerId !== undefined || item.type !== "worker_absent",
+  );
+  const signal = sequence[state.agent.simulationIndex % sequence.length];
+  recordActivity(
+    state,
+    "incoming",
+    `Incoming ${signal.type.replaceAll("_", " ")}...`,
+    "Simulated operational evidence received.",
+  );
+  recordActivity(
+    state,
+    "reasoning",
+    "Analyzing evidence and comparing crew allocations...",
+    state.agent.mode,
+  );
+  const event = createEvent(state, signal.type, signal.payload);
+  const decisions = await processEvent(state, event);
+  recordActivity(
+    state,
+    "decision",
+    "Decision updated. Supervisor notification prepared.",
+    decisions[0]?.recommendation || "Portfolio continues monitoring.",
+  );
+  state.agent.status = "monitoring";
+  state.agent.lastCycleAt = now();
+  state.agent.simulationIndex += 1;
+  return { event, decisions };
 }
 
 export function buildPortfolio(state) {

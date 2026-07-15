@@ -9,6 +9,7 @@ import {
   processEvent,
   parseRosterCsv,
   addTeamMember,
+  runAutonomousCycle,
 } from "../src/planner.mjs";
 test("high-risk worker is prioritized and coverage remains", async () => {
   const state = seedState();
@@ -46,4 +47,12 @@ test("events automatically replan affected sites and CSV imports valid workers",
     outdoorHistory: "regular",
   });
   assert.equal(member.exposureProfile.photosensitivity, "high");
+});
+test("autonomous cycle emits activity and produces a recommendation", async () => {
+  const state = seedState();
+  const cycle = await runAutonomousCycle(state);
+  assert.equal(cycle.event.status, "processed");
+  assert.ok(cycle.decisions.length > 0);
+  assert.ok(state.activity.some((item) => item.phase === "reasoning"));
+  assert.ok(cycle.decisions[0].alternative.includes("Alternative"));
 });

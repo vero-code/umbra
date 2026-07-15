@@ -15,6 +15,7 @@ import {
   buildPortfolio,
   assessProperty,
   addTeamMember,
+  decisionFromPlan,
 } from "./src/planner.mjs";
 
 const root = fileURLToPath(new URL(".", import.meta.url));
@@ -29,6 +30,15 @@ async function getState() {
     : seedState();
   state.events ||= [];
   state.decisions ||= [];
+  state.activity ||= [];
+  state.agent ||= {
+    status: "monitoring",
+    lastCycleAt: null,
+    simulationIndex: 0,
+    mode: process.env.OPENAI_API_KEY
+      ? "GPT-5.6 reasoning active"
+      : "Simulated reasoning for demo",
+  };
   state.portfolio = buildPortfolio(state);
   return state;
 }
@@ -71,18 +81,7 @@ const server = http.createServer(async (req, res) => {
         useModel: input.useModel !== false,
       });
       state.plans.unshift(plan);
-      state.decisions.unshift({
-        id: crypto.randomUUID(),
-        createdAt: new Date().toISOString(),
-        eventId: event.id,
-        siteId: plan.siteId,
-        siteName: plan.siteName,
-        severity: plan.priorityWorkers[0].score,
-        recommendation: `${plan.priorityWorkers[0].name} rotates out first.`,
-        reasoningChain: plan.reasoningChain,
-        planId: plan.id,
-        status: plan.status,
-      });
+      state.decisions.unshift(decisionFromPlan(plan, event));
       event.status = "processed";
       state.portfolio = buildPortfolio(state);
       await saveState(state);

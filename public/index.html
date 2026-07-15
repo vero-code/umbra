@@ -9,181 +9,202 @@
   <body>
     <main>
       <header>
-        <div>
-          <p class="eyebrow">UMBRA / OPERATIONS INTELLIGENCE</p>
-          <h1>Exposure decisions, continuously reprioritized.</h1>
-          <p class="sub">
-            An event-driven safety co-pilot for distributed outdoor operations.
-          </p>
-        </div>
-        <div class="agent">
-          <span></span>
-          <div>
-            <b>Agent monitoring</b
-            ><small id="agentStatus">Waiting for conditions</small>
-          </div>
+        <div class="brand">UMBRA <span>OPERATIONS INTELLIGENCE</span></div>
+        <nav class="modeNav">
+          <button data-mode="brief" class="active">Morning Brief</button
+          ><button data-mode="incident">Live Incident</button
+          ><button data-mode="workspace">Planning Workspace</button>
+        </nav>
+        <div id="agentState" class="agentState">
+          <i></i><span>Monitoring outdoor operations</span>
         </div>
       </header>
-      <section class="signal">
-        <div><b id="portfolioCount">0</b><span>sites monitored</span></div>
-        <div><b id="decisionCount">0</b><span>decisions logged</span></div>
-        <div><b id="eventCount">0</b><span>events processed</span></div>
-        <div class="signalActions">
-          <button id="heatWave">Run heat wave</button
-          ><button id="reset">Reset workspace</button>
-        </div>
-      </section>
-      <section class="intake">
-        <section class="panel">
-          <p class="eyebrow">PROPERTY EVIDENCE</p>
-          <h2>Assess the actual work environment</h2>
-          <form id="propertyForm" class="compactForm">
-            <select id="propertySite" required></select
-            ><input
-              id="propertyLocation"
-              required
-              placeholder="Property location or work zone"
-            />
-            <input
-              id="propertyAngles"
-              placeholder="Angles / orientation notes (e.g. north facade, roof)"
-            /><label class="fileField"
-              >Add property photos from one or more angles<input
-                id="propertyPhotos"
-                type="file"
-                accept="image/*"
-                multiple
-                required
-            /></label>
-            <button type="submit">Assess property exposure</button>
-          </form>
-          <p class="help">
-            GPT-5.6 vision can identify visually supported reflective materials,
-            water, shade, and open exposure. It does not make regulatory or
-            medical determinations.
+      <div id="briefMode" class="modeView">
+        <section class="mission">
+          <p class="eyebrow">CURRENT MISSION</p>
+          <h1 id="missionTitle">
+            Finding who needs to come out of the sun first.
+          </h1>
+          <p id="missionSub">
+            Umbra is collecting evidence across all active sites.
           </p>
+          <div class="missionStats">
+            <span><b id="siteCount">0</b> sites monitored</span
+            ><span><b id="riskScore">—</b> current operational risk</span
+            ><span><b id="lastCycle">—</b> last reasoning cycle</span
+            ><span><b id="activeCount">0</b> active recommendations</span>
+          </div>
         </section>
-        <section class="panel">
-          <p class="eyebrow">TEAM MEMBER</p>
-          <h2>Add a self-reported exposure profile</h2>
-          <form id="memberForm" class="compactForm">
-            <input name="name" required placeholder="Full name" /><select
-              name="siteId"
-              id="memberSite"
-              required
-            ></select
-            ><input name="role" required placeholder="Role" />
-            <select name="tier" required>
-              <option value="">Priority tier</option>
-              <option value="standard">Standard</option>
-              <option value="elevated">Elevated</option>
-              <option value="high">High</option></select
-            ><select name="photosensitivity" required>
-              <option value="">Self-reported photosensitivity</option>
-              <option value="low">Low</option>
-              <option value="moderate">Moderate</option>
-              <option value="high">High</option></select
-            ><select name="outdoorHistory" required>
-              <option value="">Recent outdoor exposure</option>
-              <option value="occasional">Occasional</option>
-              <option value="regular">Regular</option>
-              <option value="extended">Extended</option>
-            </select>
-            <input
-              name="accommodationNote"
-              placeholder="Optional workplace accommodation note"
-            /><label class="fileField"
-              >Optional profile photo (not analyzed)<input
-                name="photo"
-                type="file"
-                accept="image/*" /></label
-            ><button type="submit">Add team member</button>
-          </form>
-        </section>
-      </section>
-      <section class="layout">
-        <section class="panel portfolio">
-          <div class="head">
-            <div>
-              <p class="eyebrow">PORTFOLIO PRIORITY</p>
-              <h2>Where intervention is needed</h2>
+        <section class="primaryGrid">
+          <article class="recommendation">
+            <div class="recommendationTop">
+              <p class="eyebrow">RECOMMENDED ACTION</p>
+              <span id="confidence" class="chip">Assessing</span>
             </div>
-            <label class="inlineUpload"
-              >Import roster CSV<input
-                id="roster"
-                type="file"
-                accept=".csv,text/csv"
-            /></label>
-          </div>
-          <div id="portfolio"></div>
-        </section>
-        <section class="panel active">
-          <p class="eyebrow">ACTIVE RECOMMENDATION</p>
-          <div id="activeDecision" class="empty">
-            The agent will surface the highest-priority decision when an event
-            arrives.
-          </div>
-        </section>
-      </section>
-      <section class="layout lower">
-        <section class="panel">
-          <div class="head">
-            <div>
-              <p class="eyebrow">DECISION TIMELINE</p>
-              <h2>What changed and why</h2>
+            <div id="recommendationBody" class="loading">
+              Monitoring for new operational evidence...
             </div>
-          </div>
-          <div id="timeline"></div>
+            <button id="approve" class="approve" hidden>
+              Approve recommendation
+            </button>
+          </article>
+          <aside class="activity">
+            <p class="eyebrow">AGENT ACTIVITY</p>
+            <div id="activityStream"></div>
+          </aside>
         </section>
-        <aside class="panel ops">
-          <p class="eyebrow">OPERATIONS INPUTS</p>
-          <h2>Send a signal</h2>
-          <div id="siteInputs"></div>
-        </aside>
-      </section>
-      <section class="panel sunPanel">
-        <div class="head">
+        <section class="reasoning">
+          <div class="reasoningHeader">
+            <div>
+              <p class="eyebrow">WHY UMBRA DECIDED THIS</p>
+              <h2>Evidence → Reasoning → Tradeoffs → Decision</h2>
+            </div>
+            <span id="reasoningMode" class="mode"></span>
+          </div>
+          <div id="reasoningBody" class="reasoningBody">
+            <p>Waiting for evidence.</p>
+          </div>
+        </section>
+        <section class="portfolio">
           <div>
-            <p class="eyebrow">SITE POSITIONING PREVIEW</p>
-            <h2>Sun and crew placement</h2>
+            <p class="eyebrow">OPERATIONAL PORTFOLIO</p>
+            <h2>Where the agent is focusing now</h2>
           </div>
-          <span id="placementRisk" class="status"
-            >Load a property photo to begin</span
-          >
-        </div>
-        <div id="sunStage" class="sunStage">
-          <div class="stageEmpty">
-            Property imagery will become an interactive planning surface after
-            assessment.
+          <div id="portfolioList"></div>
+        </section>
+        <section class="copilot">
+          <div>
+            <p class="eyebrow">SUPERVISOR COPILOT</p>
+            <h2>Ask about a change in operations.</h2>
           </div>
-        </div>
-        <div class="sunControls">
-          <label
-            >Sun time
-            <input id="sunTime" type="range" min="6" max="18" value="12" /><span
-              id="sunLabel"
-              >12:00</span
-            ></label
-          >
+          <form id="copilotForm">
+            <input
+              id="copilotInput"
+              placeholder="What if Maya moves to Riverfront after lunch?"
+            /><button>Ask Umbra</button>
+          </form>
+          <div id="copilotAnswer"></div>
+        </section>
+      </div>
+      <section id="incidentMode" class="modeView" hidden>
+        <section class="incidentHero">
+          <p class="eyebrow">LIVE INCIDENT RESPONSE</p>
+          <h1>Report evidence. Umbra rebuilds the affected plan.</h1>
           <p>
-            Drag crew icons to test relative placement. This is a visual
-            planning approximation; confirm final controls on site.
+            Umbra monitors continuously but changes the plan only when an
+            operational event arrives or you request a response.
           </p>
-        </div>
+          <form id="incidentForm">
+            <select id="incidentType">
+              <option value="heat_advisory">NOAA heat advisory</option>
+              <option value="cloud_clearing">Unexpected cloud clearing</option>
+              <option value="worker_absent">Worker absence</option>
+              <option value="equipment_failed">
+                Equipment failure
+              </option></select
+            ><select id="incidentSite"></select
+            ><button>Log incoming event</button>
+          </form>
+        </section>
+        <section class="reasoning">
+          <p class="eyebrow">INCIDENT EVENT STREAM</p>
+          <div id="incidentStream" class="incidentStream"></div>
+        </section>
+      </section>
+      <section id="workspaceMode" class="modeView" hidden>
+        <section class="workspaceIntro">
+          <p class="eyebrow">PLANNING WORKSPACE</p>
+          <h1>Prepare sites before the crew arrives.</h1>
+          <p>
+            Use site imagery and the facility map to test safer placements.
+            Preparations only affect plans when you submit new evidence.
+          </p>
+        </section>
+        <section class="facility">
+          <div class="facilityHead">
+            <div>
+              <p class="eyebrow">FACILITY MAP</p>
+              <h2 id="mapTitle">Site placement preview</h2>
+            </div>
+            <label
+              >Sun time
+              <input
+                id="sunTime"
+                type="range"
+                min="6"
+                max="18"
+                value="12"
+              /><span id="sunLabel">12:00</span></label
+            >
+          </div>
+          <div id="facilityMap" class="facilityMap">
+            <div class="mapEmpty">
+              Upload property imagery to create a site map.
+            </div>
+          </div>
+          <p id="placementRisk" class="mapRisk">
+            Visual placement approximation — verify final controls on site.
+          </p>
+        </section>
+        <details class="controls" open>
+          <summary>Property evidence and team preparation</summary>
+          <div class="controlGrid">
+            <section>
+              <h3>Property evidence</h3>
+              <form id="propertyForm">
+                <select id="propertySite" required></select
+                ><input
+                  id="propertyLocation"
+                  required
+                  placeholder="Work zone / location"
+                /><input
+                  id="propertyAngles"
+                  placeholder="Angle or orientation notes"
+                /><input
+                  id="propertyPhotos"
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  required
+                /><button>Submit property imagery</button>
+              </form>
+            </section>
+            <section>
+              <h3>Add team member</h3>
+              <form id="memberForm">
+                <input name="name" required placeholder="Full name" /><select
+                  name="siteId"
+                  id="memberSite"
+                  required
+                ></select
+                ><input name="role" required placeholder="Role" /><select
+                  name="tier"
+                  required
+                >
+                  <option value="">Priority tier</option>
+                  <option>standard</option>
+                  <option>elevated</option>
+                  <option>high</option></select
+                ><select name="photosensitivity" required>
+                  <option value="">Self-reported photosensitivity</option>
+                  <option>low</option>
+                  <option>moderate</option>
+                  <option>high</option></select
+                ><select name="outdoorHistory" required>
+                  <option value="">Recent outdoor exposure</option>
+                  <option>occasional</option>
+                  <option>regular</option>
+                  <option>extended</option></select
+                ><input
+                  name="accommodationNote"
+                  placeholder="Optional workplace accommodation"
+                /><button>Add team member</button>
+              </form>
+            </section>
+          </div>
+        </details>
       </section>
     </main>
-    <template id="siteInput"
-      ><div class="siteInput">
-        <div><b class="siteName"></b><small class="siteMeta"></small></div>
-        <div class="inputActions">
-          <button class="refresh">Refresh conditions</button
-          ><button class="absence">Worker absence</button
-          ><button class="failure">Equipment failure</button
-          ><label class="photoUpload"
-            >Site photo<input class="photo" type="file" accept="image/*"
-          /></label>
-        </div></div
-    ></template>
     <script src="/app.js" type="module"></script>
   </body>
 </html>
