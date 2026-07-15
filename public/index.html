@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Umbra — Operations safety co-pilot</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <div>
+          <p class="eyebrow">UMBRA / MORNING BRIEF</p>
+          <h1>Bring the right crew out of the sun first.</h1>
+          <p class="sub">
+            Live conditions, site imagery, and crew exposure tiers—turned into
+            an explainable rotation plan.
+          </p>
+        </div>
+        <button class="ghost" id="reset">Reset demo</button>
+      </header>
+      <section class="notice">
+        <span>●</span>
+        <div>
+          <strong>Supervisor approval required.</strong> Umbra is an operational
+          planning aid, not medical or regulatory advice.
+        </div>
+      </section>
+      <section class="grid" id="siteGrid"></section>
+      <section class="split">
+        <section class="panel">
+          <div class="sectionHead">
+            <div>
+              <p class="eyebrow">LATEST PLAN</p>
+              <h2 id="planTitle">Select “Generate plan” for a site</h2>
+            </div>
+            <span id="planStatus" class="pill">Waiting</span>
+          </div>
+          <div id="planEmpty" class="empty">
+            Umbra will rank crew exposure, preserve coverage, and tell you what
+            changed.
+          </div>
+          <div id="planContent" hidden></div>
+        </section>
+        <aside class="panel audit">
+          <p class="eyebrow">AUDIT TRAIL</p>
+          <h2>Decision history</h2>
+          <div id="auditList"></div>
+        </aside>
+      </section>
+    </main>
+    <template id="siteTemplate"
+      ><article class="site card">
+        <div class="siteTop">
+          <div>
+            <p class="eyebrow siteName"></p>
+            <h2 class="task"></h2>
+          </div>
+          <span class="uvi"></span>
+        </div>
+        <div class="weather"></div>
+        <div class="setting"></div>
+        <div class="actions">
+          <button class="primary generate">Generate plan</button
+          ><button class="secondary refresh">Refresh conditions</button
+          ><button class="secondary spike">Simulate UV / heat spike</button>
+        </div>
+        <label class="upload"
+          >Upload site photo <input class="photo" type="file" accept="image/*"
+        /></label>
+        <p class="photoResult"></p></article
+    ></template>
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>
