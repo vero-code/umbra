@@ -5,11 +5,16 @@ import { join, extname } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   createPlan,
-  replan,
   seedState,
   validatePlan,
   analyzePhotoWithModel,
   refreshForecast,
+  createEvent,
+  processEvent,
+  parseRosterCsv,
+  buildPortfolio,
+  assessProperty,
+  addTeamMember,
 } from "./src/planner.mjs";
 
 const root = fileURLToPath(new URL(".", import.meta.url));
@@ -19,8 +24,13 @@ const storePath = join(storeDir, "umbra.json");
 const port = Number(process.env.PORT || 3000);
 
 async function getState() {
-  if (!existsSync(storePath)) return seedState();
-  return JSON.parse(await readFile(storePath, "utf8"));
+  const state = existsSync(storePath)
+    ? JSON.parse(await readFile(storePath, "utf8"))
+    : seedState();
+  state.events ||= [];
+  state.decisions ||= [];
+  state.portfolio = buildPortfolio(state);
+  return state;
 }
 async function saveState(state) {
   await mkdir(storeDir, { recursive: true });
@@ -53,15 +63,28 @@ const server = http.createServer(async (req, res) => {
     if (req.method === "POST" && url.pathname === "/api/plan") {
       const state = await getState();
       const input = await body(req);
+      const event = createEvent(state, "manual_review_requested", {
+        siteId: input.siteId,
+      });
       const plan = await createPlan(state, input.siteId, {
+        event,
         useModel: input.useModel !== false,
       });
       state.plans.unshift(plan);
-      state.audit.unshift({
-        at: new Date().toISOString(),
-        type: "plan_generated",
-        detail: `${plan.siteName}: ${plan.status}`,
+      state.decisions.unshift({
+        id: crypto.randomUUID(),
+        createdAt: new Date().toISOString(),
+        eventId: event.id,
+        siteId: plan.siteId,
+        siteName: plan.siteName,
+        severity: plan.priorityWorkers[0].score,
+        recommendation: `${plan.priorityWorkers[0].name} rotates out first.`,
+        reasoningChain: plan.reasoningChain,
+        planId: plan.id,
+        status: plan.status,
       });
+      event.status = "processed";
+      state.portfolio = buildPortfolio(state);
       await saveState(state);
       return json(res, 201, { plan, state });
     }
@@ -71,30 +94,29 @@ const server = http.createServer(async (req, res) => {
       const site = state.sites.find((s) => s.id === siteId);
       if (!site) return json(res, 404, { error: "Site not found" });
       const result = await refreshForecast(site);
-      state.audit.unshift({
-        at: new Date().toISOString(),
-        type: result.refreshed ? "conditions_refreshed" : "conditions_retained",
-        detail: `${site.name}: ${site.forecast.source || "last known"} conditions`,
+      const event = createEvent(state, "conditions_updated", {
+        siteId,
+        refreshed: result.refreshed,
       });
+      const decisions = await processEvent(state, event);
       await saveState(state);
-      return json(res, 200, { site, refreshed: result.refreshed, state });
+      return json(res, 200, {
+        site,
+        refreshed: result.refreshed,
+        decisions,
+        state,
+      });
     }
     if (req.method === "POST" && url.pathname === "/api/replan") {
       const state = await getState();
       const input = await body(req);
-      const plan = await replan(
-        state,
-        input.siteId,
-        input.trigger || "Conditions changed",
-      );
-      state.plans.unshift(plan);
-      state.audit.unshift({
-        at: new Date().toISOString(),
-        type: "replanned",
-        detail: `${plan.siteName}: ${input.trigger || "Conditions changed"}`,
+      const event = createEvent(state, "conditions_updated", {
+        siteId: input.siteId,
+        trigger: input.trigger || "Conditions changed",
       });
+      const decisions = await processEvent(state, event);
       await saveState(state);
-      return json(res, 201, { plan, state });
+      return json(res, 201, { plan: state.plans[0], decisions, state });
     }
     if (req.method === "POST" && url.pathname === "/api/approve") {
       const state = await getState();
@@ -124,16 +146,72 @@ const server = http.createServer(async (req, res) => {
         capturedAt: new Date().toISOString(),
         ...analysis,
       };
-      state.audit.unshift({
-        at: site.photo.capturedAt,
-        type: "photo_analyzed",
-        detail: `${site.name}: ${analysis.setting}`,
+      site.setting = analysis.setting;
+      const event = createEvent(state, "photo_analyzed", {
+        siteId,
+        setting: analysis.setting,
       });
+      const decisions = await processEvent(state, event);
       await saveState(state);
-      return json(res, 200, { site, state });
+      return json(res, 200, { site, decisions, state });
+    }
+    if (req.method === "POST" && url.pathname === "/api/property/assess") {
+      const state = await getState();
+      const input = await body(req);
+      const { site, assessment } = await assessProperty(state, input);
+      const event = createEvent(state, "property_imagery_assessed", {
+        siteId: site.id,
+        location: site.propertyLocation,
+        setting: assessment.setting,
+      });
+      const decisions = await processEvent(state, event);
+      await saveState(state);
+      return json(res, 201, { site, assessment, decisions, state });
+    }
+    if (req.method === "POST" && url.pathname === "/api/team-member") {
+      const state = await getState();
+      const input = await body(req);
+      const worker = addTeamMember(state, input);
+      const event = createEvent(state, "team_member_added", {
+        workerId: worker.id,
+        siteId: worker.siteId,
+      });
+      event.status = "processed";
+      state.portfolio = buildPortfolio(state);
+      await saveState(state);
+      return json(res, 201, { worker, state });
+    }
+    if (req.method === "POST" && url.pathname === "/api/roster/import") {
+      const state = await getState();
+      const { csv } = await body(req);
+      const workers = parseRosterCsv(csv, state);
+      state.workers.push(...workers);
+      const event = createEvent(state, "roster_imported", {
+        count: workers.length,
+      });
+      event.status = "processed";
+      state.portfolio = buildPortfolio(state);
+      await saveState(state);
+      return json(res, 201, { imported: workers.length, state });
+    }
+    if (req.method === "POST" && url.pathname === "/api/scenario") {
+      const state = await getState();
+      const input = await body(req);
+      const allowed = new Set([
+        "heat_wave",
+        "worker_absent",
+        "equipment_failed",
+      ]);
+      if (!allowed.has(input.type))
+        return json(res, 400, { error: "Unsupported scenario" });
+      const event = createEvent(state, input.type, input.payload || {});
+      const decisions = await processEvent(state, event);
+      await saveState(state);
+      return json(res, 201, { event, decisions, state });
     }
     if (req.method === "POST" && url.pathname === "/api/reset") {
       const state = seedState();
+      state.portfolio = buildPortfolio(state);
       await saveState(state);
       return json(res, 200, state);
     }

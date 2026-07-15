@@ -2,73 +2,187 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Umbra — Operations safety co-pilot</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Umbra | Operations intelligence</title>
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
     <main>
       <header>
         <div>
-          <p class="eyebrow">UMBRA / MORNING BRIEF</p>
-          <h1>Bring the right crew out of the sun first.</h1>
+          <p class="eyebrow">UMBRA / OPERATIONS INTELLIGENCE</p>
+          <h1>Exposure decisions, continuously reprioritized.</h1>
           <p class="sub">
-            Live conditions, site imagery, and crew exposure tiers—turned into
-            an explainable rotation plan.
+            An event-driven safety co-pilot for distributed outdoor operations.
           </p>
         </div>
-        <button class="ghost" id="reset">Reset demo</button>
+        <div class="agent">
+          <span></span>
+          <div>
+            <b>Agent monitoring</b
+            ><small id="agentStatus">Waiting for conditions</small>
+          </div>
+        </div>
       </header>
-      <section class="notice">
-        <span>●</span>
-        <div>
-          <strong>Supervisor approval required.</strong> Umbra is an operational
-          planning aid, not medical or regulatory advice.
+      <section class="signal">
+        <div><b id="portfolioCount">0</b><span>sites monitored</span></div>
+        <div><b id="decisionCount">0</b><span>decisions logged</span></div>
+        <div><b id="eventCount">0</b><span>events processed</span></div>
+        <div class="signalActions">
+          <button id="heatWave">Run heat wave</button
+          ><button id="reset">Reset workspace</button>
         </div>
       </section>
-      <section class="grid" id="siteGrid"></section>
-      <section class="split">
+      <section class="intake">
         <section class="panel">
-          <div class="sectionHead">
-            <div>
-              <p class="eyebrow">LATEST PLAN</p>
-              <h2 id="planTitle">Select “Generate plan” for a site</h2>
-            </div>
-            <span id="planStatus" class="pill">Waiting</span>
-          </div>
-          <div id="planEmpty" class="empty">
-            Umbra will rank crew exposure, preserve coverage, and tell you what
-            changed.
-          </div>
-          <div id="planContent" hidden></div>
+          <p class="eyebrow">PROPERTY EVIDENCE</p>
+          <h2>Assess the actual work environment</h2>
+          <form id="propertyForm" class="compactForm">
+            <select id="propertySite" required></select
+            ><input
+              id="propertyLocation"
+              required
+              placeholder="Property location or work zone"
+            />
+            <input
+              id="propertyAngles"
+              placeholder="Angles / orientation notes (e.g. north facade, roof)"
+            /><label class="fileField"
+              >Add property photos from one or more angles<input
+                id="propertyPhotos"
+                type="file"
+                accept="image/*"
+                multiple
+                required
+            /></label>
+            <button type="submit">Assess property exposure</button>
+          </form>
+          <p class="help">
+            GPT-5.6 vision can identify visually supported reflective materials,
+            water, shade, and open exposure. It does not make regulatory or
+            medical determinations.
+          </p>
         </section>
-        <aside class="panel audit">
-          <p class="eyebrow">AUDIT TRAIL</p>
-          <h2>Decision history</h2>
-          <div id="auditList"></div>
+        <section class="panel">
+          <p class="eyebrow">TEAM MEMBER</p>
+          <h2>Add a self-reported exposure profile</h2>
+          <form id="memberForm" class="compactForm">
+            <input name="name" required placeholder="Full name" /><select
+              name="siteId"
+              id="memberSite"
+              required
+            ></select
+            ><input name="role" required placeholder="Role" />
+            <select name="tier" required>
+              <option value="">Priority tier</option>
+              <option value="standard">Standard</option>
+              <option value="elevated">Elevated</option>
+              <option value="high">High</option></select
+            ><select name="photosensitivity" required>
+              <option value="">Self-reported photosensitivity</option>
+              <option value="low">Low</option>
+              <option value="moderate">Moderate</option>
+              <option value="high">High</option></select
+            ><select name="outdoorHistory" required>
+              <option value="">Recent outdoor exposure</option>
+              <option value="occasional">Occasional</option>
+              <option value="regular">Regular</option>
+              <option value="extended">Extended</option>
+            </select>
+            <input
+              name="accommodationNote"
+              placeholder="Optional workplace accommodation note"
+            /><label class="fileField"
+              >Optional profile photo (not analyzed)<input
+                name="photo"
+                type="file"
+                accept="image/*" /></label
+            ><button type="submit">Add team member</button>
+          </form>
+        </section>
+      </section>
+      <section class="layout">
+        <section class="panel portfolio">
+          <div class="head">
+            <div>
+              <p class="eyebrow">PORTFOLIO PRIORITY</p>
+              <h2>Where intervention is needed</h2>
+            </div>
+            <label class="inlineUpload"
+              >Import roster CSV<input
+                id="roster"
+                type="file"
+                accept=".csv,text/csv"
+            /></label>
+          </div>
+          <div id="portfolio"></div>
+        </section>
+        <section class="panel active">
+          <p class="eyebrow">ACTIVE RECOMMENDATION</p>
+          <div id="activeDecision" class="empty">
+            The agent will surface the highest-priority decision when an event
+            arrives.
+          </div>
+        </section>
+      </section>
+      <section class="layout lower">
+        <section class="panel">
+          <div class="head">
+            <div>
+              <p class="eyebrow">DECISION TIMELINE</p>
+              <h2>What changed and why</h2>
+            </div>
+          </div>
+          <div id="timeline"></div>
+        </section>
+        <aside class="panel ops">
+          <p class="eyebrow">OPERATIONS INPUTS</p>
+          <h2>Send a signal</h2>
+          <div id="siteInputs"></div>
         </aside>
       </section>
-    </main>
-    <template id="siteTemplate"
-      ><article class="site card">
-        <div class="siteTop">
+      <section class="panel sunPanel">
+        <div class="head">
           <div>
-            <p class="eyebrow siteName"></p>
-            <h2 class="task"></h2>
+            <p class="eyebrow">SITE POSITIONING PREVIEW</p>
+            <h2>Sun and crew placement</h2>
           </div>
-          <span class="uvi"></span>
+          <span id="placementRisk" class="status"
+            >Load a property photo to begin</span
+          >
         </div>
-        <div class="weather"></div>
-        <div class="setting"></div>
-        <div class="actions">
-          <button class="primary generate">Generate plan</button
-          ><button class="secondary refresh">Refresh conditions</button
-          ><button class="secondary spike">Simulate UV / heat spike</button>
+        <div id="sunStage" class="sunStage">
+          <div class="stageEmpty">
+            Property imagery will become an interactive planning surface after
+            assessment.
+          </div>
         </div>
-        <label class="upload"
-          >Upload site photo <input class="photo" type="file" accept="image/*"
-        /></label>
-        <p class="photoResult"></p></article
+        <div class="sunControls">
+          <label
+            >Sun time
+            <input id="sunTime" type="range" min="6" max="18" value="12" /><span
+              id="sunLabel"
+              >12:00</span
+            ></label
+          >
+          <p>
+            Drag crew icons to test relative placement. This is a visual
+            planning approximation; confirm final controls on site.
+          </p>
+        </div>
+      </section>
+    </main>
+    <template id="siteInput"
+      ><div class="siteInput">
+        <div><b class="siteName"></b><small class="siteMeta"></small></div>
+        <div class="inputActions">
+          <button class="refresh">Refresh conditions</button
+          ><button class="absence">Worker absence</button
+          ><button class="failure">Equipment failure</button
+          ><label class="photoUpload"
+            >Site photo<input class="photo" type="file" accept="image/*"
+          /></label>
+        </div></div
     ></template>
     <script src="/app.js" type="module"></script>
   </body>

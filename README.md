@@ -31,6 +31,14 @@ node server.mjs
 4. Optionally upload a worksite image; in demo mode it is safely classified as requiring review, while with an API key GPT-5.6 classifies shade/reflectivity context.
 5. Approve the generated plan and show the audit trail.
 
+## Property evidence and crew placement
+
+The executive view supports a multi-angle property submission with a supervisor-supplied location/work-zone description. With GPT-5.6 credentials, the assessment returns only visually grounded operational observations: reflective materials such as concrete or glass, visible water, shade, and open exposure. A new event is emitted and Umbra automatically recalculates the site's recommendation.
+
+The site-positioning preview uses the selected property image as an interactive planning surface. Move the time slider to change the illustrative sun direction, drag crew icons, and review the relative exposure warning. It is a visual planning approximation, not an engineering-grade sun/shadow survey.
+
+New team members can be added individually or from CSV. The individual form requires role, assigned site, operational priority tier, self-reported photosensitivity, and recent outdoor-exposure history. A workplace accommodation note and profile photo are optional; Umbra does not infer skin tone, health conditions, or medical status from an image.
+
 ## Safety boundary
 
 Umbra is not medical advice, a legal compliance system, or an autonomous worker-management tool. A supervisor must approve each plan. Worker tiers are operational exposure-priority inputs, not health diagnoses.

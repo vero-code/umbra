@@ -30,7 +30,16 @@ test("HTTP workflow generates, replans, and approves a plan", async (t) => {
     });
     assert.equal(
       response.status,
-      path === "/api/plan" || path === "/api/replan" ? 201 : 200,
+      [
+        "/api/plan",
+        "/api/replan",
+        "/api/scenario",
+        "/api/roster/import",
+        "/api/property/assess",
+        "/api/team-member",
+      ].includes(path)
+        ? 201
+        : 200,
     );
     return response.json();
   };
@@ -38,24 +47,59 @@ test("HTTP workflow generates, replans, and approves a plan", async (t) => {
   const refreshed = await post("/api/refresh-conditions", {
     siteId: "site_north",
   });
-  assert.ok(["demo", "open-meteo"].includes(refreshed.site.forecast.source));
+  assert.ok(
+    ["baseline", "open-meteo"].includes(refreshed.site.forecast.source),
+  );
   const photo = await post("/api/photo", {
     siteId: "site_north",
     image:
       "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL9dQAAAABJRU5ErkJggg==",
     note: "Bright roof surface",
   });
-  assert.equal(photo.site.photo.setting, "reflective");
+  assert.equal(photo.site.photo.setting, "uncertain");
   const generated = await post("/api/plan", {
     siteId: "site_north",
     useModel: false,
   });
   assert.equal(generated.plan.priorityWorkers[0].id, "w1");
-  const changed = await post("/api/replan", {
-    siteId: "site_north",
-    trigger: "UV spike",
+  const changed = await post("/api/scenario", {
+    type: "heat_wave",
+    payload: {},
   });
-  assert.ok(changed.plan.alerts.some((alert) => alert.includes("UV")));
-  const approved = await post("/api/approve", { planId: changed.plan.id });
+  assert.ok(changed.decisions.length >= 3);
+  const approved = await post("/api/approve", {
+    planId: changed.state.plans[0].id,
+  });
   assert.equal(approved.plan.status, "approved");
+  const imported = await post("/api/roster/import", {
+    csv: "name,site,role,tier\nDrew Cole,West Yard,Loader,standard",
+  });
+  assert.equal(imported.imported, 1);
+  const scenario = await post("/api/scenario", {
+    type: "equipment_failed",
+    payload: { siteId: "site_river" },
+  });
+  assert.equal(scenario.decisions[0].status, "needs_review");
+  const property = await post("/api/property/assess", {
+    siteId: "site_north",
+    location: "Roof deck north side",
+    photos: [
+      {
+        angle: "North-facing roof",
+        image:
+          "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL9dQAAAABJRU5ErkJggg==",
+      },
+    ],
+  });
+  assert.equal(property.site.propertyLocation, "Roof deck north side");
+  assert.ok(property.decisions.length > 0);
+  const member = await post("/api/team-member", {
+    name: "Kai Snow",
+    siteId: "site_west",
+    role: "Spotter",
+    tier: "elevated",
+    photosensitivity: "high",
+    outdoorHistory: "regular",
+  });
+  assert.equal(member.worker.exposureProfile.photosensitivity, "high");
 });
