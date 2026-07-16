@@ -11,7 +11,8 @@
       <header>
         <div class="brand">UMBRA <span>OPERATIONS INTELLIGENCE</span></div>
         <nav class="modeNav">
-          <button data-mode="brief" class="active">Morning Brief</button
+          <button data-mode="shift" class="active">Shift</button
+          ><button data-mode="brief">Morning Brief</button
           ><button data-mode="incident">Live Incident</button
           ><button data-mode="workspace">Planning Workspace</button>
         </nav>
@@ -19,6 +20,56 @@
           <i></i><span>Monitoring outdoor operations</span>
         </div>
       </header>
+      <section id="shiftMode" class="modeView">
+        <section class="shiftHero">
+          <div>
+            <p class="eyebrow">FOREMAN SHIFT</p>
+            <h1>Current crew exposure, at a glance.</h1>
+            <p id="shiftSummary">Assessing this hour's operational exposure.</p>
+          </div>
+          <div class="hourRisk">
+            <span>Current hour risk</span><b id="shiftRisk">—</b
+            ><small id="shiftRiskText">Monitoring</small>
+          </div>
+        </section>
+        <section class="shiftGrid">
+          <article class="crewPanel">
+            <div class="panelTitle">
+              <div>
+                <p class="eyebrow">TODAY'S CREW</p>
+                <h2 id="crewTitle">Active crew</h2>
+              </div>
+              <span id="crewCount" class="chip"></span>
+            </div>
+            <div id="crewList"></div>
+          </article>
+          <aside class="auditPanel">
+            <p class="eyebrow">PHOTO AUDIT TOOL</p>
+            <h2>See the surface. Check the protection.</h2>
+            <p>
+              Capture asphalt, sand, concrete, glazing, or a work area. Umbra
+              assesses qualitative UV reflectivity and visible PPE.
+            </p>
+            <form id="auditForm">
+              <select id="auditSite" required></select
+              ><input
+                id="auditPrompt"
+                placeholder="Optional context: roof deck, new concrete, glazing"
+              /><label class="cameraLabel"
+                >Take or upload audit photo<input
+                  id="auditPhoto"
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  required /></label
+              ><button>Run photo audit</button>
+            </form>
+            <div id="auditResult" class="auditResult">
+              No photo audit during this shift.
+            </div>
+          </aside>
+        </section>
+      </section>
       <div id="briefMode" class="modeView">
         <section class="mission">
           <p class="eyebrow">CURRENT MISSION</p>

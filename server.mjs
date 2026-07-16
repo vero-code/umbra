@@ -16,6 +16,8 @@ import {
   assessProperty,
   addTeamMember,
   decisionFromPlan,
+  auditWorksitePhoto,
+  recordActivity,
 } from "./src/planner.mjs";
 
 const root = fileURLToPath(new URL(".", import.meta.url));
@@ -31,6 +33,7 @@ async function getState() {
   state.events ||= [];
   state.decisions ||= [];
   state.activity ||= [];
+  state.photoAudits ||= [];
   state.agent ||= {
     status: "monitoring",
     lastCycleAt: null,
@@ -166,6 +169,24 @@ const server = http.createServer(async (req, res) => {
       const decisions = await processEvent(state, event);
       await saveState(state);
       return json(res, 201, { site, assessment, decisions, state });
+    }
+    if (req.method === "POST" && url.pathname === "/api/photo-audit") {
+      const state = await getState();
+      const input = await body(req);
+      const { site, audit } = await auditWorksitePhoto(state, input);
+      const event = createEvent(state, "photo_analyzed", {
+        siteId: site.id,
+        auditId: audit.id,
+      });
+      const decisions = await processEvent(state, event);
+      recordActivity(
+        state,
+        "evidence",
+        `Photo audit completed for ${site.name}.`,
+        `${audit.source}: ${audit.uvReflectivityRisk}`,
+      );
+      await saveState(state);
+      return json(res, 201, { audit, decisions, state });
     }
     if (req.method === "POST" && url.pathname === "/api/team-member") {
       const state = await getState();

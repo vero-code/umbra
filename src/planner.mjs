@@ -627,6 +627,26 @@ export async function assessProperty(state, input) {
   return { site, assessment };
 }
 
+export async function auditWorksitePhoto(state, input) {
+  const site = state.sites.find((entry) => entry.id === input.siteId);
+  if (!site || !String(input.image || "").startsWith("data:image/"))
+    throw new Error("A valid site and audit photo are required");
+  const audit = await analyzeAuditWithModel(input.image, input.prompt || "");
+  const record = {
+    id: id("audit"),
+    siteId: site.id,
+    image: input.image,
+    prompt: String(input.prompt || ""),
+    ...audit,
+    createdAt: now(),
+  };
+  state.photoAudits ||= [];
+  state.photoAudits.unshift(record);
+  if (audit.setting && settingFactors[audit.setting])
+    site.setting = audit.setting;
+  return { site, audit: record };
+}
+
 async function callOpenAI(input) {
   const response = await fetch("https://api.openai.com/v1/responses", {
     method: "POST",
@@ -764,6 +784,77 @@ async function analyzePropertyWithModel(photos, location) {
       waterFeature: "uncertain",
       reflectiveMaterials: [],
       shadeObservations: [],
+    };
+  }
+}
+
+async function analyzeAuditWithModel(image, prompt) {
+  if (!process.env.OPENAI_API_KEY)
+    return {
+      source: "simulated",
+      setting: "uncertain",
+      confidence: "unavailable",
+      surfaceType: "Unverified",
+      estimatedAlbedo: "Unknown",
+      uvReflectivityRisk: "Review required",
+      equipment: {
+        hardHats: "not assessed",
+        protectiveClothing: "not assessed",
+        goggles: "not assessed",
+      },
+      findings: [
+        "Vision is unavailable. This demo result does not represent a real photo assessment.",
+      ],
+      recommendedPrompt:
+        "Inspect hard hats, long sleeves, UV-rated eye protection, shade access, and the surface material before work starts.",
+    };
+  try {
+    const result = await callOpenAI([
+      {
+        role: "user",
+        content: [
+          {
+            type: "input_text",
+            text: `Audit this outdoor worksite photo for operational UV exposure. Supervisor context: ${prompt}. Return JSON {setting,confidence,surfaceType,estimatedAlbedo,uvReflectivityRisk,equipment:{hardHats,protectiveClothing,goggles},findings:string[],recommendedPrompt}. setting must be shaded, mixed, open, reflective, or uncertain. estimatedAlbedo must be a qualitative band only: low, moderate, high, or unknown. Only assess clearly visible surfaces and protective equipment; do not identify people or infer health conditions.`,
+          },
+          { type: "input_image", image_url: image, detail: "low" },
+        ],
+      },
+    ]);
+    return {
+      source: "GPT-5.6 Vision",
+      setting: settingFactors[result.setting] ? result.setting : "uncertain",
+      confidence: result.confidence || "low",
+      surfaceType: result.surfaceType || "Unverified",
+      estimatedAlbedo: result.estimatedAlbedo || "unknown",
+      uvReflectivityRisk: result.uvReflectivityRisk || "Review required",
+      equipment: result.equipment || {
+        hardHats: "unknown",
+        protectiveClothing: "unknown",
+        goggles: "unknown",
+      },
+      findings: result.findings || [],
+      recommendedPrompt:
+        result.recommendedPrompt ||
+        "Confirm surface and PPE conditions with the foreman.",
+    };
+  } catch {
+    return {
+      source: "simulated",
+      setting: "uncertain",
+      confidence: "low",
+      surfaceType: "Unverified",
+      estimatedAlbedo: "Unknown",
+      uvReflectivityRisk: "Review required",
+      equipment: {
+        hardHats: "not assessed",
+        protectiveClothing: "not assessed",
+        goggles: "not assessed",
+      },
+      findings: [
+        "Vision request failed; no image-derived conclusion was applied.",
+      ],
+      recommendedPrompt: "Perform a manual site and PPE check.",
     };
   }
 }

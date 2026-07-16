@@ -37,6 +37,7 @@ test("HTTP workflow generates, replans, and approves a plan", async (t) => {
         "/api/roster/import",
         "/api/property/assess",
         "/api/team-member",
+        "/api/photo-audit",
       ].includes(path)
         ? 201
         : 200,
@@ -102,4 +103,12 @@ test("HTTP workflow generates, replans, and approves a plan", async (t) => {
     outdoorHistory: "regular",
   });
   assert.equal(member.worker.exposureProfile.photosensitivity, "high");
+  const audit = await post("/api/photo-audit", {
+    siteId: "site_north",
+    prompt: "Fresh concrete roof",
+    image:
+      "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL9dQAAAABJRU5ErkJggg==",
+  });
+  assert.equal(audit.audit.source, "simulated");
+  assert.ok(audit.decisions.length > 0);
 });

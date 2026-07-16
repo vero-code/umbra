@@ -1,6 +1,6 @@
 let state;
 let shownDecisionId;
-let currentMode = "brief";
+let currentMode = "shift";
 const placements = new Map();
 const $ = (s) => document.querySelector(s);
 const esc = (v) =>
@@ -87,6 +87,55 @@ function render() {
     )
     .join("");
   renderFacility();
+  renderShift();
+}
+
+function renderShift() {
+  const topSite = state.portfolio[0];
+  const decision = state.decisions[0];
+  $("#shiftRisk").textContent = topSite?.exposureScore ?? "—";
+  $("#shiftRiskText").textContent = topSite
+    ? `${topSite.name} is the highest-risk active site.`
+    : "No active site risk.";
+  $("#shiftSummary").textContent =
+    decision?.recommendation ||
+    "No active rotation recommendation. Monitoring current conditions.";
+  $("#crewTitle").textContent = topSite
+    ? `${topSite.name} crew`
+    : "Active crew";
+  const crew = state.workers.filter((worker) => worker.status === "active");
+  $("#crewCount").textContent = `${crew.length} active`;
+  $("#crewList").innerHTML = crew
+    .map((worker) => {
+      const site = state.sites.find((entry) => entry.id === worker.siteId);
+      const score = site
+        ? Math.round(
+            (site.forecast.uvi || 0) *
+              (worker.tier === "high"
+                ? 1.5
+                : worker.tier === "elevated"
+                  ? 1.25
+                  : 1),
+          )
+        : 0;
+      const needsBreak =
+        decision?.siteId === worker.siteId &&
+        decision?.recommendation?.includes(worker.name);
+      const location = needsBreak
+        ? "Need a break"
+        : site?.setting === "shaded"
+          ? "In the shade"
+          : "In the sun";
+      return `<div class="crewRow"><span class="crewInitial">${esc(worker.name[0])}</span><span><b>${esc(worker.name)}</b><small>${esc(worker.role)} · ${esc(site?.name || "Unassigned")}</small></span><span class="crewStatus ${needsBreak ? "break" : location.includes("shade") ? "shade" : "sun"}">${location}</span><span class="crewScore">${score}</span></div>`;
+    })
+    .join("");
+  $("#auditSite").innerHTML = state.sites
+    .map((site) => `<option value="${site.id}">${esc(site.name)}</option>`)
+    .join("");
+  const audit = state.photoAudits?.[0];
+  if (audit)
+    $("#auditResult").innerHTML =
+      `<p class="auditSource">${esc(audit.source)} · ${esc(audit.confidence)} confidence</p><b>${esc(audit.surfaceType)} — ${esc(audit.estimatedAlbedo)} albedo</b><p>${esc(audit.uvReflectivityRisk)}</p><ul><li>Hard hats: ${esc(audit.equipment?.hardHats)}</li><li>Protective clothing: ${esc(audit.equipment?.protectiveClothing)}</li><li>Goggles: ${esc(audit.equipment?.goggles)}</li></ul>`;
 }
 function renderDecision(decision) {
   $("#missionTitle").textContent = decision.recommendation;
@@ -187,6 +236,7 @@ async function sync() {
 
 function switchMode(mode) {
   currentMode = mode;
+  $("#shiftMode").hidden = mode !== "shift";
   $("#briefMode").hidden = mode !== "brief";
   $("#incidentMode").hidden = mode !== "incident";
   $("#workspaceMode").hidden = mode !== "workspace";
@@ -280,6 +330,25 @@ $("#sunTime").oninput = () => {
     `${String($("#sunTime").value).padStart(2, "0")}:00`;
   renderFacility();
 };
+$("#auditForm").onsubmit = async (event) => {
+  event.preventDefault();
+  try {
+    const file = $("#auditPhoto").files[0];
+    const image = await readFile(file);
+    const data = await request("/api/photo-audit", {
+      method: "POST",
+      body: JSON.stringify({
+        siteId: $("#auditSite").value,
+        prompt: $("#auditPrompt").value,
+        image,
+      }),
+    });
+    state = data.state;
+    render();
+  } catch (error) {
+    alert(error.message);
+  }
+};
 $("#incidentForm").onsubmit = async (event) => {
   event.preventDefault();
   try {
@@ -307,4 +376,5 @@ $("#incidentForm").onsubmit = async (event) => {
 };
 state = await request("/api/state");
 render();
+switchMode("shift");
 setInterval(sync, 2200);
