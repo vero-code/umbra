@@ -278,6 +278,10 @@ function buildDecisionBasis(site, ranked, event) {
     `Surface setting is ${site.setting}, applying an albedo/reflectivity modifier of ${environment.albedoFactor}x.`,
     `Temperature is ${site.forecast.temperatureC}C, applying the heat load modifier.`,
     `${ranked[0].name} has the highest calculated exposure score (${ranked[0].score}) after their ${ranked[0].tier} priority tier.`,
+    ranked[0].exposureProfile
+      ? `Worker risk profile: ${ranked[0].name} reports ${ranked[0].exposureProfile.photosensitivity || "unrecorded"} photosensitivity and Fitzpatrick type ${ranked[0].exposureProfile.fitzpatrickType || "unrecorded"}.`
+      : `Worker risk profile: ${ranked[0].name}'s operational tier is ${ranked[0].tier}; no additional self-reported profile is recorded.`,
+    `Crew availability: ${ranked.length} active worker(s) are assigned to this site; break rotations preserve coverage.`,
   ];
   const factors = ranked[0].behavioralFactors;
   if (factors) {
@@ -288,11 +292,24 @@ function buildDecisionBasis(site, ranked, event) {
       basis.push(
         "The recorded sunscreen application is over two hours old, so no current sunscreen reduction is applied.",
       );
+  } else {
+    basis.push(
+      `${ranked[0].name}'s PPE, sunscreen timing, and shade status are unrecorded; no protection reduction is assumed.`,
+    );
   }
+  if (site.propertyAssessment?.uncertainty?.length)
+    basis.push(`Uncertainty: ${site.propertyAssessment.uncertainty.join(" ")}`);
+  else if (site.propertyAssessment?.confidence === "unavailable")
+    basis.push("Uncertainty: live site imagery analysis is unavailable.");
   if (site.photo)
     basis.push(
       `Latest site photo classified the work environment as ${site.photo.setting} (${site.photo.confidence} confidence).`,
     );
+  else if (site.propertyAssessment)
+    basis.push(
+      `Site imagery assessment: ${site.propertyAssessment.setting || site.setting} (${site.propertyAssessment.confidence || "unavailable"} confidence).`,
+    );
+  else basis.push("Site imagery: no property photo assessment is available.");
   if (site.equipment === "failed")
     basis.push(
       "Equipment failure reduces rotation capacity, so only one worker rotates at a time.",

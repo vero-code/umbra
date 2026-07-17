@@ -349,3 +349,57 @@ main:before {
   background: var(--purple);
   border-radius: 999px;
 }
+
+.decisionPresentation {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 18px;
+}
+
+.decisionSection {
+  padding: 20px;
+  border-top: 3px solid #cfd1ef;
+  border-radius: 18px;
+  background: #fff;
+}
+
+.decisionSection.evidence {
+  grid-row: span 2;
+  background: #f1f6ff;
+  border-color: #78aee4;
+}
+
+.decisionSection.final {
+  background: #202746;
+  border-color: #efffae;
+  color: #fff;
+}
+
+.decisionSection.final .label {
+  color: #efffae;
+}
+
+.decisionSection.final span {
+  display: block;
+  margin-top: 10px;
+  color: #cdd3e8;
+}
+
+.decisionSection ul {
+  padding-left: 18px;
+  margin: 10px 0;
+}
+
+.decisionSection small {
+  color: #6f7295;
+}
+
+@media (max-width: 700px) {
+  .decisionPresentation {
+    grid-template-columns: 1fr;
+  }
+
+  .decisionSection.evidence {
+    grid-row: auto;
+  }
+}

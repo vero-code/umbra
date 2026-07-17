@@ -228,9 +228,17 @@ function renderDecision(decision) {
     `<p class="priorityLabel">${esc(decision.siteName)} · priority worker</p><h2 class="priorityRecommendation">${esc(decision.recommendation)}</h2><p class="priorityScore">Exposure score <b>${esc(decision.severity)}</b></p><dl class="decisionFacts"><div><dt>Triggering event</dt><dd>${esc(decision.triggeringEvent)}</dd></div><div><dt>Why now</dt><dd>${esc(decision.whyNow)}</dd></div><div><dt>Evidence used</dt><dd>${esc((evidenceAgent?.evidence || decision.reasoningChain).slice(0, 3).join(" · "))}</dd></div><div><dt>Operational tradeoff</dt><dd>${esc(decision.operationalImpact)}</dd></div><div><dt>Alternative action</dt><dd>${esc(evidenceAgent?.alternative?.decision || decision.alternative)}</dd></div><div><dt>Confidence</dt><dd>${esc(decision.confidence)}</dd></div></dl>`;
   $("#reasoningBody").innerHTML =
     `<section><p class="label">EVIDENCE</p><ul>${(evidenceAgent?.evidence || decision.reasoningChain).map((item) => `<li>${esc(item)}</li>`).join("")}</ul></section><section><p class="label">REASONING</p><p>${esc((evidenceAgent?.reasoning || [decision.whyWorker, decision.whyNow]).join(" "))}</p></section><section><p class="label">TRADEOFF</p><p>${esc((evidenceAgent?.tradeoffs || [decision.operationalImpact]).join(" "))}</p><p>${esc(evidenceAgent?.alternative?.decision || decision.alternative)}</p></section><section class="final"><p class="label">DECISION</p><strong>${esc(decision.recommendation)}</strong><span>${esc(evidenceAgent?.source || "Validated operations engine")} · Supervisor approval required.</span></section>`;
+  $("#reasoningBody").innerHTML = renderDecisionPresentation(decision);
   const button = $("#approve");
   button.hidden = decision.status === "approved";
   button.onclick = () => approve(decision.planId);
+}
+function renderDecisionPresentation(decision) {
+  const agent = decision.evidenceAgent;
+  const evidence = agent?.evidence || decision.reasoningChain || [];
+  const reasoning = agent?.reasoning || [decision.whyWorker, decision.whyNow];
+  const tradeoffs = agent?.tradeoffs || [decision.operationalImpact];
+  return `<div class="decisionPresentation"><section class="decisionSection evidence"><p class="label">EVIDENCE</p><ul>${evidence.map((item) => `<li>${esc(item)}</li>`).join("")}</ul><small>Confidence: ${esc(decision.confidence)}${agent?.uncertainty?.length ? ` · Uncertainty: ${esc(agent.uncertainty.join(" "))}` : ""}</small></section><section class="decisionSection"><p class="label">REASONING</p><p>${esc(reasoning.join(" "))}</p></section><section class="decisionSection"><p class="label">TRADEOFFS</p><ul>${tradeoffs.map((item) => `<li>${esc(item)}</li>`).join("")}</ul><p>${esc(agent?.alternative?.decision || decision.alternative)}</p></section><section class="decisionSection final"><p class="label">DECISION</p><strong>${esc(decision.recommendation)}</strong><span>Validated exposure engine · Supervisor approval required.</span></section></div>`;
 }
 async function approve(planId) {
   const data = await request("/api/approve", {
