@@ -174,7 +174,7 @@ export async function runAutonomousCycle(state) {
 }
 
 export function buildPortfolio(state) {
-  return state.sites
+  const ranked = state.sites
     .map((site) => {
       const active = state.workers.filter(
         (worker) => worker.siteId === site.id && worker.status === "active",
@@ -193,9 +193,28 @@ export function buildPortfolio(state) {
         status: latest?.status || "monitoring",
         setting: site.setting,
         uvi: site.forecast.uvi,
+        temperatureC: site.forecast.temperatureC,
+        cloudCover: site.forecast.cloudCover,
+        confidence:
+          latest?.confidence ||
+          site.propertyAssessment?.confidence ||
+          "moderate",
+        lastUpdate:
+          latest?.createdAt || site.propertyAssessment?.updatedAt || null,
+        priorityReason:
+          latest?.whyNow ||
+          `UVI ${site.forecast.uvi}, ${site.setting} setting, and ${active.length} active worker(s) require monitoring.`,
       };
     })
     .sort((a, b) => b.exposureScore - a.exposureScore);
+  return ranked.map((site, index) => ({
+    ...site,
+    rank: index + 1,
+    rankReason:
+      index === 0
+        ? `Highest current priority: ${site.name} — ${site.priorityReason}`
+        : `${index === 1 ? "Second" : "Third"} priority because ${site.priorityReason}`,
+  }));
 }
 
 export async function refreshForecast(site) {

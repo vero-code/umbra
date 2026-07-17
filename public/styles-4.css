@@ -317,6 +317,63 @@ main:before {
     grid-template-columns: 1fr;
   }
 }
+
+.portfolioSite {
+  padding: 24px;
+  margin: 14px 0;
+  border: 1px solid #d9dcf2;
+  border-radius: 22px;
+  background: #fffdf8;
+  box-shadow: 0 8px 24px rgb(35 39 70 / 6%);
+}
+
+.portfolioSite header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.portfolioSite header h3 {
+  margin: 0;
+}
+.portfolioReason {
+  margin: 5px 0 0;
+  color: #707596;
+}
+.portfolioSite .siteRisk {
+  margin-left: auto;
+  padding: 8px 12px;
+}
+.portfolioMetrics {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  margin: 22px 0;
+}
+.portfolioMetrics span,
+.portfolioSite footer {
+  color: #6f7295;
+  font-size: 0.82rem;
+}
+.portfolioMetrics b,
+.portfolioSite footer b {
+  display: block;
+  color: #232746;
+  margin-bottom: 4px;
+}
+.portfolioSite footer {
+  padding-top: 14px;
+  border-top: 1px solid #e2e3f0;
+}
+.portfolioSite footer span {
+  color: #232746;
+  margin-left: 8px;
+}
+@media (max-width: 800px) {
+  .portfolioMetrics {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
 .chip,
 .mode,
 .status {

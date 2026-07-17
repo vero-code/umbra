@@ -34,6 +34,15 @@ function activeDecision() {
     state.decisions[0]
   );
 }
+function renderPortfolioSite(site) {
+  const risk =
+    site.exposureScore >= 15
+      ? "High"
+      : site.exposureScore >= 10
+        ? "Elevated"
+        : "Moderate";
+  return `<article class="portfolioSite"><header><span class="rank">0${site.rank}</span><div><h3>${esc(site.name)}</h3><p class="portfolioReason">${esc(site.rankReason)}</p></div><strong class="siteRisk">${esc(risk)} · ${site.exposureScore}</strong></header><div class="portfolioMetrics"><span><b>UV / heat</b>UVI ${esc(site.uvi)} · ${esc(site.temperatureC)}°C · ${esc(site.cloudCover)}% clouds</span><span><b>Exposure setting</b>${esc(site.setting)}</span><span><b>Crew</b>${esc(site.activeCrew)} active</span><span><b>Last update</b>${esc(clock(site.lastUpdate))}</span><span><b>Confidence</b>${esc(site.confidence)}</span></div><footer><b>Current recommendation</b><span>${esc(site.recommendation)}</span></footer></article>`;
+}
 function render() {
   const decision = activeDecision();
   const topSite = state.portfolio[0];
@@ -71,6 +80,11 @@ function render() {
     )
     .join("");
   if ($("#sitesPortfolioList"))
+    $("#sitesPortfolioList").innerHTML = state.portfolio
+      .map(renderPortfolioSite)
+      .join(""); /* portfolio */
+  /* legacy compact portfolio remains on Shift */
+  if (false)
     $("#sitesPortfolioList").innerHTML = state.portfolio
       .map(
         (site, index) =>
