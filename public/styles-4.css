@@ -250,6 +250,73 @@ main:before {
 .recommendation {
   background: linear-gradient(135deg, #e6dcff, #fffdf8 58%, #d9f6ff);
 }
+
+.recommendation {
+  min-height: 430px;
+  padding: 36px;
+  background: linear-gradient(145deg, #fffdf7, #f2efff);
+}
+
+.recommendationTop {
+  align-items: center;
+}
+
+.decisionStatus {
+  margin-left: auto;
+  color: #68721b;
+  background: #efffae;
+  border-radius: 999px;
+  padding: 7px 11px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.priorityLabel {
+  margin: 30px 0 8px;
+  color: #6f7295;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.priorityRecommendation {
+  max-width: 700px;
+  margin: 0;
+  font-size: clamp(32px, 4vw, 58px) !important;
+  line-height: 0.98;
+  letter-spacing: -0.055em;
+}
+
+.priorityScore {
+  margin: 18px 0 24px;
+  color: #6f7295;
+}
+
+.priorityScore b {
+  margin-left: 8px;
+  color: #ed7440;
+  font-size: 28px;
+}
+
+.decisionFacts {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 24px !important;
+}
+
+.decisionFacts dd {
+  color: #232746;
+}
+
+@media (max-width: 700px) {
+  .recommendation {
+    padding: 24px;
+  }
+
+  .decisionFacts {
+    grid-template-columns: 1fr;
+  }
+}
 .chip,
 .mode,
 .status {

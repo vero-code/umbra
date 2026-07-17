@@ -47,6 +47,11 @@ function render() {
     `<i></i><span>${esc(state.agent?.status === "monitoring" ? "Monitoring outdoor operations" : state.agent?.status || "Reasoning")}</span>`;
   $("#reasoningMode").textContent =
     state.agent?.mode || "Simulated reasoning for demo";
+  $("#shiftDecisionStatus").textContent = state.decisions.length
+    ? state.decisions[0].status === "approved"
+      ? "DECISION UPDATED"
+      : "AWAITING APPROVAL"
+    : "MONITORING";
   if (decision) renderDecision(decision);
   else {
     $("#recommendationBody").innerHTML =
@@ -220,7 +225,7 @@ function renderDecision(decision) {
     `${decision.siteName} is the highest current operational priority.`;
   $("#confidence").textContent = decision.confidence;
   $("#recommendationBody").innerHTML =
-    `<p class="trigger">Triggered by <b>${esc(decision.triggeringEvent)}</b></p><h2>${esc(decision.recommendation)}</h2><p class="whyNow">${esc(decision.whyNow)}</p><dl><div><dt>What changed</dt><dd>${esc(decision.whatChanged)}</dd></div><div><dt>Operational impact</dt><dd>${esc(decision.operationalImpact)}</dd></div></dl>`;
+    `<p class="priorityLabel">${esc(decision.siteName)} · priority worker</p><h2 class="priorityRecommendation">${esc(decision.recommendation)}</h2><p class="priorityScore">Exposure score <b>${esc(decision.severity)}</b></p><dl class="decisionFacts"><div><dt>Triggering event</dt><dd>${esc(decision.triggeringEvent)}</dd></div><div><dt>Why now</dt><dd>${esc(decision.whyNow)}</dd></div><div><dt>Evidence used</dt><dd>${esc((evidenceAgent?.evidence || decision.reasoningChain).slice(0, 3).join(" · "))}</dd></div><div><dt>Operational tradeoff</dt><dd>${esc(decision.operationalImpact)}</dd></div><div><dt>Alternative action</dt><dd>${esc(evidenceAgent?.alternative?.decision || decision.alternative)}</dd></div><div><dt>Confidence</dt><dd>${esc(decision.confidence)}</dd></div></dl>`;
   $("#reasoningBody").innerHTML =
     `<section><p class="label">EVIDENCE</p><ul>${(evidenceAgent?.evidence || decision.reasoningChain).map((item) => `<li>${esc(item)}</li>`).join("")}</ul></section><section><p class="label">REASONING</p><p>${esc((evidenceAgent?.reasoning || [decision.whyWorker, decision.whyNow]).join(" "))}</p></section><section><p class="label">TRADEOFF</p><p>${esc((evidenceAgent?.tradeoffs || [decision.operationalImpact]).join(" "))}</p><p>${esc(evidenceAgent?.alternative?.decision || decision.alternative)}</p></section><section class="final"><p class="label">DECISION</p><strong>${esc(decision.recommendation)}</strong><span>${esc(evidenceAgent?.source || "Validated operations engine")} · Supervisor approval required.</span></section>`;
   const button = $("#approve");
