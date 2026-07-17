@@ -404,6 +404,41 @@ main:before {
 .protectionChecklist dd.ok {
   color: #3d8252;
 }
+.reportSummary {
+  padding: 20px;
+  border-radius: 18px;
+  background: #eef7ff;
+  color: #4f5878;
+}
+.reportGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+.reportGrid article {
+  padding: 20px;
+  border: 1px solid #d9dcf2;
+  border-radius: 18px;
+  background: #fffdf8;
+}
+.reportGrid h3 {
+  margin: 0 0 10px;
+  color: #232746;
+}
+.reportGrid ul {
+  padding-left: 18px;
+  margin: 0;
+  color: #626987;
+}
+.reportGrid li {
+  margin: 7px 0;
+}
+@media (max-width: 700px) {
+  .reportGrid {
+    grid-template-columns: 1fr;
+  }
+}
 @media (max-width: 900px) {
   .crewRow {
     grid-template-columns: 42px 1fr 1fr 42px;

@@ -138,6 +138,70 @@ function render() {
   renderExternalTimeline();
   renderVisualEvidence();
   renderBehavioralFactors();
+  renderReports();
+}
+
+function renderReports() {
+  const reports = $("#reportsContent");
+  if (!reports) return;
+  const exposureRows = state.portfolio
+    .map(
+      (site) =>
+        `<li><b>${esc(site.name)}</b>: UVI ${esc(site.uvi)}, ${esc(site.temperatureC)}°C, ${esc(site.setting)} setting, exposure score ${esc(site.exposureScore)}.</li>`,
+    )
+    .join("");
+  const breaks = state.workers
+    .filter((worker) => worker.status === "active")
+    .map(
+      (worker) =>
+        `<li>${esc(worker.name)} · next break ${state.decisions.find((decision) => decision.siteId === worker.siteId && decision.recommendation?.includes(worker.name)) ? "now" : "planned rotation"}</li>`,
+    )
+    .join("");
+  const reminders =
+    state.workers
+      .filter(
+        (worker) => Number(worker.behavioralFactors?.sunscreenHoursAgo) > 2,
+      )
+      .map(
+        (worker) =>
+          `<li>${esc(worker.name)}: SPF reminder due; last application is outside the two-hour planning window.</li>`,
+      )
+      .join("") || "<li>No expired SPF applications recorded.</li>";
+  const evidence =
+    state.sites
+      .filter((site) => site.propertyAssessment)
+      .map(
+        (site) =>
+          `<li>${esc(site.name)}: ${esc(site.propertyAssessment.summary)} · confidence ${esc(site.propertyAssessment.confidence)}</li>`,
+      )
+      .join("") || "<li>No site-photo assessments recorded.</li>";
+  const approvals =
+    state.audit
+      .filter((item) => item.type === "plan_approved")
+      .map((item) => `<li>${esc(item.at)} · Supervisor approval recorded.</li>`)
+      .join("") || "<li>No approvals recorded.</li>";
+  const exceptions =
+    state.events
+      .filter(
+        (event) =>
+          event.type === "worker_absent" ||
+          event.type === "equipment_failed" ||
+          event.type === "heat_advisory",
+      )
+      .map(
+        (event) =>
+          `<li>${esc(event.type.replaceAll("_", " "))} · ${esc(event.status)}</li>`,
+      )
+      .join("") || "<li>No exceptions recorded.</li>";
+  const unresolved =
+    state.decisions
+      .filter((decision) => decision.status !== "approved")
+      .map(
+        (decision) =>
+          `<li>${esc(decision.siteName || decision.siteId)}: ${esc(decision.recommendation)} · supervisor review pending.</li>`,
+      )
+      .join("") || "<li>No unresolved recommendations.</li>";
+  reports.innerHTML = `<div class="reportSummary"><p class="eyebrow">EXPORT-READY SUMMARY</p><p>Operational record for HR and occupational safety review. Umbra reports observed conditions, actions, and approvals; it does not provide medical diagnoses or legal guarantees.</p></div><div class="reportGrid"><article><h3>Daily UV exposure log</h3><ul>${exposureRows}</ul></article><article><h3>Worker break history</h3><ul>${breaks || "<li>No active crew records.</li>"}</ul></article><article><h3>SPF reminder history</h3><ul>${reminders}</ul></article><article><h3>Site and weather evidence</h3><ul>${evidence}</ul></article><article><h3>Photo-analysis evidence</h3><ul>${(state.photoAudits || []).map((audit) => `<li>${esc(audit.surfaceType)} · ${esc(audit.estimatedAlbedo)} albedo · ${esc(audit.confidence)} confidence.</li>`).join("") || "<li>No photo audits recorded.</li>"}</ul></article><article><h3>Supervisor approvals</h3><ul>${approvals}</ul></article><article><h3>Exceptions</h3><ul>${exceptions}</ul></article><article><h3>Unresolved risks</h3><ul>${unresolved}</ul></article></div>`;
 }
 
 function renderVisualEvidence() {
