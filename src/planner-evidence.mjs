@@ -1,7 +1,9 @@
 import { refreshForecast } from "./planner-workflows.mjs";
 
 const strategicModel = () =>
-  process.env.OPENAI_STRATEGIC_MODEL || process.env.OPENAI_MODEL || "gpt-5.6";
+  process.env.OPENAI_STRATEGIC_MODEL ||
+  process.env.OPENAI_MODEL ||
+  "gpt-5.6-sol";
 const routineModel = () => process.env.OPENAI_ROUTINE_MODEL || "gpt-5.6-luna";
 
 export async function callOpenAI(input, model = routineModel()) {
@@ -45,6 +47,16 @@ export function getModelStatus() {
     configured,
     strategicModel: strategicModel(),
     routineModel: routineModel(),
+    strategicUse:
+      "Cross-site prioritization, incidents, what-if decisions, final recommendation reasoning",
+    routineUse:
+      "Photo summaries, timeline wording, low-risk classification, frequent status updates",
+    approvedTools: [
+      "refresh_weather",
+      "read_worker_conditions",
+      "read_photo_evidence",
+      "simulate_worker_absence",
+    ],
     mode: configured ? "live-ready" : "mock",
     detail: configured
       ? "A server-side API key is configured. No request is made until a model action is triggered."
@@ -122,6 +134,7 @@ export function buildEvidenceAgentMock(packet, failed = false) {
   return {
     source: failed ? "deterministic fallback" : "simulated evidence agent",
     mode: failed ? "fallback" : "mock",
+    modelRole: failed ? "deterministic rules engine" : "GPT-5.6 Sol simulation",
     priorityWorkerId: first.id,
     decision: `Rotate ${first.name} first and retain validated crew coverage.`,
     triggeringEvent: packet.event.type.replaceAll("_", " "),
@@ -162,6 +175,7 @@ function normalizeEvidenceAgent(result, packet) {
   return {
     source: "GPT-5.6 evidence agent",
     mode: "live",
+    modelRole: strategicModel(),
     priorityWorkerId,
     decision: String(result.decision || fallback.decision),
     triggeringEvent: String(result.triggeringEvent || fallback.triggeringEvent),
