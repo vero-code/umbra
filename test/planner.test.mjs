@@ -12,6 +12,7 @@ import {
   runAutonomousCycle,
   getModelStatus,
   testModelConnection,
+  calculateEnvironmentalExposure,
 } from "../src/planner.mjs";
 test("high-risk worker is prioritized and coverage remains", async () => {
   const state = seedState();
@@ -73,4 +74,24 @@ test("model connection predicts a safe mock response without a key", async () =>
   assert.equal(status.mode, "mock");
   assert.equal(result.source, "mock");
   assert.match(result.output_text, /Umbra mock response/);
+});
+
+test("environmental exposure applies peak sun, cloud, and reflective-surface modifiers", () => {
+  const site = {
+    setting: "reflective",
+    forecast: { uvi: 8, cloudCover: 10, localHour: 12 },
+  };
+  const peak = calculateEnvironmentalExposure(site);
+  const denseCloud = calculateEnvironmentalExposure({
+    ...site,
+    forecast: { ...site.forecast, cloudCover: 85 },
+  });
+  const lateDay = calculateEnvironmentalExposure({
+    ...site,
+    forecast: { ...site.forecast, localHour: 18 },
+  });
+  assert.equal(peak.albedoFactor, 2);
+  assert.equal(peak.sunAltitudeFactor, 1.35);
+  assert.ok(denseCloud.doseIndex < peak.doseIndex);
+  assert.ok(lateDay.doseIndex < peak.doseIndex);
 });

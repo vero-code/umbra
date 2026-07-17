@@ -16,6 +16,17 @@ Open `http://localhost:3000`. The default experience uses reproducible seeded da
 
 Select **Refresh conditions** to retrieve hourly UV index, temperature, and cloud cover for each seeded site from Open-Meteo. If that provider is unavailable, Umbra retains and visibly records the last-known forecast instead of fabricating a result.
 
+## Environmental exposure calculation
+
+Umbra's deterministic planning dose index uses four visible inputs: the reported UV
+Index, a time-of-day modifier (highest from 11:00–16:00), cloud-cover context, and
+the site’s qualitative albedo modifier. Reflective surfaces use a 2.0× planning
+multiplier; dense cloud cover (70%+) reduces the modifier, while light/intermittent
+cloud has a small scattering-context modifier. The weather provider's UVI already
+reflects sky conditions, so the cloud adjustment is deliberately modest to avoid
+double-counting. This is an operational prioritization proxy, not a sunburn or
+medical prediction.
+
 ## Optional GPT-5.6 multimodal reasoning
 
 Set `OPENAI_API_KEY` before running the server. Umbra then sends a constrained site snapshot and optional photo to the Responses API with `gpt-5.6` to enrich the human-readable rationale and classify a site photo. The deterministic rules engine remains the authoritative safety constraint layer; it validates crew coverage and break limits regardless of model availability.

@@ -1,11 +1,11 @@
 const riskTiers = { standard: 1, elevated: 1.25, high: 1.5 };
 const sensitivityFactors = { low: 1, moderate: 1.15, high: 1.3 };
 const settingFactors = {
-  shaded: 1,
-  mixed: 1.2,
-  open: 1.4,
-  reflective: 1.55,
-  uncertain: 1.3,
+  shaded: 0.85,
+  mixed: 1.1,
+  open: 1.2,
+  reflective: 2,
+  uncertain: 1.25,
 };
 const now = () => new Date().toISOString();
 const id = (prefix) => `${prefix}_${crypto.randomUUID().slice(0, 8)}`;
@@ -26,6 +26,7 @@ export function seedState() {
           uvi: 9,
           temperatureC: 31,
           cloudCover: 15,
+          localHour: 12,
           source: "baseline",
         },
         photo: null,
@@ -43,6 +44,7 @@ export function seedState() {
           uvi: 7,
           temperatureC: 28,
           cloudCover: 35,
+          localHour: 12,
           source: "baseline",
         },
         photo: null,
@@ -60,6 +62,7 @@ export function seedState() {
           uvi: 6,
           temperatureC: 27,
           cloudCover: 42,
+          localHour: 12,
           source: "baseline",
         },
         photo: null,
@@ -160,7 +163,43 @@ export function recordActivity(state, phase, message, detail = "") {
   state.activity = state.activity.slice(0, 30);
 }
 
+export function calculateEnvironmentalExposure(site) {
+  const forecast = site.forecast || {};
+  const hour = Number.isFinite(Number(forecast.localHour))
+    ? Number(forecast.localHour)
+    : new Date().getHours();
+  const sunAltitudeFactor =
+    hour >= 11 && hour < 16 ? 1.35 : hour >= 9 && hour < 17 ? 1.08 : 0.65;
+  const cloudCover = Math.max(
+    0,
+    Math.min(100, Number(forecast.cloudCover) || 0),
+  );
+  // UVI already incorporates observed sky conditions. This modest modifier makes
+  // cloud context visible without treating the weather-provider UVI as cloud-free.
+  const cloudFactor =
+    cloudCover >= 70
+      ? Math.max(0.3, 1 - cloudCover / 100)
+      : cloudCover >= 20
+        ? 1.08
+        : 1;
+  const albedoFactor = settingFactors[site.setting || "uncertain"];
+  const baseUvi = Math.max(0, Number(forecast.uvi) || 0);
+  const doseIndex =
+    Math.round(baseUvi * sunAltitudeFactor * cloudFactor * albedoFactor * 10) /
+    10;
+  return {
+    baseUvi,
+    hour,
+    cloudCover,
+    sunAltitudeFactor,
+    cloudFactor,
+    albedoFactor,
+    doseIndex,
+  };
+}
+
 export function scoreWorker(site, worker) {
+  const environment = calculateEnvironmentalExposure(site);
   const heat =
     site.forecast.temperatureC >= 34
       ? 1.35
@@ -170,10 +209,9 @@ export function scoreWorker(site, worker) {
   const equipmentFactor = site.equipment === "failed" ? 1.15 : 1;
   return (
     Math.round(
-      site.forecast.uvi *
+      environment.doseIndex *
         heat *
         equipmentFactor *
-        settingFactors[site.setting || "uncertain"] *
         riskTiers[worker.tier] *
         (sensitivityFactors[worker.exposureProfile?.photosensitivity] || 1) *
         10,
@@ -216,8 +254,12 @@ export function validatePlan(plan, workers) {
 }
 
 function buildDecisionBasis(site, ranked, event) {
+  const environment = calculateEnvironmentalExposure(site);
   const basis = [
-    `UV index is ${site.forecast.uvi}; the site exposure setting is ${site.setting}.`,
+    `UV index is ${environment.baseUvi}; it is converted to a planning dose index of ${environment.doseIndex}.`,
+    `Sun altitude/time modifier is ${environment.sunAltitudeFactor}x at ${String(environment.hour).padStart(2, "0")}:00; the 11:00–16:00 peak window receives the highest modifier.`,
+    `Cloud cover is ${environment.cloudCover}%, applying a ${environment.cloudFactor}x sky-condition modifier.`,
+    `Surface setting is ${site.setting}, applying an albedo/reflectivity modifier of ${environment.albedoFactor}x.`,
     `Temperature is ${site.forecast.temperatureC}C, applying the heat load modifier.`,
     `${ranked[0].name} has the highest calculated exposure score (${ranked[0].score}) after their ${ranked[0].tier} priority tier.`,
   ];
@@ -261,6 +303,7 @@ function rulePlan(site, workers, event) {
       }),
     ),
     rotationBlocks: rotations(ranked, site.equipment),
+    environmentalExposure: calculateEnvironmentalExposure(site),
     alerts: [],
     reasoningChain: buildDecisionBasis(site, ranked, event),
     confidence:
@@ -502,7 +545,7 @@ export async function refreshForecast(site) {
   endpoint.search = new URLSearchParams({
     latitude: site.latitude,
     longitude: site.longitude,
-    hourly: "uv_index,temperature_2m,cloud_cover",
+    current: "uv_index,temperature_2m,cloud_cover",
     forecast_days: "1",
     timezone: "auto",
   });
@@ -512,17 +555,17 @@ export async function refreshForecast(site) {
     });
     if (!response.ok) throw new Error("Weather provider unavailable");
     const data = await response.json();
-    const index = new Date().getHours();
+    const current = data.current || {};
+    const localHour = Number(String(current.time || "").slice(11, 13));
     site.forecast = {
-      uvi:
-        Math.round((data.hourly.uv_index[index] ?? site.forecast.uvi) * 10) /
-        10,
+      uvi: Math.round((current.uv_index ?? site.forecast.uvi) * 10) / 10,
       temperatureC: Math.round(
-        data.hourly.temperature_2m[index] ?? site.forecast.temperatureC,
+        current.temperature_2m ?? site.forecast.temperatureC,
       ),
-      cloudCover: Math.round(
-        data.hourly.cloud_cover[index] ?? site.forecast.cloudCover,
-      ),
+      cloudCover: Math.round(current.cloud_cover ?? site.forecast.cloudCover),
+      localHour: Number.isFinite(localHour)
+        ? localHour
+        : site.forecast.localHour,
       source: "open-meteo",
       refreshedAt: now(),
     };
