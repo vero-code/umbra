@@ -108,7 +108,27 @@ function render() {
   renderFacility();
   renderShift();
   renderExternalFactors();
+  renderVisualEvidence();
   renderBehavioralFactors();
+}
+
+function renderVisualEvidence() {
+  const property = state.sites.find(
+    (site) => site.propertyAssessment,
+  )?.propertyAssessment;
+  if (property?.visibleEvidence?.length) {
+    $("#externalEvidenceResult").insertAdjacentHTML(
+      "beforeend",
+      `<p class="visibleEvidence"><b>Visible evidence</b>: ${esc(property.visibleEvidence.join(" · "))}</p>`,
+    );
+  }
+  const audit = state.photoAudits?.[0];
+  if (audit?.visibleEvidence?.length) {
+    $("#auditResult").insertAdjacentHTML(
+      "beforeend",
+      `<p class="visibleEvidence"><b>Visible evidence</b>: ${esc(audit.visibleEvidence.join(" · "))}</p>`,
+    );
+  }
 }
 
 function renderBehavioralFactors() {

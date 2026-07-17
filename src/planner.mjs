@@ -969,6 +969,7 @@ export async function analyzePhotoWithModel(image, note) {
       confidence: "unavailable",
       summary:
         "Vision analysis is unavailable until GPT-5.6 credentials are configured.",
+      visibleEvidence: [],
     };
   try {
     const result = await callOpenAI([
@@ -977,7 +978,7 @@ export async function analyzePhotoWithModel(image, note) {
         content: [
           {
             type: "input_text",
-            text: `Assess outdoor worksite exposure. Note: ${note}. Return JSON {setting, confidence, summary, factors:string[]}; setting must be shaded, mixed, open, reflective, or uncertain. Do not infer health conditions.`,
+            text: `Assess outdoor worksite exposure. Note: ${note}. Return JSON {setting, confidence, summary, factors:string[], visibleEvidence:string[], uncertainty:string[]}. setting must be shaded, mixed, open, reflective, or uncertain. visibleEvidence must contain only directly visible observations (for example: tree shade, concrete, glass, metal, water, open sky, hard hat, protective clothing, goggles). Do not infer unseen conditions, identify people, infer health conditions, or make medical claims. If a feature is not clearly visible, put it in uncertainty rather than evidence.`,
           },
           { type: "input_image", image_url: image, detail: "low" },
         ],
@@ -988,6 +989,12 @@ export async function analyzePhotoWithModel(image, note) {
       confidence: result.confidence || "low",
       summary: result.summary || "Photo reviewed.",
       factors: result.factors || [],
+      visibleEvidence: Array.isArray(result.visibleEvidence)
+        ? result.visibleEvidence.map(String).slice(0, 8)
+        : [],
+      uncertainty: Array.isArray(result.uncertainty)
+        ? result.uncertainty.map(String).slice(0, 5)
+        : [],
     };
   } catch {
     return {
@@ -995,6 +1002,8 @@ export async function analyzePhotoWithModel(image, note) {
       confidence: "low",
       summary:
         "Vision analysis failed; conservative uncertain setting applied.",
+      visibleEvidence: [],
+      uncertainty: ["No reliable visual classification was returned."],
     };
   }
 }
@@ -1009,6 +1018,8 @@ async function analyzePropertyWithModel(photos, location) {
       factors: [
         "No vision classification was produced. A conservative uncertain exposure setting is active.",
       ],
+      visibleEvidence: [],
+      uncertainty: ["No live image assessment was performed."],
       waterFeature: "unknown",
       reflectiveMaterials: [],
       shadeObservations: [],
@@ -1017,7 +1028,7 @@ async function analyzePropertyWithModel(photos, location) {
   const content = [
     {
       type: "input_text",
-      text: `You are assessing outdoor worksite exposure for operational planning. Location provided by supervisor: ${location}. Review all supplied property angles. Return JSON {setting, confidence, summary, factors:string[], waterFeature:"present"|"not_observed"|"uncertain", reflectiveMaterials:string[], shadeObservations:string[]}. setting must be shaded, mixed, open, reflective, or uncertain. Only state visually supported environmental observations such as fresh concrete, glass, water, metal, tree cover, or shade. Do not infer people traits or provide medical advice.`,
+      text: `You are assessing outdoor worksite exposure for operational planning. Location provided by supervisor: ${location}. Review all supplied property angles. Return JSON {setting, confidence, summary, factors:string[], waterFeature:"present"|"not_observed"|"uncertain", reflectiveMaterials:string[], shadeObservations:string[], visibleEvidence:string[], uncertainty:string[]}. setting must be shaded, mixed, open, reflective, or uncertain. visibleEvidence must contain only directly visible environmental observations such as concrete, glass, metal, water, open sky, tree cover, or shade. Do not infer unobserved materials, people traits, health, weather, or sun exposure. Put uncertain or unavailable conclusions in uncertainty.`,
     },
     ...photos.map((photo) => ({
       type: "input_image",
@@ -1039,6 +1050,12 @@ async function analyzePropertyWithModel(photos, location) {
         : "uncertain",
       reflectiveMaterials: result.reflectiveMaterials || [],
       shadeObservations: result.shadeObservations || [],
+      visibleEvidence: Array.isArray(result.visibleEvidence)
+        ? result.visibleEvidence.map(String).slice(0, 10)
+        : [],
+      uncertainty: Array.isArray(result.uncertainty)
+        ? result.uncertainty.map(String).slice(0, 5)
+        : [],
     };
   } catch {
     return {
@@ -1050,6 +1067,8 @@ async function analyzePropertyWithModel(photos, location) {
       waterFeature: "uncertain",
       reflectiveMaterials: [],
       shadeObservations: [],
+      visibleEvidence: [],
+      uncertainty: ["No reliable visual classification was returned."],
     };
   }
 }
@@ -1071,6 +1090,8 @@ async function analyzeAuditWithModel(image, prompt) {
       findings: [
         "Vision is unavailable. This demo result does not represent a real photo assessment.",
       ],
+      visibleEvidence: [],
+      uncertainty: ["No live image assessment was performed."],
       recommendedPrompt:
         "Inspect hard hats, long sleeves, UV-rated eye protection, shade access, and the surface material before work starts.",
     };
@@ -1081,7 +1102,7 @@ async function analyzeAuditWithModel(image, prompt) {
         content: [
           {
             type: "input_text",
-            text: `Audit this outdoor worksite photo for operational UV exposure. Supervisor context: ${prompt}. Return JSON {setting,confidence,surfaceType,estimatedAlbedo,uvReflectivityRisk,equipment:{hardHats,protectiveClothing,goggles},findings:string[],recommendedPrompt}. setting must be shaded, mixed, open, reflective, or uncertain. estimatedAlbedo must be a qualitative band only: low, moderate, high, or unknown. Only assess clearly visible surfaces and protective equipment; do not identify people or infer health conditions.`,
+            text: `Audit this outdoor worksite photo for operational UV exposure. Supervisor context: ${prompt}. Return JSON {setting,confidence,surfaceType,estimatedAlbedo,uvReflectivityRisk,equipment:{hardHats,protectiveClothing,goggles},findings:string[],visibleEvidence:string[],uncertainty:string[],recommendedPrompt}. setting must be shaded, mixed, open, reflective, or uncertain. estimatedAlbedo must be a qualitative band only: low, moderate, high, or unknown. visibleEvidence must cite only visible shade, concrete, glass, metal, water, open sky, and clearly visible PPE. Do not identify people, infer health, assume material properties not visible, or make medical claims. Put unclear features in uncertainty.`,
           },
           { type: "input_image", image_url: image, detail: "low" },
         ],
@@ -1100,6 +1121,12 @@ async function analyzeAuditWithModel(image, prompt) {
         goggles: "unknown",
       },
       findings: result.findings || [],
+      visibleEvidence: Array.isArray(result.visibleEvidence)
+        ? result.visibleEvidence.map(String).slice(0, 8)
+        : [],
+      uncertainty: Array.isArray(result.uncertainty)
+        ? result.uncertainty.map(String).slice(0, 5)
+        : [],
       recommendedPrompt:
         result.recommendedPrompt ||
         "Confirm surface and PPE conditions with the foreman.",
@@ -1119,6 +1146,10 @@ async function analyzeAuditWithModel(image, prompt) {
       },
       findings: [
         "Vision request failed; no image-derived conclusion was applied.",
+      ],
+      visibleEvidence: [],
+      uncertainty: [
+        "The image request failed before a visual assessment completed.",
       ],
       recommendedPrompt: "Perform a manual site and PPE check.",
     };
