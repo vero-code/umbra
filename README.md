@@ -25,6 +25,18 @@ $env:OPENAI_API_KEY = 'your-key'
 node server.mjs
 ```
 
+No key is required for development. In that case, the model-status endpoint and
+the test endpoint return an explicitly labeled, deterministic mock response:
+
+```powershell
+Invoke-RestMethod http://localhost:3000/api/model/status
+Invoke-RestMethod -Method Post http://localhost:3000/api/model/test
+```
+
+At the end of the hackathon, set the key and repeat the second command. It makes
+one small live `gpt-5.6` Responses API request and should return `Umbra GPT-5.6
+connection confirmed.` The key stays server-side and is never sent to the browser.
+
 ## Demo path
 
 1. Generate the plan for **North Tower Roof**.

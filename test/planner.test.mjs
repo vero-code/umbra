@@ -10,6 +10,8 @@ import {
   parseRosterCsv,
   addTeamMember,
   runAutonomousCycle,
+  getModelStatus,
+  testModelConnection,
 } from "../src/planner.mjs";
 test("high-risk worker is prioritized and coverage remains", async () => {
   const state = seedState();
@@ -60,4 +62,15 @@ test("autonomous cycle emits activity and produces a recommendation", async () =
   assert.ok(cycle.decisions.length > 0);
   assert.ok(state.activity.some((item) => item.phase === "reasoning"));
   assert.ok(cycle.decisions[0].alternative.includes("Alternative"));
+});
+
+test("model connection predicts a safe mock response without a key", async () => {
+  const saved = process.env.OPENAI_API_KEY;
+  delete process.env.OPENAI_API_KEY;
+  const status = getModelStatus();
+  const result = await testModelConnection();
+  if (saved) process.env.OPENAI_API_KEY = saved;
+  assert.equal(status.mode, "mock");
+  assert.equal(result.source, "mock");
+  assert.match(result.output_text, /Umbra mock response/);
 });

@@ -673,6 +673,18 @@ export async function auditWorksitePhoto(state, input) {
 }
 
 async function callOpenAI(input) {
+  const data = await requestOpenAI({
+    input,
+    text: { format: { type: "json_object" } },
+  });
+  if (!data.output_text)
+    throw new Error("OpenAI response did not include text");
+  return JSON.parse(data.output_text);
+}
+
+async function requestOpenAI(payload) {
+  if (!process.env.OPENAI_API_KEY)
+    throw new Error("OPENAI_API_KEY is not configured");
   const response = await fetch("https://api.openai.com/v1/responses", {
     method: "POST",
     headers: {
@@ -680,15 +692,51 @@ async function callOpenAI(input) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "gpt-5.6",
+      model: process.env.OPENAI_MODEL || "gpt-5.6",
       reasoning: { effort: "low" },
-      input,
-      text: { format: { type: "json_object" } },
+      ...payload,
     }),
+    signal: AbortSignal.timeout(20_000),
   });
-  if (!response.ok) throw new Error("OpenAI request failed");
-  const data = await response.json();
-  return JSON.parse(data.output_text);
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(`OpenAI request failed (${response.status}): ${detail}`);
+  }
+  return response.json();
+}
+
+export function getModelStatus() {
+  const configured = Boolean(process.env.OPENAI_API_KEY);
+  return {
+    configured,
+    model: process.env.OPENAI_MODEL || "gpt-5.6",
+    mode: configured ? "live-ready" : "mock",
+    detail: configured
+      ? "A server-side API key is configured. No request is made until a model action is triggered."
+      : "No API key is configured. Umbra is using deterministic mock model responses.",
+  };
+}
+
+export async function testModelConnection() {
+  const status = getModelStatus();
+  if (!status.configured) {
+    return {
+      ...status,
+      source: "mock",
+      output_text:
+        "Umbra mock response: GPT-5.6 connection is ready to test after OPENAI_API_KEY is configured.",
+    };
+  }
+  const data = await requestOpenAI({
+    input:
+      "Reply with exactly: Umbra GPT-5.6 connection confirmed. Do not add any other text.",
+  });
+  return {
+    ...status,
+    source: "OpenAI Responses API",
+    responseId: data.id,
+    output_text: data.output_text || "The API returned no text output.",
+  };
 }
 async function modelRationale(site, plan) {
   const context = {

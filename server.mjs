@@ -18,6 +18,8 @@ import {
   decisionFromPlan,
   auditWorksitePhoto,
   recordActivity,
+  getModelStatus,
+  testModelConnection,
 } from "./src/planner.mjs";
 
 const root = fileURLToPath(new URL(".", import.meta.url));
@@ -73,6 +75,10 @@ const server = http.createServer(async (req, res) => {
     const url = new URL(req.url, `http://${req.headers.host}`);
     if (req.method === "GET" && url.pathname === "/api/state")
       return json(res, 200, await getState());
+    if (req.method === "GET" && url.pathname === "/api/model/status")
+      return json(res, 200, getModelStatus());
+    if (req.method === "POST" && url.pathname === "/api/model/test")
+      return json(res, 200, await testModelConnection());
     if (req.method === "POST" && url.pathname === "/api/plan") {
       const state = await getState();
       const input = await body(req);
