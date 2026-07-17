@@ -1,3 +1,4 @@
+import { setupInteractions } from "/app-interactions.js";
 let state;
 let shownDecisionId;
 let currentMode = "team";
@@ -384,148 +385,26 @@ function assessPlacement(site) {
       : "Crew is within the approximate shade zone.";
   output.className = `mapRisk ${exposed.length ? "risk" : "safe"}`;
 }
-document
-  .querySelectorAll(".modeNav button")
-  .forEach(
-    (button) => (button.onclick = () => switchMode(button.dataset.mode)),
-  );
-$("#sunTime").oninput = () => {
-  $("#sunLabel").textContent =
-    `${String($("#sunTime").value).padStart(2, "0")}:00`;
-  renderFacility();
-};
-$("#auditForm").onsubmit = async (event) => {
-  event.preventDefault();
-  try {
-    const file = $("#auditPhoto").files[0];
-    const image = await readFile(file);
-    const data = await request("/api/photo-audit", {
-      method: "POST",
-      body: JSON.stringify({
-        siteId: $("#auditSite").value,
-        prompt: $("#auditPrompt").value,
-        image,
-      }),
-    });
-    state = data.state;
-    render();
-  } catch (error) {
-    alert(error.message);
-  }
-};
-$("#teamProfileForm").onsubmit = async (event) => {
-  event.preventDefault();
-  try {
-    const form = new FormData(event.target);
-    const photoFile = form.get("photo");
-    const photo = photoFile?.size ? await readFile(photoFile) : null;
-    const data = await request("/api/team-member", {
-      method: "POST",
-      body: JSON.stringify({ ...Object.fromEntries(form), photo }),
-    });
-    state = data.state;
-    teamProfileDirty = false;
-    event.target.reset();
-    render();
-  } catch (error) {
-    alert(error.message);
-  }
-};
-$("#teamProfileForm").addEventListener("input", () => {
-  teamProfileDirty = true;
+
+await setupInteractions({
+  get state() {
+    return state;
+  },
+  set state(value) {
+    state = value;
+  },
+  get shownDecisionId() {
+    return shownDecisionId;
+  },
+  set shownDecisionId(value) {
+    shownDecisionId = value;
+  },
+  $,
+  request,
+  readFile,
+  render,
+  renderFacility,
+  renderBehavioralFactors,
+  switchMode,
+  sync,
 });
-$("#externalFactorsForm").addEventListener("input", () => {
-  externalFactorsDirty = true;
-});
-$("#behavioralFactorsForm").addEventListener("input", () => {
-  behavioralFactorsDirty = true;
-});
-$("#behaviorWorker").onchange = () => renderBehavioralFactors();
-$("#behavioralFactorsForm").onsubmit = async (event) => {
-  event.preventDefault();
-  try {
-    const data = await request("/api/behavioral-factors", {
-      method: "POST",
-      body: JSON.stringify({
-        workerId: $("#behaviorWorker").value,
-        upf: $("#behaviorUpf").value,
-        spf: $("#behaviorSpf").value,
-        sunscreenHoursAgo: $("#behaviorSunscreenHours").value,
-        shadeAvailability: $("#behaviorShade").value,
-      }),
-    });
-    state = data.state;
-    shownDecisionId = data.decisions[0]?.id;
-    behavioralFactorsDirty = false;
-    render();
-  } catch (error) {
-    alert(error.message);
-  }
-};
-$("#externalFactorsForm").onsubmit = async (event) => {
-  event.preventDefault();
-  try {
-    const siteId = $("#externalSite").value;
-    const files = [...$("#externalPhotos").files];
-    if (files.length < 2)
-      throw new Error("Add at least two photos from different angles");
-    $("#weatherResult").innerHTML =
-      "<h2>Parsing weather...</h2><p>Fetching current UV, temperature, and cloud cover.</p>";
-    const weather = await request("/api/refresh-conditions", {
-      method: "POST",
-      body: JSON.stringify({ siteId }),
-    });
-    const photos = await Promise.all(
-      files.map(async (file, index) => ({
-        image: await readFile(file),
-        angle: `Object angle ${index + 1}`,
-        note: $("#externalNotes").value,
-      })),
-    );
-    const result = await request("/api/property/assess", {
-      method: "POST",
-      body: JSON.stringify({
-        siteId,
-        location: $("#externalLocation").value,
-        photos,
-      }),
-    });
-    state = result.state;
-    externalFactorsDirty = false;
-    $("#weatherResult").innerHTML =
-      `<h2>UVI ${esc(weather.site.forecast.uvi)} · ${esc(weather.site.forecast.temperatureC)}C</h2><p>${esc(weather.site.forecast.cloudCover)}% cloud cover · source: ${esc(weather.site.forecast.source || "last known")}</p>`;
-    event.target.reset();
-    render();
-  } catch (error) {
-    alert(error.message);
-  }
-};
-$("#incidentForm").onsubmit = async (event) => {
-  event.preventDefault();
-  try {
-    const type = $("#incidentType").value;
-    const siteId = $("#incidentSite").value;
-    const payload =
-      type === "worker_absent"
-        ? {
-            workerId: state.workers.find(
-              (worker) =>
-                worker.siteId === siteId && worker.status === "active",
-            )?.id,
-          }
-        : { siteId };
-    const data = await request("/api/scenario", {
-      method: "POST",
-      body: JSON.stringify({ type, payload }),
-    });
-    state = data.state;
-    shownDecisionId = data.decisions[0]?.id;
-    render();
-  } catch (error) {
-    alert(error.message);
-  }
-};
-state = await request("/api/state");
-render();
-switchMode("team");
-setInterval(sync, 2200);

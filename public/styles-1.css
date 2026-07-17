@@ -1,0 +1,380 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap");
+:root {
+  --ink: #162322;
+  --muted: #71807c;
+  --line: #e3e9e5;
+  --paper: #fbfcfa;
+  --canvas: #f4f6f4;
+  --lime: #c7ee67;
+  --warn: #a54c21;
+  --warnbg: #fff0e5;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: Manrope, sans-serif;
+}
+main {
+  max-width: 1220px;
+  margin: auto;
+  padding: 28px 30px 80px;
+}
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.modeNav {
+  display: flex;
+  gap: 4px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 3px;
+  background: #fff;
+}
+.modeNav button {
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  padding: 7px 9px;
+  font: 600 0.68rem Manrope;
+  cursor: pointer;
+}
+.modeNav button.active {
+  background: var(--ink);
+  color: #fff;
+}
+.shiftHero {
+  display: flex;
+  justify-content: space-between;
+  gap: 30px;
+  padding: 72px 0 34px;
+}
+.shiftHero h1 {
+  max-width: 700px;
+  margin: 8px 0;
+  font-size: clamp(3rem, 5.4vw, 5.8rem);
+  line-height: 0.93;
+  letter-spacing: -0.075em;
+}
+.shiftHero p {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.hourRisk {
+  min-width: 190px;
+  height: max-content;
+  margin-top: 14px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+}
+.hourRisk span,
+.hourRisk small {
+  display: block;
+  color: var(--muted);
+  font-size: 0.68rem;
+}
+.hourRisk b {
+  display: block;
+  margin: 6px 0;
+  color: var(--warn);
+  font: 500 2.5rem "DM Mono";
+}
+.shiftGrid {
+  display: grid;
+  grid-template-columns: 1.25fr 0.75fr;
+  gap: 18px;
+}
+.teamProfilePanel {
+  display: grid;
+  grid-template-columns: 0.8fr 1.2fr;
+  gap: 24px;
+  margin-bottom: 18px;
+  padding: 23px 25px;
+  border: 1px solid #dbcff8;
+  border-radius: 22px;
+  background: linear-gradient(120deg, #f0eaff, #fffdf8);
+}
+.teamProfilePanel h2 {
+  margin: 5px 0;
+  font-size: 1.4rem;
+  letter-spacing: -0.04em;
+}
+.teamProfilePanel p {
+  color: var(--muted);
+  font-size: 0.74rem;
+  line-height: 1.5;
+}
+.teamProfilePanel form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.teamProfilePanel input,
+.teamProfilePanel select {
+  min-width: 0;
+  border: 1px solid #d9d1ee;
+  border-radius: 9px;
+  padding: 9px;
+  background: #fff;
+  font: 500 0.72rem Manrope;
+}
+.profilePhotoLabel {
+  grid-column: span 2;
+  border: 2px dashed #a996e8;
+  border-radius: 10px;
+  padding: 9px;
+  color: #544593;
+  font: 700 0.7rem Manrope;
+  cursor: pointer;
+}
+.crewInitial.figurine {
+  position: relative;
+  width: 38px;
+  height: 42px;
+  overflow: visible;
+  border-radius: 15px 15px 12px 12px;
+  background: linear-gradient(145deg, #d8f5ff, #dcd2ff);
+  box-shadow: inset -3px -3px 0 #8a7aca33;
+}
+.crewInitial.figurine:before {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  top: 5px;
+  left: 11px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #f4ba93;
+  box-shadow: 0 2px 0 #d99478;
+}
+.crewInitial.figurine:after {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  top: 2px;
+  left: 8px;
+  width: 22px;
+  height: 8px;
+  border-radius: 12px 12px 4px 4px;
+  background: #ff9d45;
+}
+.crewInitial.figurine i {
+  position: absolute;
+  z-index: 1;
+  top: 19px;
+  left: 9px;
+  width: 20px;
+  height: 17px;
+  border-radius: 7px 7px 4px 4px;
+  background: #6756c9;
+}
+.crewInitial.figurine em {
+  position: absolute;
+  z-index: 2;
+  top: 23px;
+  left: 17px;
+  width: 4px;
+  height: 12px;
+  background: #d5f460;
+  box-shadow: 7px 0 #d5f460;
+}
+.crewInitial.engineer:after {
+  background: #5c91e8;
+}
+.crewInitial.engineer i {
+  background: #274477;
+}
+.crewInitial.lead:after {
+  background: #fff1b2;
+}
+.crewInitial.lead i {
+  background: #e97667;
+}
+.crewInitial.spotter:after {
+  background: #7bd6a8;
+}
+.crewInitial.spotter i {
+  background: #2f8a71;
+}
+.crewInitial.operator:after {
+  background: #ff8caf;
+}
+.crewInitial.operator i {
+  background: #9e3d70;
+}
+.crewInitial.rigger:after {
+  background: #ffc65a;
+}
+.crewInitial.rigger i {
+  background: #9b651b;
+}
+.signatureNote {
+  grid-column: span 2;
+  color: #61578d;
+  font-size: 0.63rem;
+  line-height: 1.4;
+}
+.workspaceTeamNote {
+  color: var(--muted);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+.profilePhotoLabel input {
+  display: none;
+}
+.teamProfilePanel button {
+  grid-column: span 2;
+  border: 0;
+  border-radius: 999px;
+  background: #7d65e8;
+  color: #fff;
+  padding: 10px;
+  font: 700 0.72rem Manrope;
+}
+@media (max-width: 800px) {
+  .teamProfilePanel {
+    display: block;
+  }
+  .teamProfilePanel form {
+    margin-top: 16px;
+  }
+  .teamProfilePanel input,
+  .teamProfilePanel select {
+    width: 100%;
+  }
+}
+.crewPanel,
+.auditPanel {
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  background: var(--paper);
+  padding: 24px;
+}
+.panelTitle {
+  display: flex;
+  justify-content: space-between;
+}
+.crewPanel h2,
+.auditPanel h2 {
+  margin: 5px 0;
+  font-size: 1.35rem;
+  letter-spacing: -0.04em;
+}
+.crewRow {
+  display: grid;
+  grid-template-columns: 35px 1fr max-content 40px;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 0;
+  border-top: 1px solid var(--line);
+}
+.crewRow:first-of-type {
+  margin-top: 19px;
+}
+.crewInitial {
+  display: grid;
+  width: 29px;
+  height: 29px;
+  place-items: center;
+  border-radius: 50%;
+  background: #e3eee1;
+  color: #355b43;
+  font: 500 0.72rem "DM Mono";
+}
+.crewRow b,
+.crewRow small {
+  display: block;
+  font-size: 0.77rem;
+}
+.crewRow small {
+  color: var(--muted);
+  font-size: 0.66rem;
+  margin-top: 2px;
+}
+.crewStatus {
+  border-radius: 99px;
+  padding: 5px 7px;
+  font: 500 0.62rem "DM Mono";
+}
+.crewStatus.sun {
+  background: #fff2df;
+  color: #9c5723;
+}
+.crewStatus.shade {
+  background: #e5f1ec;
+  color: #397057;
+}
+.crewStatus.break {
+  background: #fae0dd;
+  color: #a54438;
+}
+.crewScore {
+  justify-self: end;
+  color: #58706a;
+  font: 500 0.7rem "DM Mono";
+}
+.auditPanel > p {
+  color: var(--muted);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+.auditPanel form {
+  display: grid;
+  gap: 8px;
+  margin-top: 18px;
+}
+.auditPanel select,
+.auditPanel input {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 9px;
+  background: #fff;
+  font: 500 0.72rem Manrope;
+}
+.cameraLabel {
+  border: 1px dashed #a9bfb5;
+  border-radius: 8px;
+  padding: 11px;
+  color: #456359;
+  font: 700 0.72rem Manrope;
+  cursor: pointer;
+}
+.cameraLabel input {
+  display: none;
+}
+.auditPanel button {
+  border: 0;
+  border-radius: 8px;
+  background: var(--ink);
+  color: #fff;
+  padding: 10px;
+  font: 700 0.72rem Manrope;
+}
+.auditResult {
+  margin-top: 16px;
+  border-top: 1px solid var(--line);
+  padding-top: 13px;
+  color: #4b5e5a;
+  font-size: 0.73rem;
+  line-height: 1.45;
+}
+.auditResult p {
+  margin: 5px 0;
+}
+.auditResult ul {
+  margin: 8px 0;
+  padding-left: 16px;
+}
+.auditSource {
+  color: #668077;
+  font: 500 0.64rem "DM Mono";
+}

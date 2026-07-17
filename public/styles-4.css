@@ -1,0 +1,284 @@
+.copilot form {
+  display: flex;
+  gap: 8px;
+}
+.copilot input {
+  flex: 1;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px;
+  font: 500 0.75rem Manrope;
+}
+.copilot button,
+.controls button {
+  border: 0;
+  background: var(--ink);
+  border-radius: 8px;
+  color: #fff;
+  padding: 10px 12px;
+  font: 700 0.7rem Manrope;
+}
+.copilotAnswer {
+  grid-column: 2;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+.copilotAnswer p {
+  margin: 5px 0;
+}
+.controls {
+  margin-top: 26px;
+  padding: 0;
+}
+.controls summary {
+  cursor: pointer;
+  padding: 16px 20px;
+  color: #5d706a;
+  font-size: 0.75rem;
+}
+.controlGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  padding: 0 20px 20px;
+}
+.controlGrid h3 {
+  font-size: 0.82rem;
+}
+.controlGrid form {
+  display: grid;
+  gap: 8px;
+}
+.controlGrid input,
+.controlGrid select {
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 9px;
+  font: 500 0.72rem Manrope;
+}
+@media (max-width: 800px) {
+  main {
+    padding: 20px 16px;
+  }
+  header {
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .modeNav {
+    order: 3;
+    width: 100%;
+    overflow: auto;
+  }
+  .agentState {
+    display: none;
+  }
+  .incidentHero,
+  .workspaceIntro {
+    padding: 55px 0 30px;
+  }
+  .shiftHero {
+    display: block;
+    padding: 46px 0 25px;
+  }
+  .hourRisk {
+    margin-top: 20px;
+  }
+  .shiftGrid {
+    display: block;
+  }
+  .auditPanel {
+    margin-top: 16px;
+  }
+  .crewRow {
+    grid-template-columns: 30px 1fr max-content 32px;
+  }
+  .incidentHero form {
+    display: grid;
+  }
+  .facilityMap {
+    height: 310px;
+  }
+  .mission {
+    padding: 45px 0 30px;
+  }
+  .primaryGrid,
+  .reasoningBody,
+  .copilot,
+  .controlGrid {
+    display: block;
+  }
+  .activity,
+  .copilot > *,
+  .controlGrid > section {
+    margin-top: 18px;
+  }
+  .reasoningBody section {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+    padding: 14px 0;
+  }
+  .siteRow {
+    grid-template-columns: 30px 1fr 40px;
+  }
+  .siteAction {
+    display: none;
+  }
+  .recommendation dl {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Sunny field-kit theme */
+:root {
+  --ink: #18213d;
+  --muted: #68718d;
+  --line: #dce3f2;
+  --paper: #fffdf8;
+  --canvas: #f6f5ff;
+  --lime: #d5f460;
+  --warn: #b44838;
+  --warnbg: #ffe5d5;
+  --sky: #bcecff;
+  --purple: #7d65e8;
+  --peach: #ffb28e;
+}
+body {
+  background:
+    radial-gradient(circle at 12% 8%, #fff0b5 0 8%, transparent 24%),
+    radial-gradient(circle at 90% 15%, #c8f1ff 0 9%, transparent 26%),
+    var(--canvas);
+}
+main:before {
+  content: "";
+  position: fixed;
+  z-index: -1;
+  right: -100px;
+  bottom: -120px;
+  width: 360px;
+  height: 360px;
+  border-radius: 46% 54% 65% 35%;
+  background: #e4d8ff88;
+  filter: blur(2px);
+}
+.brand:before {
+  content: "✺";
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  margin-right: 7px;
+  border-radius: 9px;
+  background: var(--lime);
+  color: #453b91;
+  font-size: 1rem;
+  vertical-align: middle;
+}
+.modeNav {
+  border-radius: 999px;
+  background: #fff9;
+}
+.modeNav button {
+  border-radius: 999px;
+}
+.modeNav button.active {
+  background: var(--purple);
+  color: #fffdf8;
+  box-shadow: 0 4px 0 #5542ad;
+}
+.shiftHero h1:after {
+  content: " ☀";
+  color: #ff9d45;
+  font-size: 0.65em;
+}
+.hourRisk {
+  border-radius: 22px 22px 22px 6px;
+  background: linear-gradient(150deg, #fff8dc, #ffe2cf);
+  box-shadow: 7px 7px 0 #efc5af;
+}
+.hourRisk b {
+  color: #e66c36;
+}
+.crewPanel,
+.auditPanel,
+.facility,
+.recommendation,
+.activity,
+.reasoning,
+.portfolio,
+.copilot,
+.controls {
+  border-radius: 22px;
+  box-shadow: 0 10px 28px #4e589314;
+}
+.crewInitial {
+  background: linear-gradient(135deg, #c8f1ff, #ddd2ff);
+  color: #453b91;
+}
+.crewStatus.sun {
+  background: #ffe4a8;
+  color: #9a4e09;
+}
+.crewStatus.shade {
+  background: #c9f4e2;
+  color: #216650;
+}
+.crewStatus.break {
+  background: #ffd7e1;
+  color: #9e3153;
+}
+.cameraLabel {
+  border: 2px dashed #9e8ced;
+  border-radius: 14px;
+  color: #51419e;
+}
+.auditPanel button {
+  background: linear-gradient(135deg, #7d65e8, #a477ed);
+  border-radius: 999px;
+}
+.facilityMap {
+  border-radius: 18px;
+}
+.mapWorker {
+  border-radius: 14px;
+  background: #fff0b5;
+  color: #3b327c;
+}
+.agentState i {
+  background: #ff9d45;
+  box-shadow: 0 0 0 5px #ffe5c8;
+}
+.recommendation {
+  background: linear-gradient(135deg, #e6dcff, #fffdf8 58%, #d9f6ff);
+}
+.chip,
+.mode,
+.status {
+  background: #d5f460;
+  color: #3a4553;
+}
+.approve {
+  background: #ff8e70;
+  border-radius: 999px;
+  box-shadow: 0 4px 0 #c86158;
+}
+.activity:before {
+  content: "LIVE FEED";
+  display: inline-block;
+  margin-bottom: 10px;
+  border-radius: 99px;
+  background: #bcecff;
+  color: #315c79;
+  padding: 5px 8px;
+  font: 500 0.6rem "DM Mono";
+}
+.reasoning {
+  background: linear-gradient(120deg, #fffdf8, #f2f7ff);
+}
+.siteRisk {
+  border-radius: 999px;
+}
+.copilot button,
+.controls button {
+  background: var(--purple);
+  border-radius: 999px;
+}
