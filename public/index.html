@@ -11,10 +11,12 @@
       <header>
         <div class="brand">UMBRA <span>OPERATIONS INTELLIGENCE</span></div>
         <nav class="modeNav">
-          <button data-mode="team" class="active">Team</button
-          ><button data-mode="external">External Factors</button
-          ><button data-mode="behavioral">Behavioral Factors</button
-          ><button data-mode="workspace">Planning Workspace</button>
+          <button data-mode="shift" class="active">Shift / Morning Brief</button
+          ><button data-mode="incident">Live Incident</button
+          ><button data-mode="sites">Sites</button
+          ><button data-mode="team">Team</button
+          ><button data-mode="reports">Reports</button
+          ><button data-mode="planning">Planning / Settings</button>
         </nav>
         <div id="agentState" class="agentState">
           <i></i><span>Monitoring outdoor operations</span>
@@ -361,6 +363,27 @@
               as expired for planning.
             </p>
           </aside>
+        </section>
+      </section>
+      <section id="sitesMode" class="modeView" hidden>
+        <section class="mission">
+          <p class="eyebrow">SITES</p>
+          <h1>Where Umbra is focusing now.</h1>
+          <p>
+            Portfolio prioritization will become the supervisor’s cross-site
+            view.
+          </p>
+          <div id="sitesPortfolioList" class="portfolioList"></div>
+        </section>
+      </section>
+      <section id="reportsMode" class="modeView" hidden>
+        <section class="mission">
+          <p class="eyebrow">REPORTS</p>
+          <h1>Operational evidence, ready for review.</h1>
+          <p>
+            Daily UV exposure, break, SPF, evidence, and approval reporting will
+            live here.
+          </p>
         </section>
       </section>
       <section id="incidentMode" class="modeView" hidden>

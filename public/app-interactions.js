@@ -144,6 +144,6 @@ export async function setupInteractions(runtime) {
   };
   runtime.state = await request("/api/state");
   runtime.render();
-  runtime.switchMode("team");
+  runtime.switchMode("shift");
   setInterval(runtime.sync, 2200);
 }

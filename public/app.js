@@ -1,7 +1,7 @@
 import { setupInteractions } from "/app-interactions.js";
 let state;
 let shownDecisionId;
-let currentMode = "team";
+let currentMode = "shift";
 const placements = new Map();
 let teamProfileDirty = false;
 let externalFactorsDirty = false;
@@ -65,6 +65,13 @@ function render() {
         `<button class="siteRow" data-site="${site.siteId}"><span class="rank">0${index + 1}</span><span><b>${esc(site.name)}</b><small>UVI ${site.uvi} · ${site.activeCrew} active crew · ${esc(site.setting)}</small></span><span class="siteRisk">${site.exposureScore}</span><span class="siteAction">${esc(site.recommendation)}</span></button>`,
     )
     .join("");
+  if ($("#sitesPortfolioList"))
+    $("#sitesPortfolioList").innerHTML = state.portfolio
+      .map(
+        (site, index) =>
+          `<button class="siteRow" data-site="${site.siteId}"><span class="rank">0${index + 1}</span><span><b>${esc(site.name)}</b><small>UVI ${site.uvi} · ${site.activeCrew} active crew · ${esc(site.setting)}</small></span><span class="siteRisk">${site.exposureScore}</span><span class="siteAction">${esc(site.recommendation)}</span></button>`,
+      )
+      .join("");
   document.querySelectorAll(".siteRow").forEach(
     (row) =>
       (row.onclick = () => {
@@ -299,18 +306,21 @@ async function sync() {
 
 function switchMode(mode) {
   currentMode = mode;
-  $("#teamMode").hidden = mode !== "team";
-  $("#briefMode").hidden = mode !== "brief";
-  $("#externalMode").hidden = mode !== "external";
-  $("#behavioralMode").hidden = mode !== "behavioral";
-  $("#incidentMode").hidden = mode !== "incident";
-  $("#workspaceMode").hidden = mode !== "workspace";
+  const viewMode = mode === "planning" ? "workspace" : mode;
+  $("#teamMode").hidden = viewMode !== "team";
+  $("#briefMode").hidden = viewMode !== "shift";
+  $("#externalMode").hidden = viewMode !== "external";
+  $("#behavioralMode").hidden = viewMode !== "behavioral";
+  $("#incidentMode").hidden = viewMode !== "incident";
+  $("#sitesMode").hidden = viewMode !== "sites";
+  $("#reportsMode").hidden = viewMode !== "reports";
+  $("#workspaceMode").hidden = viewMode !== "workspace";
   document
     .querySelectorAll(".modeNav button")
     .forEach((button) =>
       button.classList.toggle("active", button.dataset.mode === mode),
     );
-  if (mode === "workspace") renderFacility();
+  if (viewMode === "workspace") renderFacility();
 }
 
 function facilitySite() {
