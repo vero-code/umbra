@@ -85,7 +85,10 @@
                 <option value="low">Low</option>
                 <option value="moderate">Moderate</option>
                 <option value="high">High</option></select
-              ><select name="fitzpatrickType" required>
+              ><!-- Fitzpatrick and exposure history are retained outside the essential entry flow. --><select
+                name="fitzpatrickType"
+                hidden
+              >
                 <option value="">Self-reported Fitzpatrick type</option>
                 <option value="1">Type 1</option>
                 <option value="2">Type 2</option>
@@ -93,7 +96,7 @@
                 <option value="4">Type 4</option>
                 <option value="5">Type 5</option>
                 <option value="6">Type 6</option></select
-              ><select name="outdoorHistory" required>
+              ><select name="outdoorHistory" hidden>
                 <option value="">Recent sun exposure</option>
                 <option value="occasional">Occasional</option>
                 <option value="regular">Regular</option>
@@ -101,20 +104,21 @@
               ><input
                 name="medicalMarkers"
                 placeholder="Optional self-reported medical markers"
-              /><select name="photosensitizingMedication" required>
+              /><select name="photosensitizingMedication" hidden>
                 <option value="">Photosensitizing medication?</option>
                 <option value="no">No / not reported</option>
                 <option value="yes">
                   Yes — occupational-health review
                 </option></select
               ><input
-                name="accommodationNote"
-                placeholder="Optional workplace accommodation"
-              /><input
                 name="profileSignature"
                 required
                 placeholder="Employee acknowledgement signature"
-              /><select name="avatar" required>
+              /><select
+                name="avatar"
+                required
+                aria-label="Visual identity avatar"
+              >
                 <option value="">Choose a crew figurine</option>
                 <option value="☀">☀ Sun</option>
                 <option value="🦺">🦺 Safety vest</option>
@@ -122,6 +126,9 @@
                 <option value="🌿">🌿 Leaf</option>
                 <option value="⚡">⚡ Bolt</option>
                 <option value="🛠">🛠 Tools</option></select
+              ><small class="avatarNote"
+                >Avatar is visual crew identity only; it is not used to infer
+                physiology.</small
               ><button>Add to team</button
               ><small class="signatureNote"
                 >By signing, the employee confirms the profile inputs and

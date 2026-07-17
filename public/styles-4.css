@@ -348,6 +348,11 @@ main:before {
 .crewPriority {
   color: #555b80;
 }
+.avatarNote {
+  grid-column: 1 / -1;
+  color: #6f7295;
+  font-size: 0.72rem;
+}
 @media (max-width: 900px) {
   .crewRow {
     grid-template-columns: 42px 1fr 1fr 42px;
