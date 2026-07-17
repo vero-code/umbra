@@ -1,8 +1,13 @@
 import { refreshForecast } from "./planner-workflows.mjs";
 
-export async function callOpenAI(input) {
+const strategicModel = () =>
+  process.env.OPENAI_STRATEGIC_MODEL || process.env.OPENAI_MODEL || "gpt-5.6";
+const routineModel = () => process.env.OPENAI_ROUTINE_MODEL || "gpt-5.6-luna";
+
+export async function callOpenAI(input, model = routineModel()) {
   const data = await requestOpenAI({
     input,
+    model,
     text: { format: { type: "json_object" } },
   });
   if (!data.output_text)
@@ -13,6 +18,7 @@ export async function callOpenAI(input) {
 async function requestOpenAI(payload) {
   if (!process.env.OPENAI_API_KEY)
     throw new Error("OPENAI_API_KEY is not configured");
+  const { model = strategicModel(), ...request } = payload;
   const response = await fetch("https://api.openai.com/v1/responses", {
     method: "POST",
     headers: {
@@ -20,9 +26,9 @@ async function requestOpenAI(payload) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: process.env.OPENAI_MODEL || "gpt-5.6",
+      model,
       reasoning: { effort: "low" },
-      ...payload,
+      ...request,
     }),
     signal: AbortSignal.timeout(20_000),
   });
@@ -37,7 +43,8 @@ export function getModelStatus() {
   const configured = Boolean(process.env.OPENAI_API_KEY);
   return {
     configured,
-    model: process.env.OPENAI_MODEL || "gpt-5.6",
+    strategicModel: strategicModel(),
+    routineModel: routineModel(),
     mode: configured ? "live-ready" : "mock",
     detail: configured
       ? "A server-side API key is configured. No request is made until a model action is triggered."
@@ -56,6 +63,7 @@ export async function testModelConnection() {
     };
   }
   const data = await requestOpenAI({
+    model: strategicModel(),
     input:
       "Reply with exactly: Umbra GPT-5.6 connection confirmed. Do not add any other text.",
   });
@@ -301,6 +309,7 @@ export async function evidenceAgentDecision(state, site, packet) {
   const toolCalls = [];
   for (let step = 0; step < 3; step += 1) {
     data = await requestOpenAI({
+      model: strategicModel(),
       input,
       tools: evidenceAgentTools,
       tool_choice: "auto",

@@ -31,6 +31,11 @@ medical prediction.
 
 Set `OPENAI_API_KEY` before running the server. Umbra then sends a constrained site snapshot and optional photo to the Responses API with `gpt-5.6` to enrich the human-readable rationale and classify a site photo. The deterministic rules engine remains the authoritative safety constraint layer; it validates crew coverage and break limits regardless of model availability.
 
+Umbra uses a cost-aware model split: strategic cross-site Evidence Agent decisions
+default to `gpt-5.6` (Sol), while routine photo/property summaries default to
+`gpt-5.6-luna`. Override them with `OPENAI_STRATEGIC_MODEL` and
+`OPENAI_ROUTINE_MODEL` when needed.
+
 ```powershell
 $env:OPENAI_API_KEY = 'your-key'
 node server.mjs

@@ -11,18 +11,21 @@ export async function analyzePhotoWithModel(image, note) {
       visibleEvidence: [],
     };
   try {
-    const result = await callOpenAI([
-      {
-        role: "user",
-        content: [
-          {
-            type: "input_text",
-            text: `Assess outdoor worksite exposure. Note: ${note}. Return JSON {setting, confidence, summary, factors:string[], visibleEvidence:string[], uncertainty:string[]}. setting must be shaded, mixed, open, reflective, or uncertain. visibleEvidence must contain only directly visible observations (for example: tree shade, concrete, glass, metal, water, open sky, hard hat, protective clothing, goggles). Do not infer unseen conditions, identify people, infer health conditions, or make medical claims. If a feature is not clearly visible, put it in uncertainty rather than evidence.`,
-          },
-          { type: "input_image", image_url: image, detail: "low" },
-        ],
-      },
-    ]);
+    const result = await callOpenAI(
+      [
+        {
+          role: "user",
+          content: [
+            {
+              type: "input_text",
+              text: `Assess outdoor worksite exposure. Note: ${note}. Return JSON {setting, confidence, summary, factors:string[], visibleEvidence:string[], uncertainty:string[]}. setting must be shaded, mixed, open, reflective, or uncertain. visibleEvidence must contain only directly visible observations (for example: tree shade, concrete, glass, metal, water, open sky, hard hat, protective clothing, goggles). Do not infer unseen conditions, identify people, infer health conditions, or make medical claims. If a feature is not clearly visible, put it in uncertainty rather than evidence.`,
+            },
+            { type: "input_image", image_url: image, detail: "low" },
+          ],
+        },
+      ],
+      process.env.OPENAI_ROUTINE_MODEL || "gpt-5.6-luna",
+    );
     return {
       setting: settingFactors[result.setting] ? result.setting : "uncertain",
       confidence: result.confidence || "low",
@@ -76,7 +79,10 @@ export async function analyzePropertyWithModel(photos, location) {
     })),
   ];
   try {
-    const result = await callOpenAI([{ role: "user", content }]);
+    const result = await callOpenAI(
+      [{ role: "user", content }],
+      process.env.OPENAI_ROUTINE_MODEL || "gpt-5.6-luna",
+    );
     return {
       setting: settingFactors[result.setting] ? result.setting : "uncertain",
       confidence: result.confidence || "low",
@@ -135,18 +141,21 @@ export async function analyzeAuditWithModel(image, prompt) {
         "Inspect hard hats, long sleeves, UV-rated eye protection, shade access, and the surface material before work starts.",
     };
   try {
-    const result = await callOpenAI([
-      {
-        role: "user",
-        content: [
-          {
-            type: "input_text",
-            text: `Audit this outdoor worksite photo for operational UV exposure. Supervisor context: ${prompt}. Return JSON {setting,confidence,surfaceType,estimatedAlbedo,uvReflectivityRisk,equipment:{hardHats,protectiveClothing,goggles},findings:string[],visibleEvidence:string[],uncertainty:string[],recommendedPrompt}. setting must be shaded, mixed, open, reflective, or uncertain. estimatedAlbedo must be a qualitative band only: low, moderate, high, or unknown. visibleEvidence must cite only visible shade, concrete, glass, metal, water, open sky, and clearly visible PPE. Do not identify people, infer health, assume material properties not visible, or make medical claims. Put unclear features in uncertainty.`,
-          },
-          { type: "input_image", image_url: image, detail: "low" },
-        ],
-      },
-    ]);
+    const result = await callOpenAI(
+      [
+        {
+          role: "user",
+          content: [
+            {
+              type: "input_text",
+              text: `Audit this outdoor worksite photo for operational UV exposure. Supervisor context: ${prompt}. Return JSON {setting,confidence,surfaceType,estimatedAlbedo,uvReflectivityRisk,equipment:{hardHats,protectiveClothing,goggles},findings:string[],visibleEvidence:string[],uncertainty:string[],recommendedPrompt}. setting must be shaded, mixed, open, reflective, or uncertain. estimatedAlbedo must be a qualitative band only: low, moderate, high, or unknown. visibleEvidence must cite only visible shade, concrete, glass, metal, water, open sky, and clearly visible PPE. Do not identify people, infer health, assume material properties not visible, or make medical claims. Put unclear features in uncertainty.`,
+            },
+            { type: "input_image", image_url: image, detail: "low" },
+          ],
+        },
+      ],
+      process.env.OPENAI_ROUTINE_MODEL || "gpt-5.6-luna",
+    );
     return {
       source: "GPT-5.6 Vision",
       setting: settingFactors[result.setting] ? result.setting : "uncertain",
