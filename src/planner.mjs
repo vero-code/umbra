@@ -393,7 +393,11 @@ export async function createPlan(
   plan.evidenceAgent = buildEvidenceAgentMock(evidencePacket);
   if (useModel && process.env.OPENAI_API_KEY) {
     try {
-      plan.evidenceAgent = await evidenceAgentDecision(evidencePacket);
+      plan.evidenceAgent = await evidenceAgentDecision(
+        state,
+        site,
+        evidencePacket,
+      );
       plan.source = "GPT-5.6 + validated operations engine";
     } catch {
       plan.evidenceAgent = buildEvidenceAgentMock(evidencePacket, true);
@@ -964,6 +968,7 @@ function buildEvidenceAgentMock(packet, failed = false) {
     },
     confidence: packet.validatedPlan.confidence,
     supervisorReviewRequired: true,
+    toolCalls: [],
     uncertainty: failed
       ? [
           "Live GPT-5.6 reasoning was unavailable; deterministic evidence was retained.",
@@ -1010,24 +1015,157 @@ function normalizeEvidenceAgent(result, packet) {
       ? String(result.confidence).toLowerCase()
       : "moderate",
     supervisorReviewRequired: true,
+    toolCalls: Array.isArray(result.toolCalls)
+      ? result.toolCalls.map(String).slice(0, 6)
+      : [],
     uncertainty: Array.isArray(result.uncertainty)
       ? result.uncertainty.map(String).slice(0, 4)
       : [],
   };
 }
 
-async function evidenceAgentDecision(packet) {
-  const result = await callOpenAI([
+const evidenceAgentTools = [
+  {
+    type: "function",
+    name: "refresh_weather",
+    description:
+      "Refresh the current weather provider snapshot for the active site.",
+    parameters: { type: "object", properties: {}, additionalProperties: false },
+  },
+  {
+    type: "function",
+    name: "read_worker_conditions",
+    description:
+      "Read current roster, protection, and behavioral conditions for the active site.",
+    parameters: { type: "object", properties: {}, additionalProperties: false },
+  },
+  {
+    type: "function",
+    name: "read_photo_evidence",
+    description:
+      "Read the existing visual evidence and uncertainty recorded from site and property photos.",
+    parameters: { type: "object", properties: {}, additionalProperties: false },
+  },
+  {
+    type: "function",
+    name: "simulate_worker_absence",
+    description:
+      "Simulate a named active worker being unavailable. This is read-only and does not alter the roster.",
+    parameters: {
+      type: "object",
+      properties: { workerId: { type: "string" } },
+      required: ["workerId"],
+      additionalProperties: false,
+    },
+  },
+];
+
+async function runEvidenceTool(state, site, name, args) {
+  if (name === "refresh_weather") {
+    const result = await refreshForecast(site);
+    return {
+      approvedTool: name,
+      refreshed: result.refreshed,
+      forecast: site.forecast,
+    };
+  }
+  if (name === "read_worker_conditions") {
+    return {
+      approvedTool: name,
+      workers: state.workers
+        .filter((worker) => worker.siteId === site.id)
+        .map((worker) => ({
+          id: worker.id,
+          name: worker.name,
+          status: worker.status,
+          tier: worker.tier,
+          behavioralFactors: worker.behavioralFactors || null,
+        })),
+    };
+  }
+  if (name === "read_photo_evidence") {
+    return {
+      approvedTool: name,
+      sitePhoto: site.photo
+        ? {
+            visibleEvidence: site.photo.visibleEvidence || [],
+            uncertainty: site.photo.uncertainty || [],
+          }
+        : null,
+      propertyPhoto: site.propertyAssessment
+        ? {
+            visibleEvidence: site.propertyAssessment.visibleEvidence || [],
+            uncertainty: site.propertyAssessment.uncertainty || [],
+          }
+        : null,
+    };
+  }
+  if (name === "simulate_worker_absence") {
+    const worker = state.workers.find(
+      (entry) => entry.id === args.workerId && entry.siteId === site.id,
+    );
+    return worker
+      ? {
+          approvedTool: name,
+          worker: worker.name,
+          remainingActiveCrew: state.workers.filter(
+            (entry) =>
+              entry.siteId === site.id &&
+              entry.status === "active" &&
+              entry.id !== worker.id,
+          ).length,
+          note: "Read-only scenario; roster unchanged.",
+        }
+      : { approvedTool: name, error: "Worker is not active at this site." };
+  }
+  return { error: "Requested tool is not approved." };
+}
+
+async function evidenceAgentDecision(state, site, packet) {
+  const initialInput = [
     {
       role: "user",
       content: [
         {
           type: "input_text",
-          text: `You are Umbra's evidence agent. Review only the supplied JSON evidence packet. Return exactly one JSON object with this schema: {priorityWorkerId:string, decision:string, triggeringEvent:string, evidence:string[], reasoning:string[], tradeoffs:string[], alternative:{workerId:string,decision:string}, confidence:"low"|"moderate"|"high", uncertainty:string[]}. Do not introduce facts, make medical claims, or override the validatedPlan. Supervisor review is always required. ${JSON.stringify(packet)}`,
+          text: `You are Umbra's evidence agent. Review only supplied evidence and approved tool outputs. You may call an approved tool if needed; do not invent facts. Return exactly one JSON object with this schema: {priorityWorkerId:string, decision:string, triggeringEvent:string, evidence:string[], reasoning:string[], tradeoffs:string[], alternative:{workerId:string,decision:string}, confidence:"low"|"moderate"|"high", uncertainty:string[], toolCalls:string[]}. Do not make medical claims or override validatedPlan. Supervisor review is always required. ${JSON.stringify(packet)}`,
         },
       ],
     },
-  ]);
+  ];
+  let input = initialInput;
+  let data;
+  const toolCalls = [];
+  for (let step = 0; step < 3; step += 1) {
+    data = await requestOpenAI({
+      input,
+      tools: evidenceAgentTools,
+      tool_choice: "auto",
+      text: { format: { type: "json_object" } },
+    });
+    const calls = (data.output || []).filter(
+      (item) => item.type === "function_call",
+    );
+    if (!calls.length) break;
+    const toolOutputs = await Promise.all(
+      calls.map(async (call) => {
+        const args = JSON.parse(call.arguments || "{}");
+        toolCalls.push(call.name);
+        return {
+          type: "function_call_output",
+          call_id: call.call_id,
+          output: JSON.stringify(
+            await runEvidenceTool(state, site, call.name, args),
+          ),
+        };
+      }),
+    );
+    input = [...initialInput, ...data.output, ...toolOutputs];
+  }
+  if (!data?.output_text)
+    throw new Error("Evidence agent returned no JSON output");
+  const result = JSON.parse(data.output_text);
+  result.toolCalls = [...new Set(toolCalls)];
   return normalizeEvidenceAgent(result, packet);
 }
 export async function analyzePhotoWithModel(image, note) {
