@@ -92,6 +92,166 @@ header {
   grid-template-columns: 1.25fr 0.75fr;
   gap: 18px;
 }
+.teamProfilePanel {
+  display: grid;
+  grid-template-columns: 0.8fr 1.2fr;
+  gap: 24px;
+  margin-bottom: 18px;
+  padding: 23px 25px;
+  border: 1px solid #dbcff8;
+  border-radius: 22px;
+  background: linear-gradient(120deg, #f0eaff, #fffdf8);
+}
+.teamProfilePanel h2 {
+  margin: 5px 0;
+  font-size: 1.4rem;
+  letter-spacing: -0.04em;
+}
+.teamProfilePanel p {
+  color: var(--muted);
+  font-size: 0.74rem;
+  line-height: 1.5;
+}
+.teamProfilePanel form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.teamProfilePanel input,
+.teamProfilePanel select {
+  min-width: 0;
+  border: 1px solid #d9d1ee;
+  border-radius: 9px;
+  padding: 9px;
+  background: #fff;
+  font: 500 0.72rem Manrope;
+}
+.profilePhotoLabel {
+  grid-column: span 2;
+  border: 2px dashed #a996e8;
+  border-radius: 10px;
+  padding: 9px;
+  color: #544593;
+  font: 700 0.7rem Manrope;
+  cursor: pointer;
+}
+.crewInitial.figurine {
+  position: relative;
+  width: 38px;
+  height: 42px;
+  overflow: visible;
+  border-radius: 15px 15px 12px 12px;
+  background: linear-gradient(145deg, #d8f5ff, #dcd2ff);
+  box-shadow: inset -3px -3px 0 #8a7aca33;
+}
+.crewInitial.figurine:before {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  top: 5px;
+  left: 11px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #f4ba93;
+  box-shadow: 0 2px 0 #d99478;
+}
+.crewInitial.figurine:after {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  top: 2px;
+  left: 8px;
+  width: 22px;
+  height: 8px;
+  border-radius: 12px 12px 4px 4px;
+  background: #ff9d45;
+}
+.crewInitial.figurine i {
+  position: absolute;
+  z-index: 1;
+  top: 19px;
+  left: 9px;
+  width: 20px;
+  height: 17px;
+  border-radius: 7px 7px 4px 4px;
+  background: #6756c9;
+}
+.crewInitial.figurine em {
+  position: absolute;
+  z-index: 2;
+  top: 23px;
+  left: 17px;
+  width: 4px;
+  height: 12px;
+  background: #d5f460;
+  box-shadow: 7px 0 #d5f460;
+}
+.crewInitial.engineer:after {
+  background: #5c91e8;
+}
+.crewInitial.engineer i {
+  background: #274477;
+}
+.crewInitial.lead:after {
+  background: #fff1b2;
+}
+.crewInitial.lead i {
+  background: #e97667;
+}
+.crewInitial.spotter:after {
+  background: #7bd6a8;
+}
+.crewInitial.spotter i {
+  background: #2f8a71;
+}
+.crewInitial.operator:after {
+  background: #ff8caf;
+}
+.crewInitial.operator i {
+  background: #9e3d70;
+}
+.crewInitial.rigger:after {
+  background: #ffc65a;
+}
+.crewInitial.rigger i {
+  background: #9b651b;
+}
+.signatureNote {
+  grid-column: span 2;
+  color: #61578d;
+  font-size: 0.63rem;
+  line-height: 1.4;
+}
+.workspaceTeamNote {
+  color: var(--muted);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+.profilePhotoLabel input {
+  display: none;
+}
+.teamProfilePanel button {
+  grid-column: span 2;
+  border: 0;
+  border-radius: 999px;
+  background: #7d65e8;
+  color: #fff;
+  padding: 10px;
+  font: 700 0.72rem Manrope;
+}
+@media (max-width: 800px) {
+  .teamProfilePanel {
+    display: block;
+  }
+  .teamProfilePanel form {
+    margin-top: 16px;
+  }
+  .teamProfilePanel input,
+  .teamProfilePanel select {
+    width: 100%;
+  }
+}
 .crewPanel,
 .auditPanel {
   border: 1px solid var(--line);
@@ -222,6 +382,107 @@ header {
 .workspaceIntro {
   max-width: 820px;
   padding: 92px 0 46px;
+}
+.externalHero {
+  max-width: 820px;
+  padding: 92px 0 42px;
+}
+.externalHero h1 {
+  font-size: clamp(3rem, 5vw, 5.4rem);
+  line-height: 0.95;
+  letter-spacing: -0.07em;
+  margin: 8px 0;
+}
+.externalHero > p {
+  max-width: 620px;
+  color: var(--muted);
+}
+.externalGrid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 18px;
+}
+.externalForm,
+.weatherCard {
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: var(--paper);
+  padding: 25px;
+  box-shadow: 0 10px 28px #4e589314;
+}
+.externalForm h2,
+.weatherCard h2 {
+  margin: 6px 0;
+  font-size: 1.4rem;
+  letter-spacing: -0.04em;
+}
+.externalForm form {
+  display: grid;
+  gap: 9px;
+  margin-top: 18px;
+}
+.externalForm input,
+.externalForm select {
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 10px;
+  background: #fff;
+  font: 500 0.73rem Manrope;
+}
+.externalPhoto {
+  border: 2px dashed #69a9cf;
+  border-radius: 14px;
+  padding: 14px;
+  color: #2c6382;
+  font: 700 0.72rem Manrope;
+  cursor: pointer;
+}
+.externalPhoto input {
+  display: none;
+}
+.externalForm button {
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #4894d6, #7d65e8);
+  color: #fff;
+  padding: 11px;
+  font: 700 0.73rem Manrope;
+}
+.weatherCard {
+  background: linear-gradient(145deg, #dff6ff, #fffdf8);
+}
+.weatherCard p {
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+.externalEvidence {
+  margin-top: 18px;
+}
+.externalEvidence h2 {
+  margin: 7px 0;
+  font-size: 1.25rem;
+}
+.externalEvidence p,
+.externalEvidence li,
+.externalEvidence small {
+  color: var(--muted);
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+.externalEvidence ul {
+  padding-left: 18px;
+}
+@media (max-width: 800px) {
+  .externalHero {
+    padding: 55px 0 28px;
+  }
+  .externalGrid {
+    display: block;
+  }
+  .weatherCard {
+    margin-top: 16px;
+  }
 }
 .incidentHero h1,
 .workspaceIntro h1 {

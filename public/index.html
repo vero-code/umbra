@@ -11,8 +11,8 @@
       <header>
         <div class="brand">UMBRA <span>OPERATIONS INTELLIGENCE</span></div>
         <nav class="modeNav">
-          <button data-mode="shift" class="active">Shift</button
-          ><button data-mode="brief">Morning Brief</button
+          <button data-mode="team" class="active">Team</button
+          ><button data-mode="external">External Factors</button
           ><button data-mode="incident">Live Incident</button
           ><button data-mode="workspace">Planning Workspace</button>
         </nav>
@@ -20,17 +20,95 @@
           <i></i><span>Monitoring outdoor operations</span>
         </div>
       </header>
-      <section id="shiftMode" class="modeView">
+      <section id="teamMode" class="modeView">
         <section class="shiftHero">
           <div>
-            <p class="eyebrow">FOREMAN SHIFT</p>
-            <h1>Current crew exposure, at a glance.</h1>
-            <p id="shiftSummary">Assessing this hour's operational exposure.</p>
+            <p class="eyebrow">TEAM PROFILES</p>
+            <h1>Know your crew before the shift begins.</h1>
+            <p id="shiftSummary">
+              Self-reported profiles inform operational rotation priority.
+            </p>
           </div>
           <div class="hourRisk">
-            <span>Current hour risk</span><b id="shiftRisk">—</b
+            <span>Current profile priority</span><b id="shiftRisk">—</b
             ><small id="shiftRiskText">Monitoring</small>
           </div>
+        </section>
+        <section class="teamProfilePanel">
+          <div>
+            <p class="eyebrow">ADD EMPLOYEE PROFILE</p>
+            <h2>One worker at a time. Consent-aware.</h2>
+            <p>
+              Photo and medical markers are self-reported profile information;
+              Umbra never derives health or physiology from an image.
+            </p>
+          </div>
+          <form id="teamProfileForm">
+            <input name="name" required placeholder="Full name" /><input
+              name="age"
+              type="number"
+              min="18"
+              max="100"
+              required
+              placeholder="Age"
+            /><select name="siteId" id="teamSite" required></select
+            ><input name="role" required placeholder="Role" /><select
+              name="tier"
+              required
+            >
+              <option value="">Operational priority</option>
+              <option>standard</option>
+              <option>elevated</option>
+              <option>high</option></select
+            ><select name="photosensitivity" required>
+              <option value="">Individual sensitivity</option>
+              <option value="low">Low</option>
+              <option value="moderate">Moderate</option>
+              <option value="high">High</option></select
+            ><select name="fitzpatrickType" required>
+              <option value="">Self-reported Fitzpatrick type</option>
+              <option value="1">Type 1</option>
+              <option value="2">Type 2</option>
+              <option value="3">Type 3</option>
+              <option value="4">Type 4</option>
+              <option value="5">Type 5</option>
+              <option value="6">Type 6</option></select
+            ><select name="outdoorHistory" required>
+              <option value="">Recent sun exposure</option>
+              <option value="occasional">Occasional</option>
+              <option value="regular">Regular</option>
+              <option value="extended">Extended</option></select
+            ><input
+              name="medicalMarkers"
+              placeholder="Optional self-reported medical markers"
+            /><select name="photosensitizingMedication" required>
+              <option value="">Photosensitizing medication?</option>
+              <option value="no">No / not reported</option>
+              <option value="yes">
+                Yes — occupational-health review
+              </option></select
+            ><input
+              name="accommodationNote"
+              placeholder="Optional workplace accommodation"
+            /><input
+              name="profileSignature"
+              required
+              placeholder="Employee acknowledgement signature"
+            /><select name="avatar" required>
+              <option value="">Choose a crew figurine</option>
+              <option value="☀">☀ Sun</option>
+              <option value="🦺">🦺 Safety vest</option>
+              <option value="🧢">🧢 Cap</option>
+              <option value="🌿">🌿 Leaf</option>
+              <option value="⚡">⚡ Bolt</option>
+              <option value="🛠">🛠 Tools</option></select
+            ><button>Add to team</button
+            ><small class="signatureNote"
+              >By signing, the employee confirms the profile inputs and receipt
+              of a non-medical operational recommendation. This is not consent
+              to an AI medical determination.</small
+            >
+          </form>
         </section>
         <section class="shiftGrid">
           <article class="crewPanel">
@@ -137,6 +215,59 @@
           <div id="copilotAnswer"></div>
         </section>
       </div>
+      <section id="externalMode" class="modeView" hidden>
+        <section class="externalHero">
+          <p class="eyebrow">ENVIRONMENTAL PARAMETERS</p>
+          <h1>See the conditions that shape UV exposure.</h1>
+          <p>
+            Combine location, current meteorology, and a couple of object photos
+            to build a more grounded external-risk assessment.
+          </p>
+        </section>
+        <section class="externalGrid">
+          <article class="externalForm">
+            <p class="eyebrow">OBJECT & LOCATION</p>
+            <h2>Add environmental evidence</h2>
+            <form id="externalFactorsForm">
+              <select id="externalSite" required></select>
+              <input
+                id="externalLocation"
+                required
+                placeholder="Object location / work zone"
+              />
+              <input
+                id="externalNotes"
+                placeholder="Object notes: asphalt, sand, concrete, glazing"
+              />
+              <label class="externalPhoto"
+                >Add at least two object photos from different angles<input
+                  id="externalPhotos"
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  required
+              /></label>
+              <button>Parse weather & assess object</button>
+            </form>
+          </article>
+          <aside class="weatherCard">
+            <p class="eyebrow">CURRENT WEATHER PARSER</p>
+            <div id="weatherResult">
+              <h2>Waiting for a location</h2>
+              <p>
+                Umbra will parse current UV index, temperature, and cloud cover
+                from the configured weather source.
+              </p>
+            </div>
+          </aside>
+        </section>
+        <section class="reasoning externalEvidence">
+          <p class="eyebrow">LATEST EXTERNAL EVIDENCE</p>
+          <div id="externalEvidenceResult">
+            No external assessment has been submitted.
+          </div>
+        </section>
+      </section>
       <section id="incidentMode" class="modeView" hidden>
         <section class="incidentHero">
           <p class="eyebrow">LIVE INCIDENT RESPONSE</p>
@@ -221,36 +352,11 @@
               </form>
             </section>
             <section>
-              <h3>Add team member</h3>
-              <form id="memberForm">
-                <input name="name" required placeholder="Full name" /><select
-                  name="siteId"
-                  id="memberSite"
-                  required
-                ></select
-                ><input name="role" required placeholder="Role" /><select
-                  name="tier"
-                  required
-                >
-                  <option value="">Priority tier</option>
-                  <option>standard</option>
-                  <option>elevated</option>
-                  <option>high</option></select
-                ><select name="photosensitivity" required>
-                  <option value="">Self-reported photosensitivity</option>
-                  <option>low</option>
-                  <option>moderate</option>
-                  <option>high</option></select
-                ><select name="outdoorHistory" required>
-                  <option value="">Recent outdoor exposure</option>
-                  <option>occasional</option>
-                  <option>regular</option>
-                  <option>extended</option></select
-                ><input
-                  name="accommodationNote"
-                  placeholder="Optional workplace accommodation"
-                /><button>Add team member</button>
-              </form>
+              <h3>Team profiles</h3>
+              <p class="workspaceTeamNote">
+                Employee profiles, self-reported sensitivity, medical-marker
+                context, and acknowledgements are managed in the Team tab.
+              </p>
             </section>
           </div>
         </details>

@@ -569,23 +569,39 @@ export function parseRosterCsv(csv, state) {
 export function addTeamMember(state, input) {
   const required = [
     "name",
+    "age",
     "siteId",
     "role",
     "tier",
     "photosensitivity",
     "outdoorHistory",
+    "fitzpatrickType",
+    "profileSignature",
   ];
   if (required.some((key) => !String(input[key] || "").trim()))
     throw new Error(
-      "Name, site, role, priority tier, photosensitivity, and outdoor history are required",
+      "Name, age, site, role, priority tier, self-reported sensitivity, Fitzpatrick type, outdoor history, and signature are required",
     );
   if (!state.sites.some((site) => site.id === input.siteId))
     throw new Error("Selected site does not exist");
   if (!riskTiers[input.tier] || !sensitivityFactors[input.photosensitivity])
     throw new Error("Invalid exposure profile");
+  const age = Number(input.age);
+  if (!Number.isInteger(age) || age < 18 || age > 100)
+    throw new Error("Age must be a whole number from 18 to 100");
+  const fitzpatrickType = Number(input.fitzpatrickType);
+  if (
+    !Number.isInteger(fitzpatrickType) ||
+    fitzpatrickType < 1 ||
+    fitzpatrickType > 6
+  )
+    throw new Error(
+      "Fitzpatrick type must be self-reported as a number from 1 to 6",
+    );
   const worker = {
     id: id("worker"),
     name: input.name.trim(),
+    age,
     siteId: input.siteId,
     role: input.role.trim(),
     tier: input.tier,
@@ -594,7 +610,16 @@ export function addTeamMember(state, input) {
       photosensitivity: input.photosensitivity,
       outdoorHistory: input.outdoorHistory,
       accommodationNote: String(input.accommodationNote || "").trim() || null,
-      photo: input.photo || null,
+      avatar: input.avatar || "builder",
+      medicalMarkers: String(input.medicalMarkers || "").trim() || null,
+      fitzpatrickType,
+      photosensitizingMedication: input.photosensitizingMedication === "yes",
+      profileSignature: input.profileSignature.trim(),
+      signedAt: now(),
+      requiresOccupationalHealthReview:
+        age >= 60 ||
+        input.photosensitizingMedication === "yes" ||
+        Boolean(String(input.medicalMarkers || "").trim()),
     },
   };
   state.workers.push(worker);

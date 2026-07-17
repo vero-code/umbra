@@ -1,7 +1,9 @@
 let state;
 let shownDecisionId;
-let currentMode = "shift";
+let currentMode = "team";
 const placements = new Map();
+let teamProfileDirty = false;
+let externalFactorsDirty = false;
 const $ = (s) => document.querySelector(s);
 const esc = (v) =>
   String(v || "")
@@ -70,11 +72,17 @@ function render() {
         render();
       }),
   );
-  [$("#propertySite"), $("#memberSite")].forEach((select) => {
+  [$("#propertySite")].forEach((select) => {
     const saved = select.value;
     select.innerHTML = `<option value="">Select job site</option>${state.sites.map((site) => `<option value="${site.id}">${esc(site.name)}</option>`).join("")}`;
     select.value = saved;
   });
+  $("#teamSite").innerHTML =
+    `<option value="">Assign job site</option>${state.sites.map((site) => `<option value="${site.id}">${esc(site.name)}</option>`).join("")}`;
+  $("#teamProfileForm select[name='avatar']").innerHTML =
+    '<option value="">Choose a crew figurine</option><option value="builder">Builder</option><option value="engineer">Engineer</option><option value="lead">Site lead</option><option value="spotter">Spotter</option><option value="operator">Operator</option><option value="rigger">Rigger</option>';
+  $("#externalSite").innerHTML =
+    `<option value="">Select job site</option>${state.sites.map((site) => `<option value="${site.id}">${esc(site.name)}</option>`).join("")}`;
   const incidentSite = $("#incidentSite");
   incidentSite.innerHTML = state.sites
     .map((site) => `<option value="${site.id}">${esc(site.name)}</option>`)
@@ -88,6 +96,19 @@ function render() {
     .join("");
   renderFacility();
   renderShift();
+  renderExternalFactors();
+}
+
+function renderExternalFactors() {
+  const assessment = state.sites
+    .map((site) => ({ site, assessment: site.propertyAssessment }))
+    .find((entry) => entry.assessment);
+  if (!assessment) return;
+  const { site } = assessment;
+  $("#weatherResult").innerHTML =
+    `<h2>UVI ${esc(site.forecast.uvi)} · ${esc(site.forecast.temperatureC)}C</h2><p>${esc(site.forecast.cloudCover)}% cloud cover · source: ${esc(site.forecast.source || "last known")}</p>`;
+  $("#externalEvidenceResult").innerHTML =
+    `<h2>${esc(site.name)} · ${esc(site.propertyAssessment.setting)} exposure</h2><p>${esc(site.propertyAssessment.summary)}</p><ul>${(site.propertyAssessment.factors || []).map((factor) => `<li>${esc(factor)}</li>`).join("")}</ul><small>Water feature: ${esc(site.propertyAssessment.waterFeature)} · confidence: ${esc(site.propertyAssessment.confidence)}</small>`;
 }
 
 function renderShift() {
@@ -126,7 +147,8 @@ function renderShift() {
         : site?.setting === "shaded"
           ? "In the shade"
           : "In the sun";
-      return `<div class="crewRow"><span class="crewInitial">${esc(worker.name[0])}</span><span><b>${esc(worker.name)}</b><small>${esc(worker.role)} · ${esc(site?.name || "Unassigned")}</small></span><span class="crewStatus ${needsBreak ? "break" : location.includes("shade") ? "shade" : "sun"}">${location}</span><span class="crewScore">${score}</span></div>`;
+      const avatar = esc(worker.exposureProfile?.avatar || "builder");
+      return `<div class="crewRow"><span class="crewInitial figurine ${avatar}"><i></i><em></em></span><span><b>${esc(worker.name)}</b><small>${esc(worker.role)} · ${esc(site?.name || "Unassigned")}</small></span><span class="crewStatus ${needsBreak ? "break" : location.includes("shade") ? "shade" : "sun"}">${location}</span><span class="crewScore">${score}</span></div>`;
     })
     .join("");
   $("#auditSite").innerHTML = state.sites
@@ -193,20 +215,6 @@ $("#propertyForm").onsubmit = async (event) => {
     alert(error.message);
   }
 };
-$("#memberForm").onsubmit = async (event) => {
-  event.preventDefault();
-  try {
-    const data = await request("/api/team-member", {
-      method: "POST",
-      body: JSON.stringify(Object.fromEntries(new FormData(event.target))),
-    });
-    state = data.state;
-    render();
-    event.target.reset();
-  } catch (error) {
-    alert(error.message);
-  }
-};
 $("#copilotForm").onsubmit = (event) => {
   event.preventDefault();
   const question = $("#copilotInput").value.trim();
@@ -226,6 +234,14 @@ $("#copilotForm").onsubmit = (event) => {
     `<b>Simulated operational assessment</b><p>${esc(change)}</p><small>Current tradeoff: ${esc(top?.alternative || "No active alternative available.")}</small>`;
 };
 async function sync() {
+  if (
+    currentMode === "team" ||
+    currentMode === "external" ||
+    teamProfileDirty ||
+    externalFactorsDirty ||
+    document.activeElement?.closest("#teamProfileForm")
+  )
+    return;
   try {
     const next = await request("/api/state");
     const changed = next.activity?.[0]?.id !== state?.activity?.[0]?.id;
@@ -236,8 +252,9 @@ async function sync() {
 
 function switchMode(mode) {
   currentMode = mode;
-  $("#shiftMode").hidden = mode !== "shift";
+  $("#teamMode").hidden = mode !== "team";
   $("#briefMode").hidden = mode !== "brief";
+  $("#externalMode").hidden = mode !== "external";
   $("#incidentMode").hidden = mode !== "incident";
   $("#workspaceMode").hidden = mode !== "workspace";
   document
@@ -349,6 +366,68 @@ $("#auditForm").onsubmit = async (event) => {
     alert(error.message);
   }
 };
+$("#teamProfileForm").onsubmit = async (event) => {
+  event.preventDefault();
+  try {
+    const form = new FormData(event.target);
+    const photoFile = form.get("photo");
+    const photo = photoFile?.size ? await readFile(photoFile) : null;
+    const data = await request("/api/team-member", {
+      method: "POST",
+      body: JSON.stringify({ ...Object.fromEntries(form), photo }),
+    });
+    state = data.state;
+    teamProfileDirty = false;
+    event.target.reset();
+    render();
+  } catch (error) {
+    alert(error.message);
+  }
+};
+$("#teamProfileForm").addEventListener("input", () => {
+  teamProfileDirty = true;
+});
+$("#externalFactorsForm").addEventListener("input", () => {
+  externalFactorsDirty = true;
+});
+$("#externalFactorsForm").onsubmit = async (event) => {
+  event.preventDefault();
+  try {
+    const siteId = $("#externalSite").value;
+    const files = [...$("#externalPhotos").files];
+    if (files.length < 2)
+      throw new Error("Add at least two photos from different angles");
+    $("#weatherResult").innerHTML =
+      "<h2>Parsing weather...</h2><p>Fetching current UV, temperature, and cloud cover.</p>";
+    const weather = await request("/api/refresh-conditions", {
+      method: "POST",
+      body: JSON.stringify({ siteId }),
+    });
+    const photos = await Promise.all(
+      files.map(async (file, index) => ({
+        image: await readFile(file),
+        angle: `Object angle ${index + 1}`,
+        note: $("#externalNotes").value,
+      })),
+    );
+    const result = await request("/api/property/assess", {
+      method: "POST",
+      body: JSON.stringify({
+        siteId,
+        location: $("#externalLocation").value,
+        photos,
+      }),
+    });
+    state = result.state;
+    externalFactorsDirty = false;
+    $("#weatherResult").innerHTML =
+      `<h2>UVI ${esc(weather.site.forecast.uvi)} · ${esc(weather.site.forecast.temperatureC)}C</h2><p>${esc(weather.site.forecast.cloudCover)}% cloud cover · source: ${esc(weather.site.forecast.source || "last known")}</p>`;
+    event.target.reset();
+    render();
+  } catch (error) {
+    alert(error.message);
+  }
+};
 $("#incidentForm").onsubmit = async (event) => {
   event.preventDefault();
   try {
@@ -376,5 +455,5 @@ $("#incidentForm").onsubmit = async (event) => {
 };
 state = await request("/api/state");
 render();
-switchMode("shift");
+switchMode("team");
 setInterval(sync, 2200);

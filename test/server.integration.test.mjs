@@ -96,13 +96,18 @@ test("HTTP workflow generates, replans, and approves a plan", async (t) => {
   assert.ok(property.decisions.length > 0);
   const member = await post("/api/team-member", {
     name: "Kai Snow",
+    age: 32,
     siteId: "site_west",
     role: "Spotter",
     tier: "elevated",
     photosensitivity: "high",
     outdoorHistory: "regular",
+    fitzpatrickType: "2",
+    photosensitizingMedication: "no",
+    profileSignature: "Kai Snow",
   });
   assert.equal(member.worker.exposureProfile.photosensitivity, "high");
+  assert.equal(member.worker.exposureProfile.profileSignature, "Kai Snow");
   const audit = await post("/api/photo-audit", {
     siteId: "site_north",
     prompt: "Fresh concrete roof",

@@ -40,13 +40,18 @@ test("events automatically replan affected sites and CSV imports valid workers",
   assert.equal(imported[0].siteId, "site_west");
   const member = addTeamMember(state, {
     name: "Kai Snow",
+    age: 32,
     siteId: "site_west",
     role: "Spotter",
     tier: "elevated",
     photosensitivity: "high",
     outdoorHistory: "regular",
+    fitzpatrickType: "2",
+    photosensitizingMedication: "no",
+    profileSignature: "Kai Snow",
   });
   assert.equal(member.exposureProfile.photosensitivity, "high");
+  assert.equal(member.exposureProfile.fitzpatrickType, 2);
 });
 test("autonomous cycle emits activity and produces a recommendation", async () => {
   const state = seedState();
