@@ -44,6 +44,37 @@
   color: #c6d3ce;
   font-size: 0.82rem;
 }
+.mapSchematic {
+  display: grid;
+  position: absolute;
+  inset: 0;
+  place-items: center;
+  background: repeating-linear-gradient(
+    135deg,
+    #d8e1dc 0 18px,
+    #cbd7d1 18px 20px
+  );
+  color: #486158;
+  font: 700 0.72rem "DM Mono";
+}
+.mapSchematic i,
+.mapSchematic b {
+  position: absolute;
+  display: block;
+  border: 2px solid #8ea99b;
+  background: #eaf0ec;
+}
+.mapSchematic i {
+  width: 58%;
+  height: 28%;
+  transform: rotate(-8deg);
+}
+.mapSchematic b {
+  width: 20%;
+  height: 18%;
+  right: 14%;
+  bottom: 18%;
+}
 .sunVector {
   position: absolute;
   top: 17%;

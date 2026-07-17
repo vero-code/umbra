@@ -358,16 +358,18 @@ function facilitySite() {
 function renderFacility() {
   const site = facilitySite();
   const map = $("#facilityMap");
-  if (!site?.propertyPhotos?.length) {
-    map.innerHTML =
-      '<div class="mapEmpty">Upload property imagery to create a site map.</div>';
+  if (!site) {
+    map.innerHTML = '<div class="mapEmpty">No active site is available.</div>';
     return;
   }
   const hour = Number($("#sunTime").value);
   const angle = 25 + ((hour - 6) / 12) * 130;
-  const image = site.propertyPhotos[0];
+  const image = site.propertyPhotos?.[0] || {
+    image: "",
+    angle: "Imagery unavailable",
+  };
   $("#mapTitle").textContent = `${site.name} placement preview`;
-  map.innerHTML = `<img src="${image.image}" alt="${esc(image.angle)}" /><div class="sunVector" style="--sun:${angle}deg"></div><div class="shadeZone" style="--sun:${angle}deg"></div><div class="mapCaption">${esc(site.name)} · ${esc(image.angle)} · ${esc(site.propertyAssessment?.summary || "Property evidence pending")}</div>`;
+  map.innerHTML = `${image.image ? `<img src="${image.image}" alt="${esc(image.angle)}" />` : '<div class="mapSchematic"><span>NEUTRAL SITE SCHEMATIC</span><i></i><b></b></div>'}<div class="sunVector" style="--sun:${angle}deg"></div><div class="shadeZone" style="--sun:${angle}deg"></div><div class="mapCaption">${esc(site.name)} · ${esc(image.angle)} · ${esc(site.propertyAssessment?.summary || "Neutral planning schematic; verify site controls on location.")}</div>`;
   state.workers
     .filter((worker) => worker.siteId === site.id && worker.status === "active")
     .forEach((worker, index) => {
@@ -416,10 +418,10 @@ function assessPlacement(site) {
   );
   const output = $("#placementRisk");
   output.textContent = high.length
-    ? `${high.map((worker) => worker.name).join(", ")} is placed in an approximate direct-exposure area.`
+    ? `${high.map((worker) => worker.name).join(", ")} is in an unsafe direct-exposure zone. Relocate to the shaded lower-left zone or schedule a break.`
     : exposed.length
-      ? `${exposed.length} crew member(s) are in an approximate direct-exposure area.`
-      : "Crew is within the approximate shade zone.";
+      ? `${exposed.length} crew member(s) are in an unsafe direct-exposure zone. Recommended relocation: shaded lower-left zone.`
+      : "Crew is within the recommended shade zone.";
   output.className = `mapRisk ${exposed.length ? "risk" : "safe"}`;
 }
 
