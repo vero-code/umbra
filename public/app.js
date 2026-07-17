@@ -221,7 +221,11 @@ function renderShift() {
           ? "In the shade"
           : "In the sun";
       const avatar = esc(worker.exposureProfile?.avatar || "builder");
-      return `<div class="crewRow"><span class="crewInitial figurine ${avatar}"><i></i><em></em></span><span><b>${esc(worker.name)}</b><small>${esc(worker.role)} · ${esc(site?.name || "Unassigned")}</small></span><span class="crewStatus ${needsBreak ? "break" : location.includes("shade") ? "shade" : "sun"}">${location}</span><span class="crewScore">${score}</span></div>`;
+      const protection = worker.behavioralFactors || {};
+      const priorityReason = needsBreak
+        ? "Highest exposure score; break rotation required now."
+        : `${worker.tier} risk tier · ${location.toLowerCase()} conditions.`;
+      return `<article class="crewRow"><span class="crewInitial figurine ${avatar}"><i></i><em></em></span><span><b>${esc(worker.name)}</b><small>${esc(worker.role)} · ${esc(site?.name || "Unassigned")}</small></span><span class="crewStatus ${needsBreak ? "break" : location.includes("shade") ? "shade" : "sun"}">${location}</span><span><small>Last break</small><b>—</b></span><span><small>Next break</small><b>${needsBreak ? "Now" : "In 45 min"}</b></span><span class="crewProtections"><small>PPE ${esc(protection.upf || "unrecorded")} · SPF ${esc(protection.spf || "unrecorded")} · Shade ${esc(protection.shadeAvailability || "unrecorded")}</small></span><span class="crewPriority"><small>${esc(priorityReason)}</small></span><span class="crewScore">${score}</span></article>`;
     })
     .join("");
   $("#auditSite").innerHTML = state.sites

@@ -48,82 +48,89 @@
             >
           </div>
         </section>
-        <section class="teamProfilePanel">
-          <div>
-            <p class="eyebrow">ADD EMPLOYEE PROFILE</p>
-            <h2>One worker at a time. Consent-aware.</h2>
-            <p>
-              Photo and medical markers are self-reported profile information;
-              Umbra never derives health or physiology from an image.
-            </p>
-          </div>
-          <form id="teamProfileForm">
-            <input name="name" required placeholder="Full name" /><input
-              name="age"
-              type="number"
-              min="18"
-              max="100"
-              required
-              placeholder="Age"
-            /><select name="siteId" id="teamSite" required></select
-            ><input name="role" required placeholder="Role" /><select
-              name="tier"
-              required
-            >
-              <option value="">Operational priority</option>
-              <option>standard</option>
-              <option>elevated</option>
-              <option>high</option></select
-            ><select name="photosensitivity" required>
-              <option value="">Individual sensitivity</option>
-              <option value="low">Low</option>
-              <option value="moderate">Moderate</option>
-              <option value="high">High</option></select
-            ><select name="fitzpatrickType" required>
-              <option value="">Self-reported Fitzpatrick type</option>
-              <option value="1">Type 1</option>
-              <option value="2">Type 2</option>
-              <option value="3">Type 3</option>
-              <option value="4">Type 4</option>
-              <option value="5">Type 5</option>
-              <option value="6">Type 6</option></select
-            ><select name="outdoorHistory" required>
-              <option value="">Recent sun exposure</option>
-              <option value="occasional">Occasional</option>
-              <option value="regular">Regular</option>
-              <option value="extended">Extended</option></select
-            ><input
-              name="medicalMarkers"
-              placeholder="Optional self-reported medical markers"
-            /><select name="photosensitizingMedication" required>
-              <option value="">Photosensitizing medication?</option>
-              <option value="no">No / not reported</option>
-              <option value="yes">
-                Yes — occupational-health review
-              </option></select
-            ><input
-              name="accommodationNote"
-              placeholder="Optional workplace accommodation"
-            /><input
-              name="profileSignature"
-              required
-              placeholder="Employee acknowledgement signature"
-            /><select name="avatar" required>
-              <option value="">Choose a crew figurine</option>
-              <option value="☀">☀ Sun</option>
-              <option value="🦺">🦺 Safety vest</option>
-              <option value="🧢">🧢 Cap</option>
-              <option value="🌿">🌿 Leaf</option>
-              <option value="⚡">⚡ Bolt</option>
-              <option value="🛠">🛠 Tools</option></select
-            ><button>Add to team</button
-            ><small class="signatureNote"
-              >By signing, the employee confirms the profile inputs and receipt
-              of a non-medical operational recommendation. This is not consent
-              to an AI medical determination.</small
-            >
-          </form>
-        </section>
+        <details class="secondaryPanel">
+          <summary>Add employee profile</summary>
+          <section class="teamProfilePanel">
+            <div>
+              <p class="eyebrow">ADD EMPLOYEE PROFILE</p>
+              <h2>One worker at a time. Consent-aware.</h2>
+              <p>
+                Photo and medical markers are self-reported profile information;
+                Umbra never derives health or physiology from an image.
+              </p>
+              <p class="contextNote">
+                Occupational-health context only: Fitzpatrick type, sensitivity,
+                and medical markers are employee-reported, not AI-diagnosed.
+              </p>
+            </div>
+            <form id="teamProfileForm">
+              <input name="name" required placeholder="Full name" /><input
+                name="age"
+                type="number"
+                min="18"
+                max="100"
+                required
+                placeholder="Age"
+              /><select name="siteId" id="teamSite" required></select
+              ><input name="role" required placeholder="Role" /><select
+                name="tier"
+                required
+              >
+                <option value="">Operational priority</option>
+                <option>standard</option>
+                <option>elevated</option>
+                <option>high</option></select
+              ><select name="photosensitivity" required>
+                <option value="">Individual sensitivity</option>
+                <option value="low">Low</option>
+                <option value="moderate">Moderate</option>
+                <option value="high">High</option></select
+              ><select name="fitzpatrickType" required>
+                <option value="">Self-reported Fitzpatrick type</option>
+                <option value="1">Type 1</option>
+                <option value="2">Type 2</option>
+                <option value="3">Type 3</option>
+                <option value="4">Type 4</option>
+                <option value="5">Type 5</option>
+                <option value="6">Type 6</option></select
+              ><select name="outdoorHistory" required>
+                <option value="">Recent sun exposure</option>
+                <option value="occasional">Occasional</option>
+                <option value="regular">Regular</option>
+                <option value="extended">Extended</option></select
+              ><input
+                name="medicalMarkers"
+                placeholder="Optional self-reported medical markers"
+              /><select name="photosensitizingMedication" required>
+                <option value="">Photosensitizing medication?</option>
+                <option value="no">No / not reported</option>
+                <option value="yes">
+                  Yes — occupational-health review
+                </option></select
+              ><input
+                name="accommodationNote"
+                placeholder="Optional workplace accommodation"
+              /><input
+                name="profileSignature"
+                required
+                placeholder="Employee acknowledgement signature"
+              /><select name="avatar" required>
+                <option value="">Choose a crew figurine</option>
+                <option value="☀">☀ Sun</option>
+                <option value="🦺">🦺 Safety vest</option>
+                <option value="🧢">🧢 Cap</option>
+                <option value="🌿">🌿 Leaf</option>
+                <option value="⚡">⚡ Bolt</option>
+                <option value="🛠">🛠 Tools</option></select
+              ><button>Add to team</button
+              ><small class="signatureNote"
+                >By signing, the employee confirms the profile inputs and
+                receipt of a non-medical operational recommendation. This is not
+                consent to an AI medical determination.</small
+              >
+            </form>
+          </section>
+        </details>
         <section class="shiftGrid">
           <article class="crewPanel">
             <div class="panelTitle">

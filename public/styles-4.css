@@ -318,6 +318,45 @@ main:before {
   }
 }
 
+.secondaryPanel {
+  margin: 18px 0;
+  border: 1px solid #d9dcf2;
+  border-radius: 18px;
+  background: #fffdf8;
+}
+.secondaryPanel summary {
+  cursor: pointer;
+  padding: 16px 22px;
+  color: #555b80;
+  font-weight: 700;
+}
+.secondaryPanel .teamProfilePanel {
+  border-top: 1px solid #e4e5f0;
+}
+.crewRow {
+  display: grid;
+  grid-template-columns: 42px 1.1fr 0.9fr 0.65fr 0.65fr 1.2fr 1.2fr 42px;
+  align-items: center;
+  gap: 10px;
+}
+.crewRow > span:not(.crewInitial) small {
+  display: block;
+  color: #7a7e9e;
+  font-size: 0.68rem;
+}
+.crewProtections,
+.crewPriority {
+  color: #555b80;
+}
+@media (max-width: 900px) {
+  .crewRow {
+    grid-template-columns: 42px 1fr 1fr 42px;
+  }
+  .crewRow > span:nth-child(n + 4):nth-child(-n + 7) {
+    grid-column: span 2;
+  }
+}
+
 .portfolioSite {
   padding: 24px;
   margin: 14px 0;
