@@ -427,6 +427,13 @@ export function simulateWhatIf(state, question) {
     },
     changed: { exposureScore: proposedRisk, shadeAvailability: proposedShade },
     riskReductionPercent: reduction,
+    operationalDelay:
+      proposedShade === "canopy"
+        ? "Approximately 10–20 minutes to reposition and confirm coverage."
+        : "No modeled delay; verify task coverage before applying.",
+    confidence: "moderate",
+    readOnly: true,
+    whatChanged: `Only the proposed ${proposedShade} placement was simulated; the live roster and plan were not changed.`,
     coverageImpact:
       proposedShade === "canopy"
         ? "Crew count is unchanged; the worker must be assigned to a shaded task or relief position during the rotation."
