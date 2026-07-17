@@ -262,23 +262,21 @@ $("#propertyForm").onsubmit = async (event) => {
     alert(error.message);
   }
 };
-$("#copilotForm").onsubmit = (event) => {
+$("#copilotForm").onsubmit = async (event) => {
   event.preventDefault();
   const question = $("#copilotInput").value.trim();
   if (!question) return;
-  const top = activeDecision();
-  const uv11 = /uv.*11|11.*uv/i.test(question);
-  const river = /riverfront|moves? to river/i.test(question);
-  const crane = /crane|delay/i.test(question);
-  const change = uv11
-    ? "At UV 11, the agent would elevate every open or reflective site and shorten the next rotation."
-    : river
-      ? "Moving Maya to Riverfront shifts the highest-sensitivity worker away from the reflective roof, but adds a coverage gap at North Tower."
-      : crane
-        ? "A crane delay reduces roof completion capacity; Umbra would keep only essential crew in direct exposure and advance relief rotations."
-        : "Umbra would compare the requested change against active exposure, coverage, and equipment constraints.";
-  $("#copilotAnswer").innerHTML =
-    `<b>Simulated operational assessment</b><p>${esc(change)}</p><small>Current tradeoff: ${esc(top?.alternative || "No active alternative available.")}</small>`;
+  try {
+    const { result } = await request("/api/what-if", {
+      method: "POST",
+      body: JSON.stringify({ question }),
+    });
+    $("#copilotAnswer").innerHTML =
+      `<b>${esc(result.proposal)}</b><p>Exposure score: ${esc(result.baseline.exposureScore)} → ${esc(result.changed.exposureScore)}. Estimated reduction: ${esc(result.riskReductionPercent)}%.</p><p>${esc(result.coverageImpact)}</p><small>${esc(result.bestAlternative)} · Supervisor review required.</small>`;
+  } catch (error) {
+    $("#copilotAnswer").innerHTML =
+      `<b>Scenario needs more detail.</b><p>${esc(error.message)}</p><small>Try: “What if Maya moves under a canopy?”</small>`;
+  }
 };
 async function sync() {
   if (

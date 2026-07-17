@@ -719,6 +719,74 @@ export function updateBehavioralFactors(state, input) {
   return worker;
 }
 
+export function simulateWhatIf(state, question) {
+  const normalized = String(question || "")
+    .trim()
+    .toLowerCase();
+  if (!normalized) throw new Error("Describe the proposed operational change");
+  const worker = state.workers.find((entry) =>
+    normalized.includes(entry.name.toLowerCase().split(" ")[0]),
+  );
+  if (!worker) throw new Error("Name a current team member in the scenario");
+  const site = state.sites.find((entry) => entry.id === worker.siteId);
+  if (!site) throw new Error("Worker is not assigned to an active site");
+  const proposedShade = /canopy|consistent shade|full shade/.test(normalized)
+    ? "canopy"
+    : /partial shade|partial/.test(normalized)
+      ? "partial"
+      : /direct sun|roof|open sun/.test(normalized)
+        ? "direct"
+        : null;
+  if (!proposedShade)
+    throw new Error(
+      "Specify direct sun, partial shade, or a canopy in the scenario",
+    );
+  const baselineRisk = scoreWorker(site, worker);
+  const proposedWorker = {
+    ...worker,
+    behavioralFactors: {
+      ...(worker.behavioralFactors || {}),
+      shadeAvailability: proposedShade,
+    },
+  };
+  const proposedRisk = scoreWorker(site, proposedWorker);
+  const reduction = Math.max(
+    0,
+    Math.round(
+      ((baselineRisk - proposedRisk) / Math.max(baselineRisk, 1)) * 100,
+    ),
+  );
+  const alternative = state.workers
+    .filter(
+      (entry) =>
+        entry.siteId === site.id &&
+        entry.id !== worker.id &&
+        entry.status === "active",
+    )
+    .map((entry) => ({ worker: entry, risk: scoreWorker(site, entry) }))
+    .sort((a, b) => b.risk - a.risk)[0];
+  return {
+    source: "validated what-if planner",
+    worker: { id: worker.id, name: worker.name, siteName: site.name },
+    proposal: `Move ${worker.name} to ${proposedShade === "canopy" ? "a canopy / consistent shade" : proposedShade}.`,
+    baseline: {
+      exposureScore: baselineRisk,
+      shadeAvailability:
+        worker.behavioralFactors?.shadeAvailability || "unrecorded",
+    },
+    changed: { exposureScore: proposedRisk, shadeAvailability: proposedShade },
+    riskReductionPercent: reduction,
+    coverageImpact:
+      proposedShade === "canopy"
+        ? "Crew count is unchanged; the worker must be assigned to a shaded task or relief position during the rotation."
+        : "Crew count is unchanged; supervisor must confirm task-location coverage.",
+    bestAlternative: alternative
+      ? `Alternative: move ${alternative.worker.name} to a canopy first; their current exposure score is ${alternative.risk}.`
+      : "No alternate active worker is available at this site.",
+    supervisorReviewRequired: true,
+  };
+}
+
 export async function assessProperty(state, input) {
   const site = state.sites.find((entry) => entry.id === input.siteId);
   if (!site) throw new Error("Site not found");

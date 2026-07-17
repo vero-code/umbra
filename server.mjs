@@ -21,6 +21,7 @@ import {
   getModelStatus,
   testModelConnection,
   updateBehavioralFactors,
+  simulateWhatIf,
 } from "./src/planner.mjs";
 
 const root = fileURLToPath(new URL(".", import.meta.url));
@@ -218,6 +219,11 @@ const server = http.createServer(async (req, res) => {
       const decisions = await processEvent(state, event);
       await saveState(state);
       return json(res, 201, { worker, decisions, state });
+    }
+    if (req.method === "POST" && url.pathname === "/api/what-if") {
+      const state = await getState();
+      const { question } = await body(req);
+      return json(res, 200, { result: simulateWhatIf(state, question) });
     }
     if (req.method === "POST" && url.pathname === "/api/roster/import") {
       const state = await getState();
