@@ -129,7 +129,11 @@ export function buildEvidencePacket(site, plan, workers, event) {
 }
 
 export function buildEvidenceAgentMock(packet, failed = false) {
-  const first = packet.validatedPlan.priorityWorkers[0];
+  const first = packet.validatedPlan.priorityWorkers[0] || {
+    id: "unassigned",
+    name: "No assigned worker",
+    tier: "unavailable",
+  };
   const alternative = packet.validatedPlan.priorityWorkers[1] || first;
   return {
     source: failed ? "deterministic fallback" : "simulated evidence agent",

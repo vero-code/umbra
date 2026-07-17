@@ -271,6 +271,16 @@ export function validatePlan(plan, workers) {
 
 function buildDecisionBasis(site, ranked, event) {
   const environment = calculateEnvironmentalExposure(site);
+  if (!ranked.length) {
+    return [
+      `UV index is ${environment.baseUvi}; no active workers are assigned to this site.`,
+      `Site exposure setting is ${site.setting}; crew coverage cannot be validated until a worker is assigned.`,
+      "Uncertainty: no worker risk profile or protection status is available.",
+      ...(event
+        ? [`Triggered automatically by ${event.type.replaceAll("_", " ")}.`]
+        : []),
+    ];
+  }
   const basis = [
     `UV index is ${environment.baseUvi}; it is converted to a planning dose index of ${environment.doseIndex}.`,
     `Sun altitude/time modifier is ${environment.sunAltitudeFactor}x at ${String(environment.hour).padStart(2, "0")}:00; the 11:00–16:00 peak window receives the highest modifier.`,
@@ -331,7 +341,7 @@ function rulePlan(site, workers, event) {
     siteId: site.id,
     siteName: site.name,
     status:
-      ranked[0].score >= 15 || site.equipment === "failed"
+      !ranked.length || ranked[0].score >= 15 || site.equipment === "failed"
         ? "needs_review"
         : "approved_candidate",
     source: "validated operations engine",
@@ -367,12 +377,16 @@ function rulePlan(site, workers, event) {
   if (site.equipment === "failed")
     plan.alerts.push("Equipment failure constrains crew coverage.");
   const checked = validatePlan(plan, workers);
+  if (!workers.length) return plan;
   if (!checked.valid) throw new Error(checked.reason);
   return plan;
 }
 
 export function decisionFromPlan(plan, event) {
-  const first = plan.priorityWorkers[0];
+  const first = plan.priorityWorkers[0] || {
+    name: "No assigned worker",
+    score: 99,
+  };
   const alternative = plan.priorityWorkers[1] || first;
   return {
     id: id("dec"),

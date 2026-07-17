@@ -76,3 +76,26 @@ Umbra is not medical advice, a legal compliance system, or an autonomous worker-
 ## Codex and GPT-5.6
 
 Codex was used to create the full working MVP: the product UI, rules engine, validation tests, API server, and documentation. GPT-5.6 is integrated through the Responses API to reason over structured live-condition context and site-photo inputs, returning constrained explanatory insight. Model output never controls break constraints directly.
+
+## Incremental implementation milestones
+
+Umbra is delivered in reviewable milestones. Each milestone preserves the
+working application before the next one is started:
+
+- [x] Navigation and Shift / Morning Brief homepage
+- [x] Recommendation and Evidence → Reasoning → Tradeoffs → Decision presentation
+- [x] Agent-style event stream language and evidence-triggered replanning
+- [x] Ranked Sites operational portfolio
+- [x] Facility map with fallback schematic, sun slider, shade zones, and placement warnings
+- [x] Team status view
+- [x] Secondary employee-profile drawer
+- [x] External evidence intake and timeline
+- [x] Behavioral protection checklist
+- [x] Read-only What-if planner
+- [x] B2B operational Reports
+- [x] GPT-5.6 Sol/Luna routing with deterministic fallback
+- [x] Visual hierarchy and responsive cleanup
+
+For review, run the app after each milestone with `npm run dev`, walk the
+corresponding navigation view, and confirm that previous views still load and
+that only evidence-changing events or explicit scenarios replan operations.

@@ -6,6 +6,7 @@ import {
   settingFactors,
   scoreWorker,
   recordActivity,
+  createPlan,
 } from "./planner-core.mjs";
 import {
   analyzeAuditWithModel,

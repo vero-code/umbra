@@ -6,6 +6,9 @@ const placements = new Map();
 let teamProfileDirty = false;
 let externalFactorsDirty = false;
 let behavioralFactorsDirty = false;
+let foremanProfile = JSON.parse(
+  localStorage.getItem("umbra_foreman_profile") || "null",
+);
 const $ = (s) => document.querySelector(s);
 const esc = (v) =>
   String(v || "")
@@ -44,6 +47,7 @@ function renderPortfolioSite(site) {
   return `<article class="portfolioSite"><header><span class="rank">0${site.rank}</span><div><h3>${esc(site.name)}</h3><p class="portfolioReason">${esc(site.rankReason)}</p></div><strong class="siteRisk">${esc(risk)} · ${site.exposureScore}</strong></header><div class="portfolioMetrics"><span><b>UV / heat</b>UVI ${esc(site.uvi)} · ${esc(site.temperatureC)}°C · ${esc(site.cloudCover)}% clouds</span><span><b>Exposure setting</b>${esc(site.setting)}</span><span><b>Crew</b>${esc(site.activeCrew)} active</span><span><b>Last update</b>${esc(clock(site.lastUpdate))}</span><span><b>Confidence</b>${esc(site.confidence)}</span></div><footer><b>Current recommendation</b><span>${esc(site.recommendation)}</span></footer></article>`;
 }
 function render() {
+  applyForemanGate();
   const decision = activeDecision();
   const topSite = state.portfolio[0];
   $("#siteCount").textContent = state.sites.length;
@@ -139,6 +143,20 @@ function render() {
   renderVisualEvidence();
   renderBehavioralFactors();
   renderReports();
+}
+function applyForemanGate() {
+  const ready = Boolean(foremanProfile?.name && foremanProfile?.avatar);
+  document.body.classList.toggle("needsForeman", !ready);
+  $("#foremanOnboarding").hidden = ready;
+  document.querySelectorAll(".modeNav button").forEach((button) => {
+    button.disabled = !ready;
+    button.title = button.disabled ? "Complete the foreman profile first" : "";
+  });
+  if (!ready) {
+    document
+      .querySelectorAll(".modeView")
+      .forEach((view) => (view.hidden = true));
+  }
 }
 
 function renderReports() {
@@ -434,6 +452,10 @@ async function sync() {
 }
 
 function switchMode(mode) {
+  if (!foremanProfile?.name && mode !== "team") {
+    applyForemanGate();
+    return;
+  }
   currentMode = mode;
   const viewMode = mode === "planning" ? "workspace" : mode;
   $("#teamMode").hidden = viewMode !== "team";
@@ -536,6 +558,12 @@ await setupInteractions({
   },
   get shownDecisionId() {
     return shownDecisionId;
+  },
+  get foremanProfile() {
+    return foremanProfile;
+  },
+  set foremanProfile(value) {
+    foremanProfile = value;
   },
   set shownDecisionId(value) {
     shownDecisionId = value;

@@ -1,5 +1,23 @@
 export async function setupInteractions(runtime) {
   const { $, request, readFile } = runtime;
+  document.querySelectorAll(".avatarChoice").forEach((choice) => {
+    choice.onclick = () => {
+      $("#foremanAvatar").value = choice.dataset.avatar;
+      document
+        .querySelectorAll(".avatarChoice")
+        .forEach((item) => item.classList.toggle("selected", item === choice));
+    };
+  });
+  $("#foremanProfileForm").onsubmit = (event) => {
+    event.preventDefault();
+    const profile = Object.fromEntries(new FormData(event.target));
+    if (!profile.avatar) return;
+    runtime.foremanProfile = profile;
+    localStorage.setItem("umbra_foreman_profile", JSON.stringify(profile));
+    event.target.reset();
+    runtime.render();
+    runtime.switchMode("team");
+  };
   document
     .querySelectorAll(".modeNav button")
     .forEach(
@@ -145,5 +163,4 @@ export async function setupInteractions(runtime) {
   runtime.state = await request("/api/state");
   runtime.render();
   runtime.switchMode("shift");
-  setInterval(runtime.sync, 2200);
 }
