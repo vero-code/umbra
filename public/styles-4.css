@@ -353,6 +353,30 @@ main:before {
   color: #6f7295;
   font-size: 0.72rem;
 }
+.evidenceTimeline {
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid #d9dcf2;
+}
+.evidenceTimeline > div {
+  display: grid;
+  grid-template-columns: 70px 1fr;
+  gap: 8px;
+  padding: 10px 0;
+  border-bottom: 1px solid #ececf4;
+}
+.evidenceTimeline time {
+  color: #7a7e9e;
+  font: 0.72rem "DM Mono";
+}
+.evidenceTimeline span {
+  color: #232746;
+  font-weight: 700;
+}
+.evidenceTimeline small {
+  grid-column: 2;
+  color: #707596;
+}
 @media (max-width: 900px) {
   .crewRow {
     grid-template-columns: 42px 1fr 1fr 42px;

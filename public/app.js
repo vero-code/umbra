@@ -135,6 +135,7 @@ function render() {
   renderFacility();
   renderShift();
   renderExternalFactors();
+  renderExternalTimeline();
   renderVisualEvidence();
   renderBehavioralFactors();
 }
@@ -175,13 +176,36 @@ function renderBehavioralFactors() {
 function renderExternalFactors() {
   const assessment = state.sites
     .map((site) => ({ site, assessment: site.propertyAssessment }))
-    .find((entry) => entry.assessment);
-  if (!assessment) return;
+    .find((entry) => entry.assessment) || {
+    site: state.sites[0],
+    assessment: null,
+  };
+  if (!assessment.site) return;
   const { site } = assessment;
+  if (!assessment.assessment) {
+    $("#weatherResult").innerHTML =
+      `<h2>UVI ${esc(site.forecast.uvi)} · ${esc(site.forecast.temperatureC)}°C</h2><p>${esc(site.forecast.cloudCover)}% cloud cover · source: ${esc(site.forecast.source || "last known")}</p>`;
+    $("#externalEvidenceResult").innerHTML =
+      `<p>No object imagery assessment yet. Upload two angles to detect visible materials, shade, and albedo.</p>`;
+    $("#externalEvidenceTimeline").innerHTML =
+      `<p class="eyebrow">EVIDENCE TIMELINE</p><small>Waiting for incoming environmental evidence.</small>`;
+    return;
+  }
   $("#weatherResult").innerHTML =
     `<h2>UVI ${esc(site.forecast.uvi)} · ${esc(site.forecast.temperatureC)}C</h2><p>${esc(site.forecast.cloudCover)}% cloud cover · source: ${esc(site.forecast.source || "last known")}</p>`;
   $("#externalEvidenceResult").innerHTML =
     `<h2>${esc(site.name)} · ${esc(site.propertyAssessment.setting)} exposure</h2><p>${esc(site.propertyAssessment.summary)}</p><ul>${(site.propertyAssessment.factors || []).map((factor) => `<li>${esc(factor)}</li>`).join("")}</ul><small>Water feature: ${esc(site.propertyAssessment.waterFeature)} · confidence: ${esc(site.propertyAssessment.confidence)}</small>`;
+}
+
+function renderExternalTimeline() {
+  if (!$("#externalEvidenceTimeline")) return;
+  const items = (state.activity || [])
+    .filter((item) =>
+      /weather|imagery|photo|UV|surface/i.test(item.message + item.detail),
+    )
+    .slice(0, 6);
+  $("#externalEvidenceTimeline").innerHTML =
+    `<p class="eyebrow">EVIDENCE TIMELINE</p>${items.map((item) => `<div><time>${clock(item.at)}</time><span>${esc(item.message)}</span><small>${esc(item.detail)}</small></div>`).join("") || "<small>Waiting for incoming environmental evidence.</small>"}`;
 }
 
 function renderShift() {
