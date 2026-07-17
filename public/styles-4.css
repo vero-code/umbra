@@ -377,6 +377,33 @@ main:before {
   grid-column: 2;
   color: #707596;
 }
+.protectionChecklist {
+  display: grid;
+  gap: 10px;
+  margin: 18px 0;
+}
+.protectionChecklist div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e1e3ef;
+}
+.protectionChecklist dt {
+  color: #707596;
+}
+.protectionChecklist dd {
+  margin: 0;
+  color: #232746;
+  font-weight: 700;
+  text-align: right;
+}
+.protectionChecklist dd.warning {
+  color: #c95b47;
+}
+.protectionChecklist dd.ok {
+  color: #3d8252;
+}
 @media (max-width: 900px) {
   .crewRow {
     grid-template-columns: 42px 1fr 1fr 42px;

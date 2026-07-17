@@ -169,8 +169,18 @@ function renderBehavioralFactors() {
   $("#behaviorSpf").value = factors.spf;
   $("#behaviorSunscreenHours").value = factors.sunscreenHoursAgo;
   $("#behaviorShade").value = factors.shadeAvailability;
+  const hours = Number(factors.sunscreenHoursAgo || 0);
+  const expired = hours > 2;
+  const modifier =
+    (expired ? 1.15 : 0.9) *
+    (factors.shadeAvailability === "direct_sun" ? 1.2 : 0.75);
+  const action = expired
+    ? `Reapply ${factors.spf || "sunscreen"} before the next roof rotation.`
+    : factors.shadeAvailability === "direct_sun"
+      ? "Assign a shade break or rotate this worker at the next safe interval."
+      : "Protection is currently within the recorded planning window.";
   $("#behavioralResult").innerHTML =
-    `<p class="eyebrow">CURRENT PROTECTION EFFECT</p><h2>${esc(worker.name)}</h2><p>${esc(factors.upf)} PPE · ${esc(factors.spf)} sunscreen · ${esc(factors.shadeAvailability)} conditions.</p><p>${Number(factors.sunscreenHoursAgo) > 2 ? "Sunscreen is treated as expired for the current plan." : "Sunscreen timing is within the two-hour planning window."}</p>`;
+    `<p class="eyebrow">PROTECTION STATUS</p><h2>${esc(worker.name)}</h2><dl class="protectionChecklist"><div><dt>UPF / PPE</dt><dd>${esc(factors.upf || "Unrecorded")}</dd></div><div><dt>SPF level</dt><dd>${esc(factors.spf || "Unrecorded")}</dd></div><div><dt>Hours since application</dt><dd>${esc(hours)}</dd></div><div><dt>Shade assignment</dt><dd>${esc(factors.shadeAvailability || "Unrecorded")}</dd></div><div><dt>Expiration warning</dt><dd class="${expired ? "warning" : "ok"}">${expired ? "Expired for planning" : "Within two-hour window"}</dd></div><div><dt>Exposure modifier</dt><dd>${esc(modifier.toFixed(2))}x</dd></div></dl><p><b>Recommended action:</b> ${esc(action)}</p>`;
 }
 
 function renderExternalFactors() {
