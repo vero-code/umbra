@@ -1,5 +1,8 @@
 const riskTiers = { standard: 1, elevated: 1.25, high: 1.5 };
 const sensitivityFactors = { low: 1, moderate: 1.15, high: 1.3 };
+const upfFactors = { cotton: 0.95, visor: 0.82, upf50: 0.55 };
+const spfFactors = { none: 1, spf30: 0.82, spf50: 0.7 };
+const shadeFactors = { direct: 1, partial: 0.76, canopy: 0.58 };
 const settingFactors = {
   shaded: 0.85,
   mixed: 1.1,
@@ -200,6 +203,12 @@ export function calculateEnvironmentalExposure(site) {
 
 export function scoreWorker(site, worker) {
   const environment = calculateEnvironmentalExposure(site);
+  const behavior = worker.behavioralFactors || {};
+  const sunscreenExpired = Number(behavior.sunscreenHoursAgo) > 2;
+  const protectionFactor =
+    (upfFactors[behavior.upf] || 1) *
+    (sunscreenExpired ? 1 : spfFactors[behavior.spf] || 1) *
+    (shadeFactors[behavior.shadeAvailability] || 1);
   const heat =
     site.forecast.temperatureC >= 34
       ? 1.35
@@ -214,6 +223,7 @@ export function scoreWorker(site, worker) {
         equipmentFactor *
         riskTiers[worker.tier] *
         (sensitivityFactors[worker.exposureProfile?.photosensitivity] || 1) *
+        protectionFactor *
         10,
     ) / 10
   );
@@ -263,6 +273,16 @@ function buildDecisionBasis(site, ranked, event) {
     `Temperature is ${site.forecast.temperatureC}C, applying the heat load modifier.`,
     `${ranked[0].name} has the highest calculated exposure score (${ranked[0].score}) after their ${ranked[0].tier} priority tier.`,
   ];
+  const factors = ranked[0].behavioralFactors;
+  if (factors) {
+    basis.push(
+      `${ranked[0].name}'s protection profile applies ${factors.upf || "unrecorded"} PPE, ${factors.spf || "no"} sunscreen, and ${factors.shadeAvailability || "unrecorded"} shade conditions.`,
+    );
+    if (Number(factors.sunscreenHoursAgo) > 2)
+      basis.push(
+        "The recorded sunscreen application is over two hours old, so no current sunscreen reduction is applied.",
+      );
+  }
   if (site.photo)
     basis.push(
       `Latest site photo classified the work environment as ${site.photo.setting} (${site.photo.confidence} confidence).`,
@@ -352,6 +372,7 @@ export function decisionFromPlan(plan, event) {
     alternative: `Alternative: rotate ${alternative.name} first for an estimated ${Math.min(20, Math.round(alternative.score * 1.1))}% reduction, with lower risk relief.`,
     confidence: plan.confidence,
     reasoningChain: plan.reasoningChain,
+    evidenceAgent: plan.evidenceAgent,
     planId: plan.id,
     status: plan.status,
   };
@@ -368,15 +389,14 @@ export async function createPlan(
     (worker) => worker.siteId === siteId && worker.status === "active",
   );
   const plan = rulePlan(site, workers, event);
+  const evidencePacket = buildEvidencePacket(site, plan, workers, event);
+  plan.evidenceAgent = buildEvidenceAgentMock(evidencePacket);
   if (useModel && process.env.OPENAI_API_KEY) {
     try {
-      plan.agentExplanation = await modelRationale(site, plan);
+      plan.evidenceAgent = await evidenceAgentDecision(evidencePacket);
       plan.source = "GPT-5.6 + validated operations engine";
     } catch {
-      plan.agentExplanation = {
-        summary:
-          "Model explanation unavailable; deterministic decision basis remains active.",
-      };
+      plan.evidenceAgent = buildEvidenceAgentMock(evidencePacket, true);
     }
   }
   return plan;
@@ -421,6 +441,12 @@ export async function processEvent(state, event) {
       worker.status = "absent";
       affected.add(worker.siteId);
     }
+  }
+  if (event.type === "behavioral_factors_updated") {
+    const worker = state.workers.find(
+      (entry) => entry.id === event.payload.workerId,
+    );
+    if (worker) affected.add(worker.siteId);
   }
   if (event.type === "equipment_failed") {
     const site = state.sites.find((entry) => entry.id === event.payload.siteId);
@@ -669,6 +695,30 @@ export function addTeamMember(state, input) {
   return worker;
 }
 
+export function updateBehavioralFactors(state, input) {
+  const worker = state.workers.find((entry) => entry.id === input.workerId);
+  if (!worker) throw new Error("Team member not found");
+  if (!upfFactors[input.upf]) throw new Error("Select protective equipment");
+  if (!spfFactors[input.spf]) throw new Error("Select sunscreen use");
+  if (!shadeFactors[input.shadeAvailability])
+    throw new Error("Select shade availability");
+  const sunscreenHoursAgo = Number(input.sunscreenHoursAgo);
+  if (
+    !Number.isFinite(sunscreenHoursAgo) ||
+    sunscreenHoursAgo < 0 ||
+    sunscreenHoursAgo > 24
+  )
+    throw new Error("Sunscreen timing must be between 0 and 24 hours");
+  worker.behavioralFactors = {
+    upf: input.upf,
+    spf: input.spf,
+    sunscreenHoursAgo,
+    shadeAvailability: input.shadeAvailability,
+    updatedAt: now(),
+  };
+  return worker;
+}
+
 export async function assessProperty(state, input) {
   const site = state.sites.find((entry) => entry.id === input.siteId);
   if (!site) throw new Error("Site not found");
@@ -781,36 +831,136 @@ export async function testModelConnection() {
     output_text: data.output_text || "The API returned no text output.",
   };
 }
-async function modelRationale(site, plan) {
-  const context = {
+function buildEvidencePacket(site, plan, workers, event) {
+  return {
+    event: event
+      ? {
+          type: event.type,
+          occurredAt: event.occurredAt,
+          payload: event.payload,
+        }
+      : { type: "manual_review_requested" },
     site: {
+      id: site.id,
       name: site.name,
       task: site.task,
       forecast: site.forecast,
       setting: site.setting,
+      propertyAssessment: site.propertyAssessment || null,
+      photoAssessment: site.photo
+        ? {
+            setting: site.photo.setting,
+            confidence: site.photo.confidence,
+            factors: site.photo.factors || [],
+          }
+        : null,
     },
-    priorityWorkers: plan.priorityWorkers,
-    decisionBasis: plan.reasoningChain,
-    instruction:
-      "Return JSON {summary, operational_considerations:string[]}. Explain only supplied operational factors; do not provide medical advice.",
+    crew: workers.map((worker) => ({
+      id: worker.id,
+      name: worker.name,
+      role: worker.role,
+      tier: worker.tier,
+      status: worker.status,
+      behavioralFactors: worker.behavioralFactors || null,
+    })),
+    validatedPlan: {
+      priorityWorkers: plan.priorityWorkers,
+      rotationBlocks: plan.rotationBlocks,
+      reasoningChain: plan.reasoningChain,
+      alerts: plan.alerts,
+      confidence: plan.confidence,
+    },
   };
-  return callOpenAI([
+}
+
+function buildEvidenceAgentMock(packet, failed = false) {
+  const first = packet.validatedPlan.priorityWorkers[0];
+  const alternative = packet.validatedPlan.priorityWorkers[1] || first;
+  return {
+    source: failed ? "deterministic fallback" : "simulated evidence agent",
+    mode: failed ? "fallback" : "mock",
+    priorityWorkerId: first.id,
+    decision: `Rotate ${first.name} first and retain validated crew coverage.`,
+    triggeringEvent: packet.event.type.replaceAll("_", " "),
+    evidence: packet.validatedPlan.reasoningChain,
+    reasoning: [
+      `${first.name} ranks first in the validated exposure calculation.`,
+      "The agent cannot override break, coverage, or supervisor-review constraints.",
+    ],
+    tradeoffs: [
+      `Immediate relief for ${first.name} may delay ${packet.site.task} work during the rotation block.`,
+    ],
+    alternative: {
+      workerId: alternative.id,
+      decision: `Rotate ${alternative.name} first with lower modeled risk relief.`,
+    },
+    confidence: packet.validatedPlan.confidence,
+    supervisorReviewRequired: true,
+    uncertainty: failed
+      ? [
+          "Live GPT-5.6 reasoning was unavailable; deterministic evidence was retained.",
+        ]
+      : [
+          "This is a clearly labeled deterministic mock; no live model call was made.",
+        ],
+  };
+}
+
+function normalizeEvidenceAgent(result, packet) {
+  const fallback = buildEvidenceAgentMock(packet);
+  const allowedIds = new Set(packet.crew.map((worker) => worker.id));
+  const priorityWorkerId = allowedIds.has(result.priorityWorkerId)
+    ? result.priorityWorkerId
+    : fallback.priorityWorkerId;
+  const alternativeWorkerId = allowedIds.has(result.alternative?.workerId)
+    ? result.alternative.workerId
+    : fallback.alternative.workerId;
+  return {
+    source: "GPT-5.6 evidence agent",
+    mode: "live",
+    priorityWorkerId,
+    decision: String(result.decision || fallback.decision),
+    triggeringEvent: String(result.triggeringEvent || fallback.triggeringEvent),
+    evidence: Array.isArray(result.evidence)
+      ? result.evidence.map(String).slice(0, 8)
+      : fallback.evidence,
+    reasoning: Array.isArray(result.reasoning)
+      ? result.reasoning.map(String).slice(0, 6)
+      : fallback.reasoning,
+    tradeoffs: Array.isArray(result.tradeoffs)
+      ? result.tradeoffs.map(String).slice(0, 4)
+      : fallback.tradeoffs,
+    alternative: {
+      workerId: alternativeWorkerId,
+      decision: String(
+        result.alternative?.decision || fallback.alternative.decision,
+      ),
+    },
+    confidence: ["low", "moderate", "high"].includes(
+      String(result.confidence).toLowerCase(),
+    )
+      ? String(result.confidence).toLowerCase()
+      : "moderate",
+    supervisorReviewRequired: true,
+    uncertainty: Array.isArray(result.uncertainty)
+      ? result.uncertainty.map(String).slice(0, 4)
+      : [],
+  };
+}
+
+async function evidenceAgentDecision(packet) {
+  const result = await callOpenAI([
     {
       role: "user",
       content: [
-        { type: "input_text", text: JSON.stringify(context) },
-        ...(site.photo?.image
-          ? [
-              {
-                type: "input_image",
-                image_url: site.photo.image,
-                detail: "low",
-              },
-            ]
-          : []),
+        {
+          type: "input_text",
+          text: `You are Umbra's evidence agent. Review only the supplied JSON evidence packet. Return exactly one JSON object with this schema: {priorityWorkerId:string, decision:string, triggeringEvent:string, evidence:string[], reasoning:string[], tradeoffs:string[], alternative:{workerId:string,decision:string}, confidence:"low"|"moderate"|"high", uncertainty:string[]}. Do not introduce facts, make medical claims, or override the validatedPlan. Supervisor review is always required. ${JSON.stringify(packet)}`,
+        },
       ],
     },
   ]);
+  return normalizeEvidenceAgent(result, packet);
 }
 export async function analyzePhotoWithModel(image, note) {
   if (!process.env.OPENAI_API_KEY)

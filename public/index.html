@@ -13,7 +13,7 @@
         <nav class="modeNav">
           <button data-mode="team" class="active">Team</button
           ><button data-mode="external">External Factors</button
-          ><button data-mode="incident">Live Incident</button
+          ><button data-mode="behavioral">Behavioral Factors</button
           ><button data-mode="workspace">Planning Workspace</button>
         </nav>
         <div id="agentState" class="agentState">
@@ -32,6 +32,18 @@
           <div class="hourRisk">
             <span>Current profile priority</span><b id="shiftRisk">—</b
             ><small id="shiftRiskText">Monitoring</small>
+          </div>
+          <div class="tabIllustration teamIllustration" aria-hidden="true">
+            <span class="sun"></span><span class="figure f1"></span
+            ><span class="figure f2"></span><span class="figure f3"></span
+            ><span class="board"></span>
+            <a
+              class="photoCredit"
+              href="https://www.pexels.com/photo/group-of-persons-wearing-yellow-safety-helmet-during-daytime-33266/"
+              target="_blank"
+              rel="noreferrer"
+              >Photo: Pixabay / Pexels</a
+            >
           </div>
         </section>
         <section class="teamProfilePanel">
@@ -223,6 +235,18 @@
             Combine location, current meteorology, and a couple of object photos
             to build a more grounded external-risk assessment.
           </p>
+          <div class="tabIllustration externalIllustration" aria-hidden="true">
+            <span class="sun"></span><span class="cloud"></span
+            ><span class="roof"></span><span class="shine s1"></span
+            ><span class="shine s2"></span>
+            <a
+              class="photoCredit"
+              href="https://www.pexels.com/photo/group-of-persons-wearing-yellow-safety-helmet-during-daytime-33266/"
+              target="_blank"
+              rel="noreferrer"
+              >Photo: Pixabay / Pexels</a
+            >
+          </div>
         </section>
         <section class="externalGrid">
           <article class="externalForm">
@@ -266,6 +290,77 @@
           <div id="externalEvidenceResult">
             No external assessment has been submitted.
           </div>
+        </section>
+      </section>
+      <section id="behavioralMode" class="modeView" hidden>
+        <section class="externalHero">
+          <p class="eyebrow">WORKING CONDITIONS & PROTECTION</p>
+          <h1>Record what protects each worker right now.</h1>
+          <p>
+            Equipment, sunscreen timing, and shade availability affect the
+            operational exposure score and trigger a targeted replan.
+          </p>
+          <div
+            class="tabIllustration behavioralIllustration"
+            aria-hidden="true"
+          >
+            <span class="sun"></span><span class="shield"></span
+            ><span class="bottle"></span><span class="canopy"></span
+            ><span class="figure"></span>
+            <a
+              class="photoCredit"
+              href="https://commons.wikimedia.org/wiki/File:Builders_hard_hats.jpg"
+              target="_blank"
+              rel="noreferrer"
+              >Photo: Santeri Viinamäki, CC BY-SA 4.0</a
+            >
+          </div>
+        </section>
+        <section class="externalGrid">
+          <article class="externalForm">
+            <p class="eyebrow">TEAM MEMBER CONDITIONS</p>
+            <h2>Update protection factors</h2>
+            <form id="behavioralFactorsForm">
+              <select id="behaviorWorker" required></select>
+              <select id="behaviorUpf" required>
+                <option value="">UPF / protective equipment</option>
+                <option value="visor">Hard hat with visor</option>
+                <option value="upf50">Full-body UPF 50+ clothing</option>
+                <option value="cotton">Regular cotton T-shirt</option>
+              </select>
+              <select id="behaviorSpf" required>
+                <option value="">Sunscreen use</option>
+                <option value="none">No sunscreen recorded</option>
+                <option value="spf30">SPF 30</option>
+                <option value="spf50">SPF 50</option>
+              </select>
+              <input
+                id="behaviorSunscreenHours"
+                type="number"
+                min="0"
+                max="24"
+                step="0.25"
+                required
+                placeholder="Hours since sunscreen application"
+              />
+              <select id="behaviorShade" required>
+                <option value="">Shade availability</option>
+                <option value="direct">Direct sun / exposed roof</option>
+                <option value="partial">Partial shade</option>
+                <option value="canopy">Under canopy / consistent shade</option>
+              </select>
+              <button>Update protection & replan</button>
+            </form>
+          </article>
+          <aside class="weatherCard" id="behavioralResult">
+            <p class="eyebrow">CURRENT PROTECTION EFFECT</p>
+            <h2>Select a worker</h2>
+            <p>
+              Umbra applies these conditions to the worker's operational
+              exposure score. Sunscreen recorded over two hours ago is treated
+              as expired for planning.
+            </p>
+          </aside>
         </section>
       </section>
       <section id="incidentMode" class="modeView" hidden>

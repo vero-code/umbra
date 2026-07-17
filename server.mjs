@@ -20,6 +20,7 @@ import {
   recordActivity,
   getModelStatus,
   testModelConnection,
+  updateBehavioralFactors,
 } from "./src/planner.mjs";
 
 const root = fileURLToPath(new URL(".", import.meta.url));
@@ -206,6 +207,17 @@ const server = http.createServer(async (req, res) => {
       state.portfolio = buildPortfolio(state);
       await saveState(state);
       return json(res, 201, { worker, state });
+    }
+    if (req.method === "POST" && url.pathname === "/api/behavioral-factors") {
+      const state = await getState();
+      const worker = updateBehavioralFactors(state, await body(req));
+      const event = createEvent(state, "behavioral_factors_updated", {
+        workerId: worker.id,
+        siteId: worker.siteId,
+      });
+      const decisions = await processEvent(state, event);
+      await saveState(state);
+      return json(res, 201, { worker, decisions, state });
     }
     if (req.method === "POST" && url.pathname === "/api/roster/import") {
       const state = await getState();

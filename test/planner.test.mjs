@@ -13,6 +13,7 @@ import {
   getModelStatus,
   testModelConnection,
   calculateEnvironmentalExposure,
+  updateBehavioralFactors,
 } from "../src/planner.mjs";
 test("high-risk worker is prioritized and coverage remains", async () => {
   const state = seedState();
@@ -94,4 +95,22 @@ test("environmental exposure applies peak sun, cloud, and reflective-surface mod
   assert.equal(peak.sunAltitudeFactor, 1.35);
   assert.ok(denseCloud.doseIndex < peak.doseIndex);
   assert.ok(lateDay.doseIndex < peak.doseIndex);
+});
+
+test("behavioral factors update a worker and replan their site", async () => {
+  const state = seedState();
+  const worker = updateBehavioralFactors(state, {
+    workerId: "w1",
+    upf: "upf50",
+    spf: "spf50",
+    sunscreenHoursAgo: 1,
+    shadeAvailability: "canopy",
+  });
+  assert.equal(worker.behavioralFactors.upf, "upf50");
+  const event = createEvent(state, "behavioral_factors_updated", {
+    workerId: "w1",
+  });
+  const decisions = await processEvent(state, event);
+  assert.equal(event.status, "processed");
+  assert.equal(decisions[0].siteId, "site_north");
 });

@@ -384,8 +384,234 @@ header {
   padding: 92px 0 46px;
 }
 .externalHero {
+  position: relative;
+  overflow: hidden;
   max-width: 820px;
   padding: 92px 0 42px;
+}
+
+.shiftHero {
+  position: relative;
+  overflow: hidden;
+}
+
+.tabIllustration {
+  position: absolute;
+  right: 2rem;
+  bottom: 0;
+  width: 245px;
+  height: 150px;
+  pointer-events: none;
+}
+
+.tabIllustration .sun {
+  position: absolute;
+  width: 52px;
+  height: 52px;
+  right: 25px;
+  top: 8px;
+  border-radius: 50%;
+  background: #ffd74f;
+  box-shadow: 0 0 0 11px #ffd74f33;
+}
+
+.teamIllustration .board {
+  position: absolute;
+  right: 22px;
+  bottom: 15px;
+  width: 78px;
+  height: 74px;
+  border: 6px solid #3745a0;
+  border-radius: 13px;
+  background: repeating-linear-gradient(#ffffff 0 10px, #e8eaff 10px 15px);
+  transform: rotate(5deg);
+}
+
+.teamIllustration .figure,
+.behavioralIllustration .figure {
+  position: absolute;
+  bottom: 14px;
+  width: 28px;
+  height: 61px;
+  border-radius: 16px 16px 9px 9px;
+  background: #ff8d7c;
+}
+
+.teamIllustration .figure::before,
+.behavioralIllustration .figure::before {
+  content: "";
+  position: absolute;
+  top: -19px;
+  left: 3px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #694437;
+  box-shadow: 0 -5px 0 #ffcf47;
+}
+
+.teamIllustration .f1 {
+  left: 24px;
+  background: #ff8d7c;
+}
+.teamIllustration .f2 {
+  left: 66px;
+  height: 72px;
+  background: #605ed6;
+}
+.teamIllustration .f3 {
+  left: 108px;
+  height: 53px;
+  background: #54bda8;
+}
+
+.externalIllustration .cloud {
+  position: absolute;
+  top: 47px;
+  left: 62px;
+  width: 82px;
+  height: 28px;
+  border-radius: 28px;
+  background: #dbe7ff;
+  box-shadow:
+    -17px 8px 0 #dbe7ff,
+    24px 10px 0 #dbe7ff;
+}
+
+.externalIllustration .roof {
+  position: absolute;
+  right: 17px;
+  bottom: 8px;
+  width: 175px;
+  height: 73px;
+  border-radius: 12px 12px 0 0;
+  background: repeating-linear-gradient(
+    135deg,
+    #8996bd 0 9px,
+    #dfe6ff 9px 16px
+  );
+  transform: skewY(-12deg);
+}
+
+.externalIllustration .shine {
+  position: absolute;
+  width: 8px;
+  height: 36px;
+  border-radius: 99px;
+  background: #fff7b3;
+  z-index: 1;
+}
+
+.externalIllustration .s1 {
+  right: 66px;
+  top: 76px;
+  transform: rotate(45deg);
+}
+.externalIllustration .s2 {
+  right: 107px;
+  top: 93px;
+  transform: rotate(-45deg);
+}
+
+.behavioralIllustration .shield {
+  position: absolute;
+  top: 40px;
+  left: 59px;
+  width: 59px;
+  height: 70px;
+  border-radius: 50% 50% 42% 42%;
+  background: #5ec6ad;
+  clip-path: polygon(50% 0, 100% 18%, 86% 75%, 50% 100%, 14% 75%, 0 18%);
+}
+
+.behavioralIllustration .bottle {
+  position: absolute;
+  right: 42px;
+  bottom: 17px;
+  width: 32px;
+  height: 66px;
+  border-radius: 8px 8px 13px 13px;
+  background: #fff9e3;
+  border: 5px solid #ffbb50;
+}
+
+.behavioralIllustration .bottle::before {
+  content: "SPF";
+  position: absolute;
+  top: 20px;
+  left: 3px;
+  color: #3745a0;
+  font: 700 9px/1 sans-serif;
+}
+
+.behavioralIllustration .canopy {
+  position: absolute;
+  right: 87px;
+  bottom: 19px;
+  width: 76px;
+  height: 42px;
+  border-radius: 76px 76px 5px 5px;
+  background: #7c70d7;
+}
+
+.behavioralIllustration .figure {
+  left: 113px;
+  bottom: 14px;
+  background: #ff8d7c;
+}
+
+@media (max-width: 760px) {
+  .tabIllustration {
+    opacity: 0.35;
+    right: -25px;
+  }
+}
+
+/* Open-source photographic tab art, retained with visible source links. */
+.tabIllustration {
+  width: 270px;
+  height: 156px;
+  border: 4px solid #fff;
+  border-radius: 22px 22px 0 0;
+  background-color: #dbe7ff;
+  background-position: center;
+  background-size: cover;
+  box-shadow: 0 16px 28px #313b8d26;
+}
+
+.teamIllustration,
+.externalIllustration {
+  background-image:
+    linear-gradient(90deg, #1b246255, #1b246600),
+    url("https://images.pexels.com/photos/33266/work-chinese-industrial-professional.jpg?cs=srgb&dl=pexels-pixabay-33266.jpg&fm=jpg");
+}
+
+.externalIllustration {
+  background-position: 60% center;
+}
+
+.behavioralIllustration {
+  background-image:
+    linear-gradient(90deg, #1b246544, #1b246600),
+    url("https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Builders_hard_hats.jpg/960px-Builders_hard_hats.jpg");
+}
+
+.tabIllustration > span {
+  display: none;
+}
+
+.photoCredit {
+  position: absolute;
+  right: 9px;
+  bottom: 8px;
+  max-width: calc(100% - 18px);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1.15;
+  text-align: right;
+  text-decoration: none;
+  text-shadow: 0 1px 4px #000;
 }
 .externalHero h1 {
   font-size: clamp(3rem, 5vw, 5.4rem);

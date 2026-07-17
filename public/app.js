@@ -4,6 +4,7 @@ let currentMode = "team";
 const placements = new Map();
 let teamProfileDirty = false;
 let externalFactorsDirty = false;
+let behavioralFactorsDirty = false;
 const $ = (s) => document.querySelector(s);
 const esc = (v) =>
   String(v || "")
@@ -83,6 +84,16 @@ function render() {
     '<option value="">Choose a crew figurine</option><option value="builder">Builder</option><option value="engineer">Engineer</option><option value="lead">Site lead</option><option value="spotter">Spotter</option><option value="operator">Operator</option><option value="rigger">Rigger</option>';
   $("#externalSite").innerHTML =
     `<option value="">Select job site</option>${state.sites.map((site) => `<option value="${site.id}">${esc(site.name)}</option>`).join("")}`;
+  const behaviorWorker = $("#behaviorWorker");
+  const selectedWorker = behaviorWorker.value;
+  behaviorWorker.innerHTML = `<option value="">Select team member</option>${state.workers
+    .filter((worker) => worker.status === "active")
+    .map(
+      (worker) =>
+        `<option value="${worker.id}">${esc(worker.name)} · ${esc(state.sites.find((site) => site.id === worker.siteId)?.name || "Unassigned")}</option>`,
+    )
+    .join("")}`;
+  behaviorWorker.value = selectedWorker;
   const incidentSite = $("#incidentSite");
   incidentSite.innerHTML = state.sites
     .map((site) => `<option value="${site.id}">${esc(site.name)}</option>`)
@@ -97,6 +108,21 @@ function render() {
   renderFacility();
   renderShift();
   renderExternalFactors();
+  renderBehavioralFactors();
+}
+
+function renderBehavioralFactors() {
+  const worker = state.workers.find(
+    (entry) => entry.id === $("#behaviorWorker").value,
+  );
+  if (!worker?.behavioralFactors) return;
+  const factors = worker.behavioralFactors;
+  $("#behaviorUpf").value = factors.upf;
+  $("#behaviorSpf").value = factors.spf;
+  $("#behaviorSunscreenHours").value = factors.sunscreenHoursAgo;
+  $("#behaviorShade").value = factors.shadeAvailability;
+  $("#behavioralResult").innerHTML =
+    `<p class="eyebrow">CURRENT PROTECTION EFFECT</p><h2>${esc(worker.name)}</h2><p>${esc(factors.upf)} PPE · ${esc(factors.spf)} sunscreen · ${esc(factors.shadeAvailability)} conditions.</p><p>${Number(factors.sunscreenHoursAgo) > 2 ? "Sunscreen is treated as expired for the current plan." : "Sunscreen timing is within the two-hour planning window."}</p>`;
 }
 
 function renderExternalFactors() {
@@ -160,6 +186,7 @@ function renderShift() {
       `<p class="auditSource">${esc(audit.source)} · ${esc(audit.confidence)} confidence</p><b>${esc(audit.surfaceType)} — ${esc(audit.estimatedAlbedo)} albedo</b><p>${esc(audit.uvReflectivityRisk)}</p><ul><li>Hard hats: ${esc(audit.equipment?.hardHats)}</li><li>Protective clothing: ${esc(audit.equipment?.protectiveClothing)}</li><li>Goggles: ${esc(audit.equipment?.goggles)}</li></ul>`;
 }
 function renderDecision(decision) {
+  const evidenceAgent = decision.evidenceAgent;
   $("#missionTitle").textContent = decision.recommendation;
   $("#missionSub").textContent =
     `${decision.siteName} is the highest current operational priority.`;
@@ -167,7 +194,7 @@ function renderDecision(decision) {
   $("#recommendationBody").innerHTML =
     `<p class="trigger">Triggered by <b>${esc(decision.triggeringEvent)}</b></p><h2>${esc(decision.recommendation)}</h2><p class="whyNow">${esc(decision.whyNow)}</p><dl><div><dt>What changed</dt><dd>${esc(decision.whatChanged)}</dd></div><div><dt>Operational impact</dt><dd>${esc(decision.operationalImpact)}</dd></div></dl>`;
   $("#reasoningBody").innerHTML =
-    `<section><p class="label">EVIDENCE</p><ul>${decision.reasoningChain.map((item) => `<li>${esc(item)}</li>`).join("")}</ul></section><section><p class="label">REASONING</p><p>${esc(decision.whyWorker)}</p><p>${esc(decision.whyNow)}</p></section><section><p class="label">TRADEOFF</p><p>${esc(decision.operationalImpact)}</p><p>${esc(decision.alternative)}</p></section><section class="final"><p class="label">DECISION</p><strong>${esc(decision.recommendation)}</strong><span>Supervisor approval required.</span></section>`;
+    `<section><p class="label">EVIDENCE</p><ul>${(evidenceAgent?.evidence || decision.reasoningChain).map((item) => `<li>${esc(item)}</li>`).join("")}</ul></section><section><p class="label">REASONING</p><p>${esc((evidenceAgent?.reasoning || [decision.whyWorker, decision.whyNow]).join(" "))}</p></section><section><p class="label">TRADEOFF</p><p>${esc((evidenceAgent?.tradeoffs || [decision.operationalImpact]).join(" "))}</p><p>${esc(evidenceAgent?.alternative?.decision || decision.alternative)}</p></section><section class="final"><p class="label">DECISION</p><strong>${esc(decision.recommendation)}</strong><span>${esc(evidenceAgent?.source || "Validated operations engine")} · Supervisor approval required.</span></section>`;
   const button = $("#approve");
   button.hidden = decision.status === "approved";
   button.onclick = () => approve(decision.planId);
@@ -239,6 +266,7 @@ async function sync() {
     currentMode === "external" ||
     teamProfileDirty ||
     externalFactorsDirty ||
+    behavioralFactorsDirty ||
     document.activeElement?.closest("#teamProfileForm")
   )
     return;
@@ -255,6 +283,7 @@ function switchMode(mode) {
   $("#teamMode").hidden = mode !== "team";
   $("#briefMode").hidden = mode !== "brief";
   $("#externalMode").hidden = mode !== "external";
+  $("#behavioralMode").hidden = mode !== "behavioral";
   $("#incidentMode").hidden = mode !== "incident";
   $("#workspaceMode").hidden = mode !== "workspace";
   document
@@ -390,6 +419,31 @@ $("#teamProfileForm").addEventListener("input", () => {
 $("#externalFactorsForm").addEventListener("input", () => {
   externalFactorsDirty = true;
 });
+$("#behavioralFactorsForm").addEventListener("input", () => {
+  behavioralFactorsDirty = true;
+});
+$("#behaviorWorker").onchange = () => renderBehavioralFactors();
+$("#behavioralFactorsForm").onsubmit = async (event) => {
+  event.preventDefault();
+  try {
+    const data = await request("/api/behavioral-factors", {
+      method: "POST",
+      body: JSON.stringify({
+        workerId: $("#behaviorWorker").value,
+        upf: $("#behaviorUpf").value,
+        spf: $("#behaviorSpf").value,
+        sunscreenHoursAgo: $("#behaviorSunscreenHours").value,
+        shadeAvailability: $("#behaviorShade").value,
+      }),
+    });
+    state = data.state;
+    shownDecisionId = data.decisions[0]?.id;
+    behavioralFactorsDirty = false;
+    render();
+  } catch (error) {
+    alert(error.message);
+  }
+};
 $("#externalFactorsForm").onsubmit = async (event) => {
   event.preventDefault();
   try {
