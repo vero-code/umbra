@@ -12,6 +12,19 @@ import {
   analyzePropertyWithModel,
 } from "./planner-vision.mjs";
 
+const operationalMessages = {
+  conditions_updated: "Incoming weather update...",
+  cloud_clearing: "UV forecast changed...",
+  heat_advisory: "Incoming NOAA Heat Advisory...",
+  heat_wave: "Incoming heat-wave advisory...",
+  photo_analyzed: "Reflective surface detected...",
+  property_imagery_assessed: "New site imagery received...",
+  behavioral_factors_updated: "Worker protection expired...",
+  worker_absent: "Worker absence reported...",
+  equipment_failed: "Equipment failure reported...",
+  manual_review_requested: "Supervisor scenario requested...",
+};
+
 export function createEvent(state, type, payload = {}) {
   const event = {
     id: id("evt"),
@@ -26,6 +39,12 @@ export function createEvent(state, type, payload = {}) {
     type: "event_received",
     detail: type.replaceAll("_", " "),
   });
+  recordActivity(
+    state,
+    "incoming",
+    operationalMessages[type] || "Incoming operational evidence...",
+    "Evidence received; Umbra will replan only if the operating picture changes.",
+  );
   return event;
 }
 
@@ -72,6 +91,13 @@ export async function processEvent(state, event) {
       affected.add(site.id);
     });
   }
+  if (affected.size)
+    recordActivity(
+      state,
+      "reasoning",
+      "Comparing crew allocations...",
+      "Evaluating worker risk, protection status, site exposure, and coverage constraints.",
+    );
   const decisions = [];
   for (const siteId of affected) {
     try {
@@ -95,6 +121,20 @@ export async function processEvent(state, event) {
   }
   event.status = "processed";
   event.processedAt = now();
+  if (decisions.length)
+    recordActivity(
+      state,
+      "decision",
+      "Recommendation updated...",
+      "Supervisor approval requested. Deterministic exposure constraints remain authoritative.",
+    );
+  else
+    recordActivity(
+      state,
+      "monitoring",
+      "Evidence logged; plan unchanged.",
+      "No site exposure or crew constraint changed, so no replanning was triggered.",
+    );
   state.portfolio = buildPortfolio(state);
   return decisions;
 }
@@ -125,26 +165,8 @@ export async function runAutonomousCycle(state) {
       item.payload.workerId !== undefined || item.type !== "worker_absent",
   );
   const signal = sequence[state.agent.simulationIndex % sequence.length];
-  recordActivity(
-    state,
-    "incoming",
-    `Incoming ${signal.type.replaceAll("_", " ")}...`,
-    "Simulated operational evidence received.",
-  );
-  recordActivity(
-    state,
-    "reasoning",
-    "Analyzing evidence and comparing crew allocations...",
-    state.agent.mode,
-  );
   const event = createEvent(state, signal.type, signal.payload);
   const decisions = await processEvent(state, event);
-  recordActivity(
-    state,
-    "decision",
-    "Decision updated. Supervisor notification prepared.",
-    decisions[0]?.recommendation || "Portfolio continues monitoring.",
-  );
   state.agent.status = "monitoring";
   state.agent.lastCycleAt = now();
   state.agent.simulationIndex += 1;
