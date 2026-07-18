@@ -56,8 +56,10 @@ function render() {
   $("#activeCount").textContent = state.decisions.filter(
     (item) => item.status !== "approved",
   ).length;
-  $("#agentState").innerHTML =
-    `<i></i><span>${esc(state.agent?.status === "monitoring" ? "Monitoring outdoor operations" : state.agent?.status || "Reasoning")}</span>`;
+  const agentState = $("#agentState");
+  if (agentState) {
+    agentState.innerHTML = `<i></i><span>${esc(state.agent?.status === "monitoring" ? "Monitoring outdoor operations" : state.agent?.status || "Reasoning")}</span>`;
+  }
   $("#reasoningMode").textContent =
     state.agent?.mode || "Simulated reasoning for demo";
   $("#shiftDecisionStatus").textContent = state.decisions.length
@@ -145,9 +147,14 @@ function render() {
   renderReports();
 }
 function applyForemanGate() {
-  const ready = Boolean(foremanProfile?.name && foremanProfile?.avatar);
+  const ready = Boolean(foremanProfile?.name && foremanProfile?.company);
   document.body.classList.toggle("needsForeman", !ready);
   $("#foremanOnboarding").hidden = ready;
+  $("#foremanProfileMenu").hidden = !ready;
+  $("#foremanActions").hidden = true;
+  $("#foremanIdentity").setAttribute("aria-expanded", "false");
+  $("#foremanName").textContent = ready ? foremanProfile.name : "";
+  $("#foremanCompany").textContent = ready ? foremanProfile.company : "";
   document.querySelectorAll(".modeNav button").forEach((button) => {
     button.disabled = !ready;
     button.title = button.disabled ? "Complete the foreman profile first" : "";
@@ -452,7 +459,7 @@ async function sync() {
 }
 
 function switchMode(mode) {
-  if (!foremanProfile?.name && mode !== "team") {
+  if ((!foremanProfile?.name || !foremanProfile?.company) && mode !== "team") {
     applyForemanGate();
     return;
   }

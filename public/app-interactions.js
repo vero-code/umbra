@@ -1,23 +1,33 @@
 export async function setupInteractions(runtime) {
   const { $, request, readFile } = runtime;
-  document.querySelectorAll(".avatarChoice").forEach((choice) => {
-    choice.onclick = () => {
-      $("#foremanAvatar").value = choice.dataset.avatar;
-      document
-        .querySelectorAll(".avatarChoice")
-        .forEach((item) => item.classList.toggle("selected", item === choice));
-    };
-  });
   $("#foremanProfileForm").onsubmit = (event) => {
     event.preventDefault();
     const profile = Object.fromEntries(new FormData(event.target));
-    if (!profile.avatar) return;
     runtime.foremanProfile = profile;
     localStorage.setItem("umbra_foreman_profile", JSON.stringify(profile));
     event.target.reset();
     runtime.render();
     runtime.switchMode("team");
   };
+  $("#foremanIdentity").onclick = () => {
+    const actions = $("#foremanActions");
+    const willOpen = actions.hidden;
+    actions.hidden = !willOpen;
+    $("#foremanIdentity").setAttribute("aria-expanded", String(willOpen));
+  };
+  $("#signOutForeman").onclick = () => {
+    if (!window.confirm("End this shift and return to foreman sign-in?"))
+      return;
+    localStorage.removeItem("umbra_foreman_profile");
+    runtime.foremanProfile = null;
+    runtime.switchMode("team");
+    runtime.render();
+  };
+  document.addEventListener("click", (event) => {
+    if ($("#foremanProfileMenu").contains(event.target)) return;
+    $("#foremanActions").hidden = true;
+    $("#foremanIdentity").setAttribute("aria-expanded", "false");
+  });
   document
     .querySelectorAll(".modeNav button")
     .forEach(

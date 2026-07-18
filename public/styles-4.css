@@ -491,6 +491,96 @@ main:before {
   border-radius: 24px;
   background: #fffdf8;
 }
+.foremanProfileMenu {
+  position: relative;
+}
+.foremanIdentity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px 5px 5px;
+  border: 1px solid #d9dcf2;
+  border-radius: 999px;
+  background: #fffdf8;
+  color: #4f5878;
+  cursor: pointer;
+  font:
+    700 0.7rem "DM Mono",
+    monospace;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+.foremanIdentity:hover {
+  border-color: #7564df;
+  background: #f7f4ff;
+}
+.foremanIdentity:focus-visible {
+  outline: 3px solid #7564df44;
+  outline-offset: 2px;
+}
+.profileChevron {
+  margin-left: 2px;
+  color: #7564df;
+  font-size: 1rem;
+  transition: transform 0.15s;
+}
+.foremanIdentity[aria-expanded="true"] .profileChevron {
+  transform: rotate(180deg);
+}
+.foremanActions {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 142px;
+  padding: 6px;
+  border: 1px solid #d9dcf2;
+  border-radius: 12px;
+  background: #fffdf8;
+  box-shadow: 0 12px 28px #2623481f;
+}
+.foremanActions button {
+  width: 100%;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #b24d42;
+  font:
+    700 0.72rem "DM Sans",
+    sans-serif;
+  text-align: left;
+  cursor: pointer;
+}
+.foremanActions button:hover {
+  background: #fff0ec;
+}
+.foremanIdentity .crewInitial.figurine {
+  width: 30px;
+  height: 34px;
+  flex: 0 0 auto;
+  transform: scale(0.82);
+}
+.foremanIdentity b,
+.foremanIdentity small {
+  display: block;
+  line-height: 1.2;
+}
+.foremanIdentity b {
+  color: #232746;
+  font-size: 0.7rem;
+}
+.foremanIdentity small {
+  margin-top: 2px;
+  color: #7a7e9e;
+  font-size: 0.6rem;
+}
+.headerStatus {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+}
 .needsForeman .modeView {
   display: none !important;
 }
@@ -505,7 +595,7 @@ main:before {
   margin-top: 28px;
 }
 .foremanOnboarding form {
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 1fr 1fr auto;
 }
 .foremanOnboarding input[type="text"],
 .foremanOnboarding input:not([type]),

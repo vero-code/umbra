@@ -18,8 +18,30 @@
           ><button data-mode="reports">Reports</button
           ><button data-mode="planning">Planning / Settings</button>
         </nav>
-        <div id="agentState" class="agentState">
-          <i></i><span>Monitoring outdoor operations</span>
+        <div class="headerStatus">
+          <!-- <div id="agentState" class="agentState">
+            <i></i><span>Monitoring outdoor operations</span>
+          </div> -->
+          <div id="foremanProfileMenu" class="foremanProfileMenu" hidden>
+            <button
+              id="foremanIdentity"
+              class="foremanIdentity"
+              type="button"
+              aria-expanded="false"
+              aria-controls="foremanActions"
+            >
+              <span class="crewInitial figurine lead" aria-hidden="true"
+                ><i></i><em></em
+              ></span>
+              <span
+                ><b id="foremanName"></b><small id="foremanCompany"></small
+              ></span>
+              <span class="profileChevron" aria-hidden="true">⌄</span>
+            </button>
+            <div id="foremanActions" class="foremanActions" hidden>
+              <button id="signOutForeman" type="button">End shift</button>
+            </div>
+          </div>
         </div>
       </header>
       <section id="foremanOnboarding" class="foremanOnboarding">
@@ -31,113 +53,6 @@
         <form id="foremanProfileForm">
           <input name="name" required placeholder="Foreman / supervisor name" />
           <input name="company" required placeholder="Company name" />
-          <input type="hidden" name="avatar" id="foremanAvatar" required />
-          <div
-            class="avatarChoices"
-            role="group"
-            aria-label="Choose a foreman avatar"
-          >
-            <button type="button" class="avatarChoice" data-avatar="builder">
-              <svg
-                class="crewInitial figurine builder"
-                viewBox="0 0 64 64"
-                aria-hidden="true"
-              >
-                <path fill="#f4b83f" d="M12 26c0-16 40-16 40 0v6H12z" />
-                <circle fill="#ffc09b" cx="32" cy="34" r="18" />
-                <circle fill="#232746" cx="25" cy="33" r="2" />
-                <circle fill="#232746" cx="39" cy="33" r="2" />
-                <path
-                  fill="none"
-                  stroke="#232746"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  d="M27 42c3 3 7 3 10 0"
-                />
-                <path fill="#7564df" d="M12 58c2-13 38-13 40 0z" /></svg
-              ><small>Supervisor</small>
-            </button>
-            <button type="button" class="avatarChoice" data-avatar="engineer">
-              <svg
-                class="crewInitial figurine engineer"
-                viewBox="0 0 64 64"
-                aria-hidden="true"
-              >
-                <path fill="#55a8cf" d="M14 28c0-20 36-20 36 0v4H14z" />
-                <circle fill="#efaa86" cx="32" cy="35" r="17" />
-                <circle
-                  fill="none"
-                  stroke="#232746"
-                  stroke-width="2"
-                  cx="25"
-                  cy="34"
-                  r="4"
-                />
-                <circle
-                  fill="none"
-                  stroke="#232746"
-                  stroke-width="2"
-                  cx="39"
-                  cy="34"
-                  r="4"
-                />
-                <path
-                  fill="none"
-                  stroke="#232746"
-                  stroke-width="2"
-                  d="M29 44h6"
-                />
-                <path fill="#4b9ec6" d="M12 58c2-13 38-13 40 0z" /></svg
-              ><small>Site lead</small>
-            </button>
-            <button type="button" class="avatarChoice" data-avatar="lead">
-              <svg
-                class="crewInitial figurine lead"
-                viewBox="0 0 64 64"
-                aria-hidden="true"
-              >
-                <path fill="#efb64e" d="M15 27c3-17 31-17 34 0v5H15z" />
-                <circle fill="#c88b68" cx="32" cy="35" r="17" />
-                <circle fill="#232746" cx="25" cy="34" r="2" />
-                <circle fill="#232746" cx="39" cy="34" r="2" />
-                <path
-                  fill="none"
-                  stroke="#232746"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  d="M27 43c3 2 7 2 10 0"
-                />
-                <path fill="#edb44d" d="M12 58c2-13 38-13 40 0z" /></svg
-              ><small>Field coordinator</small>
-            </button>
-            <button type="button" class="avatarChoice" data-avatar="spotter">
-              <svg
-                class="crewInitial figurine spotter"
-                viewBox="0 0 64 64"
-                aria-hidden="true"
-              >
-                <path fill="#5eaa73" d="M14 28c2-19 34-19 36 0v4H14z" />
-                <circle fill="#8e604b" cx="32" cy="35" r="17" />
-                <circle fill="#232746" cx="25" cy="33" r="2" />
-                <circle fill="#232746" cx="39" cy="33" r="2" />
-                <path fill="#3c2925" d="M21 39c5 8 17 8 22 0v7H21z" />
-                <path fill="#5ca873" d="M12 58c2-13 38-13 40 0z" /></svg
-              ><small>Safety officer</small>
-            </button>
-          </div>
-
-          <div class="geometricGallery" aria-label="Geometric avatar options">
-            <div>
-              <span class="geoAvatar geoDiamond"></span><small>Diamond</small>
-            </div>
-            <div>
-              <span class="geoAvatar geoSquare"></span><small>Square</small>
-            </div>
-            <div>
-              <span class="geoAvatar geoTriangle"></span><small>Triangle</small>
-            </div>
-            <div><span class="geoAvatar geoArc"></span><small>Arc</small></div>
-          </div>
           <button>Start Umbra shift</button>
         </form>
       </section>
