@@ -1,0 +1,19 @@
+{
+  "objects": [
+    {
+      "id": "site_example",
+      "name": "Example outdoor site",
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "setting": "uncertain",
+      "equipment": "ready",
+      "forecast": {
+        "uvi": 0,
+        "temperatureC": 0,
+        "cloudCover": 0,
+        "localHour": 12,
+        "source": "baseline"
+      }
+    }
+  ]
+}

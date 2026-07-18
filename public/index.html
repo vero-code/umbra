@@ -365,13 +365,17 @@
                   type="file"
                   accept="image/*"
                   multiple
-                  required
               /></label>
+              <div
+                id="externalPhotoPreview"
+                class="externalPhotoPreview"
+                aria-live="polite"
+              ></div>
               <button>Assess object & parse weather</button>
             </form>
           </article>
           <aside class="weatherCard">
-            <p class="eyebrow">CURRENT WEATHER PARSER</p>
+            <p class="eyebrow">CURRENT OBJECTPARSER</p>
             <div id="weatherResult">
               <h2>Waiting for a location</h2>
               <p>
@@ -382,7 +386,7 @@
           </aside>
         </section>
         <section class="reasoning externalEvidence">
-          <p class="eyebrow">LATEST EXTERNAL EVIDENCE</p>
+          <p class="eyebrow">SAVED EXTERNAL EVIDENCE</p>
           <div id="externalEvidenceResult">
             No external assessment has been submitted.
           </div>

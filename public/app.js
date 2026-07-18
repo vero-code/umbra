@@ -9,6 +9,12 @@ let behavioralFactorsDirty = false;
 let foremanProfile = JSON.parse(
   localStorage.getItem("umbra_foreman_profile") || "null",
 );
+const externalEvidenceKey = () =>
+  `umbra_external_evidence_${foremanProfile?.company || ""}:${foremanProfile?.name || ""}`;
+const lastModeKey = () =>
+  `umbra_last_mode_${foremanProfile?.company || ""}:${foremanProfile?.name || ""}`;
+const hasExternalEvidence = () =>
+  localStorage.getItem(externalEvidenceKey()) === "true";
 const $ = (s) => document.querySelector(s);
 const esc = (v) =>
   String(v || "")
@@ -263,6 +269,7 @@ function renderReports() {
 }
 
 function renderVisualEvidence() {
+  if (!hasExternalEvidence()) return;
   const property = state.sites.find(
     (site) => site.propertyAssessment,
   )?.propertyAssessment;
@@ -306,6 +313,15 @@ function renderBehavioralFactors() {
 }
 
 function renderExternalFactors() {
+  if (!hasExternalEvidence()) {
+    $("#weatherResult").innerHTML =
+      "<h2>Analysis results will appear here</h2><p>Add an object name, location, and two photos, then run the assessment to view current weather, Vision findings, albedo, and the planning dose calculation.</p>";
+    $("#externalEvidenceResult").innerHTML =
+      "<p>Submitted object assessments are saved here for this crew, including visible materials, shade observations, albedo, and confidence.</p>";
+    $("#externalEvidenceTimeline").innerHTML =
+      '<p class="eyebrow">EVIDENCE TIMELINE</p><small>The saved history of object uploads, weather refreshes, and assessment updates will appear here.</small>';
+    return;
+  }
   const assessment = state.sites
     .map((site) => ({ site, assessment: site.propertyAssessment }))
     .find((entry) => entry.assessment) || {
@@ -330,6 +346,7 @@ function renderExternalFactors() {
 }
 
 function renderExternalAnalysisPanel() {
+  if (!hasExternalEvidence()) return;
   const site = state.sites.find((entry) => entry.propertyAssessment);
   if (!site?.propertyAssessment) return;
   const assessment = site.propertyAssessment;
@@ -367,6 +384,7 @@ function renderExternalAnalysisPanel() {
 }
 
 function renderExternalTimeline() {
+  if (!hasExternalEvidence()) return;
   if (!$("#externalEvidenceTimeline")) return;
   const items = (state.activity || [])
     .filter((item) =>
@@ -548,6 +566,8 @@ function switchMode(mode) {
     return;
   }
   currentMode = mode;
+  if (foremanProfile?.name && foremanProfile?.company)
+    localStorage.setItem(lastModeKey(), mode);
   updateModeSlider();
   const viewMode = mode === "planning" ? "workspace" : mode;
   $("#teamMode").hidden = viewMode !== "team";

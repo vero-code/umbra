@@ -31,6 +31,7 @@ const publicDir = join(root, "public");
 const storeDir = join(root, "data");
 const storePath = join(storeDir, "umbra.json");
 const workerStorePath = join(storeDir, "workers.json");
+const objectStorePath = join(storeDir, "objects.json");
 const port = Number(process.env.PORT || 3000);
 
 const teamId = (profile) =>
@@ -47,6 +48,15 @@ async function readWorkerStore() {
 async function saveWorkerStore(store) {
   await mkdir(storeDir, { recursive: true });
   await writeFile(workerStorePath, JSON.stringify(store, null, 2));
+}
+async function readObjectStore() {
+  return existsSync(objectStorePath)
+    ? JSON.parse(await readFile(objectStorePath, "utf8"))
+    : { objects: seedState().sites };
+}
+async function saveObjectStore(objects) {
+  await mkdir(storeDir, { recursive: true });
+  await writeFile(objectStorePath, JSON.stringify({ objects }, null, 2));
 }
 async function teamFor(profile, create = false) {
   if (!profile?.name || !profile?.company) return { store: null, team: null };
@@ -71,6 +81,7 @@ async function getState(profile) {
   state.decisions ||= [];
   state.activity ||= [];
   state.photoAudits ||= [];
+  state.sites = (await readObjectStore()).objects;
   state.agent ||= {
     status: "monitoring",
     lastCycleAt: null,
@@ -86,8 +97,9 @@ async function getState(profile) {
 }
 async function saveState(state) {
   await mkdir(storeDir, { recursive: true });
-  const { workers, ...persistentState } = state;
+  const { workers, sites, ...persistentState } = state;
   await writeFile(storePath, JSON.stringify(persistentState, null, 2));
+  await saveObjectStore(sites);
 }
 function json(res, status, payload) {
   res.writeHead(status, { "content-type": "application/json; charset=utf-8" });

@@ -797,6 +797,55 @@ main:before {
   gap: 10px;
   margin: 16px 0;
 }
+.externalPhotoPreview {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.externalPhotoPreview figure {
+  position: relative;
+  overflow: hidden;
+  min-height: 78px;
+  margin: 0;
+  border: 1px solid #d7deef;
+  border-radius: 10px;
+  background: #eef1fb;
+}
+.externalPhotoPreview img {
+  display: block;
+  width: 100%;
+  height: 78px;
+  object-fit: cover;
+}
+.externalPhotoPreview figcaption {
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+  padding: 3px 5px;
+  border-radius: 5px;
+  background: #252b50cf;
+  color: #fff;
+  font-size: 0.58rem;
+}
+.removeExternalPhoto {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  display: grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: #252b50df;
+  color: #fff;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.removeExternalPhoto:hover {
+  background: #c7574c;
+}
 .externalAnalysis div {
   padding-bottom: 9px;
   border-bottom: 1px solid #d9e4ef;

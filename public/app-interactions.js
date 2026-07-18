@@ -1,6 +1,34 @@
 export async function setupInteractions(runtime) {
   const { $, request, readFile } = runtime;
   let editingWorkerId = null;
+  let externalPhotoFiles = [];
+  const renderExternalPreviews = async () => {
+    const preview = $("#externalPhotoPreview");
+    if (!externalPhotoFiles.length) {
+      preview.innerHTML = "";
+      return;
+    }
+    const images = await Promise.all(
+      externalPhotoFiles.map(async (file, index) => ({
+        image: await readFile(file),
+        label: `Angle ${index + 1}`,
+        index,
+      })),
+    );
+    preview.innerHTML = images
+      .map(
+        (item) =>
+          `<figure><img src="${item.image}" alt="${item.label} preview" /><figcaption>${item.label}</figcaption><button type="button" class="removeExternalPhoto" data-index="${item.index}" aria-label="Remove ${item.label}" title="Remove photo">×</button></figure>`,
+      )
+      .join("");
+  };
+  const withTimeout = (promise, milliseconds, message) =>
+    Promise.race([
+      promise,
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error(message)), milliseconds),
+      ),
+    ]);
   const statePath = (profile) =>
     `/api/state?foreman=${encodeURIComponent(profile?.name || "")}&company=${encodeURIComponent(profile?.company || "")}`;
   $("#foremanProfileForm").onsubmit = async (event) => {
@@ -44,6 +72,16 @@ export async function setupInteractions(runtime) {
     $("#sunLabel").textContent =
       `${String($("#sunTime").value).padStart(2, "0")}:00`;
     runtime.renderFacility();
+  };
+  $("#externalPhotos").onchange = async (event) => {
+    externalPhotoFiles = [...event.target.files].slice(0, 6);
+    await renderExternalPreviews();
+  };
+  $("#externalPhotoPreview").onclick = async (event) => {
+    const button = event.target.closest(".removeExternalPhoto");
+    if (!button) return;
+    externalPhotoFiles.splice(Number(button.dataset.index), 1);
+    await renderExternalPreviews();
   };
   $("#auditForm").onsubmit = async (event) => {
     event.preventDefault();
@@ -154,15 +192,19 @@ export async function setupInteractions(runtime) {
     event.preventDefault();
     try {
       const siteId = $("#externalSite").value || runtime.state.sites[0]?.id;
-      const files = [...$("#externalPhotos").files];
+      const files = externalPhotoFiles;
       if (files.length < 2)
         throw new Error("Add at least two photos from different angles");
       $("#weatherResult").innerHTML =
         "<h2>Parsing weather...</h2><p>Fetching current UV, temperature, and cloud cover.</p>";
-      const weather = await request("/api/refresh-conditions", {
-        method: "POST",
-        body: JSON.stringify({ siteId }),
-      });
+      const weather = await withTimeout(
+        request("/api/refresh-conditions", {
+          method: "POST",
+          body: JSON.stringify({ siteId }),
+        }),
+        8000,
+        "Weather refresh timed out. Please try again.",
+      );
       const photos = await Promise.all(
         files.map(async (file, index) => ({
           image: await readFile(file),
@@ -181,11 +223,19 @@ export async function setupInteractions(runtime) {
         }),
       });
       runtime.state = result.runtime.state;
+      localStorage.setItem(
+        `umbra_external_evidence_${runtime.foremanProfile.company}:${runtime.foremanProfile.name}`,
+        "true",
+      );
       $("#weatherResult").innerHTML =
         `<h2>UVI ${esc(weather.site.forecast.uvi)} · ${esc(weather.site.forecast.temperatureC)}C</h2><p>${esc(weather.site.forecast.cloudCover)}% cloud cover · source: ${esc(weather.site.forecast.source || "last known")}</p>`;
       event.target.reset();
+      externalPhotoFiles = [];
+      await renderExternalPreviews();
       runtime.render();
     } catch (error) {
+      $("#weatherResult").innerHTML =
+        "<h2>Weather refresh unavailable</h2><p>The assessment was not saved; check the connection and retry.</p>";
       alert(error.message);
     }
   };
@@ -216,5 +266,14 @@ export async function setupInteractions(runtime) {
   };
   runtime.state = await request(statePath(runtime.foremanProfile));
   runtime.render();
-  runtime.switchMode("team");
+  const savedMode = runtime.foremanProfile?.name
+    ? localStorage.getItem(
+        `umbra_last_mode_${runtime.foremanProfile.company}:${runtime.foremanProfile.name}`,
+      )
+    : null;
+  runtime.switchMode(
+    savedMode === "external" && runtime.state.workers.length > 0
+      ? "external"
+      : "team",
+  );
 }
