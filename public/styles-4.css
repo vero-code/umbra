@@ -339,6 +339,115 @@ main:before {
   align-items: center;
   gap: 10px;
 }
+.crewProfileRow {
+  display: grid;
+  grid-template-columns: 42px 1.1fr 0.8fr 0.8fr 1.2fr max-content;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 0;
+  border-top: 1px solid #e0e3f0;
+}
+.crewProfileHeader {
+  display: grid;
+  grid-template-columns: 42px 1.1fr 0.8fr 0.8fr 1.2fr max-content;
+  gap: 14px;
+  padding: 8px 0;
+  color: #747a9b;
+  font-size: 0.64rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.infoTip {
+  position: relative;
+  display: inline-grid;
+  width: 14px;
+  height: 14px;
+  place-items: center;
+  border: 1px solid #8e94b4;
+  border-radius: 50%;
+  color: #626a91;
+  font-size: 0.58rem;
+  font-style: normal;
+  text-transform: none;
+  cursor: help;
+}
+.infoTip::after {
+  position: absolute;
+  z-index: 30;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  width: 210px;
+  padding: 8px 10px;
+  border-radius: 9px;
+  background: #252b50;
+  color: #fff;
+  content: attr(data-tooltip);
+  font-size: 0.68rem;
+  font-weight: 500;
+  line-height: 1.35;
+  opacity: 0;
+  pointer-events: none;
+  text-align: left;
+  text-transform: none;
+  transform: translate(-50%, 4px);
+  transition:
+    opacity 0.15s,
+    transform 0.15s;
+}
+.infoTip:hover::after,
+.infoTip:focus-visible::after {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+.crewProfileRow:first-child {
+  margin-top: 18px;
+}
+.crewProfileRow b,
+.crewProfileRow small {
+  display: block;
+}
+.crewProfileRow small {
+  color: #7a7e9e;
+  font-size: 0.67rem;
+}
+.crewProfileRow b {
+  color: #282f55;
+  font-size: 0.76rem;
+}
+.profilePending {
+  padding: 6px 9px;
+  border-radius: 999px;
+  background: #e8efff;
+  color: #465c9c;
+  font-size: 0.68rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.crewActions {
+  display: flex;
+  gap: 6px;
+}
+.crewActions button {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid #d9dcf2;
+  border-radius: 9px;
+  background: #fff;
+  color: #565e85;
+  font-size: 1rem;
+  cursor: pointer;
+}
+.crewActions .crewEdit:hover {
+  border-color: #7564df;
+  color: #5a45d4;
+}
+.crewActions .crewDelete:hover {
+  border-color: #ef9b8c;
+  background: #fff1ed;
+  color: #b84f43;
+}
 .crewRow > span:not(.crewInitial) small {
   display: block;
   color: #7a7e9e;
@@ -491,6 +600,42 @@ main:before {
   border-radius: 24px;
   background: #fffdf8;
 }
+.modeSliderControls {
+  position: fixed;
+  z-index: 15;
+  top: 50%;
+  right: max(18px, calc((100vw - 1320px) / 2));
+  left: max(18px, calc((100vw - 1320px) / 2));
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+.modeSliderControls button {
+  width: 46px;
+  height: 46px;
+  border: 1px solid #d9dcf2;
+  border-radius: 50%;
+  background: #fffdf8e8;
+  box-shadow: 0 8px 24px #252b5014;
+  color: #6654d5;
+  font:
+    400 2.15rem/0.8 Arial,
+    sans-serif;
+  cursor: pointer;
+  pointer-events: auto;
+  transition:
+    transform 0.16s,
+    background 0.16s;
+}
+.modeSliderControls button:hover:not(:disabled) {
+  background: #f0edff;
+  transform: scale(1.08);
+}
+.modeSliderControls button:disabled {
+  cursor: not-allowed;
+  opacity: 0.25;
+}
 .foremanProfileMenu {
   position: relative;
 }
@@ -615,6 +760,72 @@ main:before {
 }
 #teamMode .teamProfilePanel form {
   margin-top: 0;
+}
+.consentCheck {
+  display: flex;
+  grid-column: span 2;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 10px 2px;
+  color: #525a7c;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  cursor: pointer;
+}
+.profileField {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  color: #4f5878;
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+.profileField em {
+  color: #8b90ae;
+  font-style: normal;
+  font-weight: 500;
+}
+.profileField small {
+  min-height: 2.1em;
+  color: #858ba8;
+  font-size: 0.62rem;
+  font-weight: 500;
+  line-height: 1.25;
+}
+.externalAnalysis {
+  display: grid;
+  gap: 10px;
+  margin: 16px 0;
+}
+.externalAnalysis div {
+  padding-bottom: 9px;
+  border-bottom: 1px solid #d9e4ef;
+}
+.externalAnalysis dt {
+  margin-bottom: 3px;
+  color: #60788a;
+  font:
+    800 0.62rem "DM Mono",
+    monospace;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.externalAnalysis dd {
+  margin: 0;
+  color: #303b61;
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+.calculationNote {
+  color: #65728f;
+  font-size: 0.68rem;
+  line-height: 1.5;
+}
+.consentCheck input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: #7564df;
 }
 #teamMode .shiftHero h2 {
   margin: 18px 0 6px;
@@ -1108,6 +1319,21 @@ main:before {
   }
 }
 @media (max-width: 900px) {
+  .crewProfileRow {
+    grid-template-columns: 42px 1fr 1fr;
+  }
+  .crewProfileHeader {
+    grid-template-columns: 42px 1fr 1fr;
+  }
+  .crewProfileHeader > span:nth-child(n + 4) {
+    display: none;
+  }
+  .crewProfileRow > span:nth-child(n + 4) {
+    grid-column: span 2;
+  }
+  .profilePending {
+    grid-column: 2 / -1 !important;
+  }
   .crewRow {
     grid-template-columns: 42px 1fr 1fr 42px;
   }

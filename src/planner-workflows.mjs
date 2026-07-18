@@ -342,6 +342,49 @@ export function addTeamMember(state, input) {
   return worker;
 }
 
+export function updateTeamMember(state, workerId, input) {
+  const worker = state.workers.find((entry) => entry.id === workerId);
+  if (!worker) throw new Error("Team member not found");
+  if (
+    !["name", "age", "photosensitivity", "fitzpatrickType"].every((key) =>
+      String(input[key] || "").trim(),
+    )
+  )
+    throw new Error(
+      "Name, age, individual sensitivity, and Fitzpatrick type are required",
+    );
+  const age = Number(input.age);
+  const fitzpatrickType = Number(input.fitzpatrickType);
+  if (!Number.isInteger(age) || age < 18 || age > 100)
+    throw new Error("Age must be a whole number from 18 to 100");
+  if (!sensitivityFactors[input.photosensitivity])
+    throw new Error("Invalid individual sensitivity");
+  if (
+    !Number.isInteger(fitzpatrickType) ||
+    fitzpatrickType < 1 ||
+    fitzpatrickType > 6
+  )
+    throw new Error("Fitzpatrick type must be from 1 to 6");
+  worker.name = String(input.name).trim();
+  worker.age = age;
+  worker.exposureProfile ||= {};
+  worker.exposureProfile.photosensitivity = input.photosensitivity;
+  worker.exposureProfile.fitzpatrickType = fitzpatrickType;
+  worker.exposureProfile.medicalMarkers =
+    String(input.medicalMarkers || "").trim() || null;
+  worker.exposureProfile.profileSignature = "acknowledged";
+  worker.exposureProfile.signedAt = now();
+  worker.exposureProfile.requiresOccupationalHealthReview =
+    age >= 60 || Boolean(worker.exposureProfile.medicalMarkers);
+  return worker;
+}
+
+export function removeTeamMember(state, workerId) {
+  const index = state.workers.findIndex((entry) => entry.id === workerId);
+  if (index < 0) throw new Error("Team member not found");
+  return state.workers.splice(index, 1)[0];
+}
+
 export function updateBehavioralFactors(state, input) {
   const worker = state.workers.find((entry) => entry.id === input.workerId);
   if (!worker) throw new Error("Team member not found");
@@ -453,8 +496,9 @@ export async function assessProperty(state, input) {
     throw new Error("At least one property photo is required");
   const assessment = await analyzePropertyWithModel(
     photos,
-    input.location || site.name,
+    `${input.location || site.name}. Supervisor notes: ${input.notes || "none"}`,
   );
+  site.propertyObjectName = String(input.objectName || "").trim() || site.name;
   site.propertyLocation = String(input.location || "").trim() || site.name;
   site.propertyPhotos = photos.map((photo) => ({
     angle: String(photo.angle || "Unspecified angle"),

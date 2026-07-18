@@ -187,10 +187,12 @@ export function calculateEnvironmentalExposure(site) {
   // cloud context visible without treating the weather-provider UVI as cloud-free.
   const cloudFactor =
     cloudCover >= 70
-      ? Math.max(0.3, 1 - cloudCover / 100)
-      : cloudCover >= 20
-        ? 1.08
-        : 1;
+      ? Math.max(0.1, 1 - cloudCover / 100)
+      : cloudCover >= 50
+        ? 0.75
+        : cloudCover >= 20
+          ? 1.08
+          : 1;
   const albedoFactor = settingFactors[site.setting || "uncertain"];
   const baseUvi = Math.max(0, Number(forecast.uvi) || 0);
   const doseIndex =

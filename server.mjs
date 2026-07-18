@@ -21,6 +21,8 @@ import {
   getModelStatus,
   testModelConnection,
   updateBehavioralFactors,
+  updateTeamMember,
+  removeTeamMember,
   simulateWhatIf,
 } from "./src/planner.mjs";
 
@@ -28,9 +30,40 @@ const root = fileURLToPath(new URL(".", import.meta.url));
 const publicDir = join(root, "public");
 const storeDir = join(root, "data");
 const storePath = join(storeDir, "umbra.json");
+const workerStorePath = join(storeDir, "workers.json");
 const port = Number(process.env.PORT || 3000);
 
-async function getState() {
+const teamId = (profile) =>
+  `team_${Buffer.from(
+    `${profile?.company || ""}:${profile?.name || ""}`.toLowerCase(),
+  )
+    .toString("base64url")
+    .slice(0, 24)}`;
+async function readWorkerStore() {
+  return existsSync(workerStorePath)
+    ? JSON.parse(await readFile(workerStorePath, "utf8"))
+    : { teams: [] };
+}
+async function saveWorkerStore(store) {
+  await mkdir(storeDir, { recursive: true });
+  await writeFile(workerStorePath, JSON.stringify(store, null, 2));
+}
+async function teamFor(profile, create = false) {
+  if (!profile?.name || !profile?.company) return { store: null, team: null };
+  const store = await readWorkerStore();
+  const id = teamId(profile);
+  let team = store.teams.find((entry) => entry.id === id);
+  if (!team && create) {
+    team = {
+      id,
+      foreman: { name: profile.name, company: profile.company },
+      employees: [],
+    };
+    store.teams.push(team);
+  }
+  return { store, team };
+}
+async function getState(profile) {
   const state = existsSync(storePath)
     ? JSON.parse(await readFile(storePath, "utf8"))
     : seedState();
@@ -46,12 +79,15 @@ async function getState() {
       ? "GPT-5.6 reasoning active"
       : "Simulated reasoning for demo",
   };
+  const { team } = await teamFor(profile);
+  state.workers = team?.employees || [];
   state.portfolio = buildPortfolio(state);
   return state;
 }
 async function saveState(state) {
   await mkdir(storeDir, { recursive: true });
-  await writeFile(storePath, JSON.stringify(state, null, 2));
+  const { workers, ...persistentState } = state;
+  await writeFile(storePath, JSON.stringify(persistentState, null, 2));
 }
 function json(res, status, payload) {
   res.writeHead(status, { "content-type": "application/json; charset=utf-8" });
@@ -76,7 +112,14 @@ const server = http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url, `http://${req.headers.host}`);
     if (req.method === "GET" && url.pathname === "/api/state")
-      return json(res, 200, await getState());
+      return json(
+        res,
+        200,
+        await getState({
+          name: url.searchParams.get("foreman"),
+          company: url.searchParams.get("company"),
+        }),
+      );
     if (req.method === "GET" && url.pathname === "/api/model/status")
       return json(res, 200, getModelStatus());
     if (req.method === "POST" && url.pathname === "/api/model/test")
@@ -197,9 +240,11 @@ const server = http.createServer(async (req, res) => {
       return json(res, 201, { audit, decisions, state });
     }
     if (req.method === "POST" && url.pathname === "/api/team-member") {
-      const state = await getState();
       const input = await body(req);
+      const { store, team } = await teamFor(input.profile, true);
+      const state = await getState(input.profile);
       const worker = addTeamMember(state, input);
+      team.employees = state.workers;
       const event = createEvent(state, "team_member_added", {
         workerId: worker.id,
         siteId: worker.siteId,
@@ -207,7 +252,36 @@ const server = http.createServer(async (req, res) => {
       event.status = "processed";
       state.portfolio = buildPortfolio(state);
       await saveState(state);
+      await saveWorkerStore(store);
       return json(res, 201, { worker, state });
+    }
+    const teamMemberMatch = url.pathname.match(/^\/api\/team-member\/([^/]+)$/);
+    if (req.method === "POST" && teamMemberMatch) {
+      const input = await body(req);
+      const { store, team } = await teamFor(input.profile);
+      if (!team) throw new Error("Team profile not found");
+      const state = await getState(input.profile);
+      const worker = updateTeamMember(state, teamMemberMatch[1], input);
+      team.employees = state.workers;
+      state.portfolio = buildPortfolio(state);
+      await saveState(state);
+      await saveWorkerStore(store);
+      return json(res, 200, { worker, state });
+    }
+    const deleteTeamMemberMatch = url.pathname.match(
+      /^\/api\/team-member\/([^/]+)\/delete$/,
+    );
+    if (req.method === "POST" && deleteTeamMemberMatch) {
+      const input = await body(req);
+      const { store, team } = await teamFor(input.profile);
+      if (!team) throw new Error("Team profile not found");
+      const state = await getState(input.profile);
+      removeTeamMember(state, deleteTeamMemberMatch[1]);
+      team.employees = state.workers;
+      state.portfolio = buildPortfolio(state);
+      await saveState(state);
+      await saveWorkerStore(store);
+      return json(res, 200, { state });
     }
     if (req.method === "POST" && url.pathname === "/api/behavioral-factors") {
       const state = await getState();

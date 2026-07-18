@@ -117,8 +117,10 @@ function render() {
   const teamAvatar = $("#teamProfileForm select[name='avatar']");
   if (teamAvatar)
     teamAvatar.innerHTML = '<option value="builder">Builder</option>';
-  $("#externalSite").innerHTML =
-    `<option value="">Select job site</option>${state.sites.map((site) => `<option value="${site.id}">${esc(site.name)}</option>`).join("")}`;
+  const externalSite = $("#externalSite");
+  externalSite.innerHTML = state.sites
+    .map((site) => `<option value="${site.id}">${esc(site.name)}</option>`)
+    .join("");
   const behaviorWorker = $("#behaviorWorker");
   const selectedWorker = behaviorWorker.value;
   behaviorWorker.innerHTML = `<option value="">Select team member</option>${state.workers
@@ -143,6 +145,7 @@ function render() {
   renderFacility();
   renderShift();
   renderExternalFactors();
+  renderExternalAnalysisPanel();
   renderExternalTimeline();
   renderVisualEvidence();
   renderBehavioralFactors();
@@ -158,19 +161,42 @@ function applyForemanGate() {
   $("#foremanName").textContent = ready ? foremanProfile.name : "";
   $("#foremanCompany").textContent = ready ? foremanProfile.company : "";
   document.querySelectorAll(".modeNav button").forEach((button) => {
-    const available = ready && button.dataset.mode === "team";
+    const hasEmployees = state?.workers?.length > 0;
+    const available =
+      ready &&
+      (button.dataset.mode === "team" ||
+        (hasEmployees && button.dataset.mode === "external"));
     button.disabled = !available;
     button.title = available
       ? ""
       : ready
-        ? "Complete the Team step before continuing"
+        ? "Add an employee profile before continuing"
         : "Complete the foreman profile first";
   });
+  updateModeSlider();
   if (!ready) {
     document
       .querySelectorAll(".modeView")
       .forEach((view) => (view.hidden = true));
   }
+}
+
+function updateModeSlider() {
+  const hasEmployees = state?.workers?.length > 0;
+  const ready = Boolean(foremanProfile?.name && foremanProfile?.company);
+  const previous = $("#previousMode");
+  const next = $("#nextMode");
+  if (!previous || !next) return;
+  previous.disabled = !ready || currentMode !== "external";
+  next.disabled = !ready || !hasEmployees || currentMode !== "team";
+  previous.title = previous.disabled
+    ? "No previous available step"
+    : "Back to Team";
+  next.title = next.disabled
+    ? hasEmployees
+      ? "No next available step"
+      : "Add an employee to unlock the next step"
+    : "Continue to External Factors";
 }
 
 function renderReports() {
@@ -303,6 +329,43 @@ function renderExternalFactors() {
     `<h2>${esc(site.name)} · ${esc(site.propertyAssessment.setting)} exposure</h2><p>${esc(site.propertyAssessment.summary)}</p><ul>${(site.propertyAssessment.factors || []).map((factor) => `<li>${esc(factor)}</li>`).join("")}</ul><small>Water feature: ${esc(site.propertyAssessment.waterFeature)} · confidence: ${esc(site.propertyAssessment.confidence)}</small>`;
 }
 
+function renderExternalAnalysisPanel() {
+  const site = state.sites.find((entry) => entry.propertyAssessment);
+  if (!site?.propertyAssessment) return;
+  const assessment = site.propertyAssessment;
+  const hour = Number(site.forecast.localHour) || 12;
+  const sunFactor =
+    hour >= 11 && hour < 16 ? 1.35 : hour >= 9 && hour < 17 ? 1.08 : 0.65;
+  const cloudCover = Math.max(
+    0,
+    Math.min(100, Number(site.forecast.cloudCover) || 0),
+  );
+  const cloudFactor =
+    cloudCover >= 70
+      ? Math.max(0.1, 1 - cloudCover / 100)
+      : cloudCover >= 50
+        ? 0.75
+        : cloudCover >= 20
+          ? 1.08
+          : 1;
+  const albedoFactor =
+    { shaded: 0.85, mixed: 1.1, open: 1.2, reflective: 2, uncertain: 1.25 }[
+      assessment.setting
+    ] || 1.25;
+  const doseIndex =
+    Math.round(
+      Number(site.forecast.uvi) * sunFactor * cloudFactor * albedoFactor * 10,
+    ) / 10;
+  const materials = assessment.reflectiveMaterials?.length
+    ? assessment.reflectiveMaterials.join(", ")
+    : "No reflective material confirmed";
+  const shade = assessment.shadeObservations?.length
+    ? assessment.shadeObservations.join(", ")
+    : "No shade observation confirmed";
+  $("#weatherResult").innerHTML =
+    `<h2>${esc(site.propertyObjectName || site.name)}</h2><dl class="externalAnalysis"><div><dt>Current weather parser</dt><dd>UVI ${esc(site.forecast.uvi)} · ${esc(site.forecast.temperatureC)}°C · ${esc(cloudCover)}% cloud cover · ${String(hour).padStart(2, "0")}:00 · ${esc(site.forecast.source || "last known")}</dd></div><div><dt>Vision assessment</dt><dd>Setting: ${esc(assessment.setting)} · Materials: ${esc(materials)} · Shade: ${esc(shade)} · Water: ${esc(assessment.waterFeature)}</dd></div><div><dt>Albedo multiplier</dt><dd>${esc(albedoFactor)}× (${esc(assessment.setting)})</dd></div><div><dt>Planning dose index</dt><dd><b>${esc(doseIndex)}</b> = ${esc(site.forecast.uvi)} UVI × ${esc(sunFactor)} time × ${esc(cloudFactor)} cloud × ${esc(albedoFactor)} albedo</dd></div></dl><p class="calculationNote">Time: 11:00–16:00 = 1.35×; 09:00–11:00 and 16:00–17:00 = 1.08×; otherwise = 0.65×. Light haze = 1.08×; 50–69% cloud = 0.75×; 70–90% cloud = 0.3–0.1×.</p>`;
+}
+
 function renderExternalTimeline() {
   if (!$("#externalEvidenceTimeline")) return;
   const items = (state.activity || [])
@@ -315,6 +378,8 @@ function renderExternalTimeline() {
 }
 
 function renderShift() {
+  renderTeamProfiles();
+  return;
   const topSite = state.portfolio[0];
   const decision = state.decisions[0];
   $("#crewTitle").textContent = topSite
@@ -358,6 +423,24 @@ function renderShift() {
   if (audit)
     $("#auditResult").innerHTML =
       `<p class="auditSource">${esc(audit.source)} · ${esc(audit.confidence)} confidence</p><b>${esc(audit.surfaceType)} — ${esc(audit.estimatedAlbedo)} albedo</b><p>${esc(audit.uvReflectivityRisk)}</p><ul><li>Hard hats: ${esc(audit.equipment?.hardHats)}</li><li>Protective clothing: ${esc(audit.equipment?.protectiveClothing)}</li><li>Goggles: ${esc(audit.equipment?.goggles)}</li></ul>`;
+}
+function renderTeamProfiles() {
+  $("#crewTitle").textContent = "Employee profiles";
+  const crew = state.workers.filter((worker) => worker.status === "active");
+  $("#crewCount").textContent =
+    `${crew.length} profile${crew.length === 1 ? "" : "s"}`;
+  $("#crewList").innerHTML =
+    (crew.length
+      ? `<div class="crewProfileHeader"><span></span><span>Employee & age <span class="infoTip" data-tooltip="Age helps Umbra apply a cautious heat-recovery modifier for older workers.">i</span></span><span>Fitzpatrick type <span class="infoTip" data-tooltip="A 1–6 skin-response scale used to estimate how quickly UV exposure may cause burning. Type 1 generally burns fastest; Type 6 generally burns more slowly.">i</span></span><span>Sensitivity <span class="infoTip" data-tooltip="Self-reported individual sensitivity raises or lowers the worker’s UV-planning priority.">i</span></span><span>Medical markers <span class="infoTip" data-tooltip="Self-reported photosensitivity context, such as medication. It flags a cautious planning review; it is not a diagnosis.">i</span></span><span>Actions <span class="infoTip" data-tooltip="Edit or delete this employee profile.">i</span></span></div>`
+      : "") +
+      crew
+        .map((worker) => {
+          const avatar = esc(worker.exposureProfile?.avatar || "builder");
+          const profile = worker.exposureProfile || {};
+          return `<article class="crewProfileRow"><span class="crewInitial figurine ${avatar}"><i></i><em></em></span><span><b>${esc(worker.name)}</b><small>${esc(worker.age)} years old</small></span><span><small>Fitzpatrick type</small><b>${esc(profile.fitzpatrickType || "Not recorded")}</b></span><span><small>Sensitivity</small><b>${esc(profile.photosensitivity || "Not recorded")}</b></span><span><small>Medical markers</small><b>${esc(profile.medicalMarkers || "None reported")}</b></span><span class="crewActions"><button class="crewEdit" data-worker-id="${esc(worker.id)}" type="button" title="Edit employee profile" aria-label="Edit ${esc(worker.name)}">✎</button><button class="crewDelete" data-worker-id="${esc(worker.id)}" type="button" title="Delete employee profile" aria-label="Delete ${esc(worker.name)}">×</button></span></article>`;
+        })
+        .join("") ||
+    '<p class="emptyState">Add the first employee profile to begin the team roster.</p>';
 }
 function renderDecision(decision) {
   const evidenceAgent = decision.evidenceAgent;
@@ -459,11 +542,13 @@ async function sync() {
 }
 
 function switchMode(mode) {
-  if (mode !== "team") {
+  const hasEmployees = state?.workers?.length > 0;
+  if (mode !== "team" && !(mode === "external" && hasEmployees)) {
     applyForemanGate();
     return;
   }
   currentMode = mode;
+  updateModeSlider();
   const viewMode = mode === "planning" ? "workspace" : mode;
   $("#teamMode").hidden = viewMode !== "team";
   $("#briefMode").hidden = viewMode !== "shift";

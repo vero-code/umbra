@@ -11,12 +11,12 @@
       <header>
         <div class="brand">UMBRA <span>B2B UV-COMPLIANCE</span></div>
         <nav class="modeNav">
-          <button data-mode="shift" class="active">Shift / Morning Brief</button
+          <button data-mode="team" class="active">Team</button
+          ><button data-mode="external">External Factors</button
+          ><button data-mode="behavioral">Behavioral Factors</button
+          ><button data-mode="shift">Shift / Morning Brief</button
           ><button data-mode="incident">Live Incident</button
-          ><button data-mode="sites">Sites</button
-          ><button data-mode="team">Team</button
-          ><button data-mode="reports">Reports</button
-          ><button data-mode="planning">Planning / Settings</button>
+          ><button data-mode="reports">Reports</button>
         </nav>
         <div class="headerStatus">
           <!-- <div id="agentState" class="agentState">
@@ -44,6 +44,24 @@
           </div>
         </div>
       </header>
+      <div class="modeSliderControls" aria-label="Workflow navigation">
+        <button
+          id="previousMode"
+          type="button"
+          aria-label="Previous step"
+          title="Previous step"
+        >
+          ‹
+        </button>
+        <button
+          id="nextMode"
+          type="button"
+          aria-label="Next step"
+          title="Next step"
+        >
+          ›
+        </button>
+      </div>
       <section id="foremanOnboarding" class="foremanOnboarding">
         <p class="eyebrow">FIRST SHIFT SETUP</p>
         <h1>Tell Umbra who is leading this crew.</h1>
@@ -88,14 +106,24 @@
           <p class="eyebrow formLabel">ADD EMPLOYEE PROFILE</p>
           <section class="teamProfilePanel">
             <form id="teamProfileForm">
-              <input name="name" required placeholder="Full name" /><input
-                name="age"
-                type="number"
-                min="18"
-                max="100"
-                required
-                placeholder="Age"
-              /><select name="siteId" id="teamSite" hidden></select
+              <label class="profileField"
+                ><span>Full name</span
+                ><input name="name" required placeholder="Full name" /><small
+                  >Identifies the employee in the safety plan.</small
+                ></label
+              ><label class="profileField"
+                ><span>Age</span
+                ><input
+                  name="age"
+                  type="number"
+                  min="18"
+                  max="100"
+                  required
+                  placeholder="Age"
+                /><small
+                  >Helps apply a cautious heat-recovery modifier.</small
+                ></label
+              ><select name="siteId" id="teamSite" hidden></select
               ><select name="role" hidden>
                 <option value="">Select role</option>
                 <option value="supervisor">Supervisor / shift lead</option>
@@ -110,42 +138,59 @@
                 <option>standard</option>
                 <option>elevated</option>
                 <option>high</option></select
-              ><select name="photosensitivity" required>
-                <option value="">Individual sensitivity</option>
-                <option value="low">Low</option>
-                <option value="moderate">Moderate</option>
-                <option value="high">High</option></select
-              ><select name="fitzpatrickType" required>
-                <option value="">Self-reported Fitzpatrick type</option>
-                <option value="1">Type 1 — burns very quickly</option>
-                <option value="2">Type 2</option>
-                <option value="3">Type 3</option>
-                <option value="4">Type 4</option>
-                <option value="5">Type 5</option>
-                <option value="6">Type 6 — burns more slowly</option></select
+              ><label class="profileField"
+                ><span>Individual sensitivity</span
+                ><select name="photosensitivity" required>
+                  <option value="">Individual sensitivity</option>
+                  <option value="low">Low</option>
+                  <option value="moderate">Moderate</option>
+                  <option value="high">High</option></select
+                ><small
+                  >Self-reported sensitivity affects UV priority.</small
+                ></label
+              ><label class="profileField"
+                ><span>Fitzpatrick type</span
+                ><select name="fitzpatrickType" required>
+                  <option value="">Self-reported Fitzpatrick type</option>
+                  <option value="1">Type 1 — burns very quickly</option>
+                  <option value="2">Type 2</option>
+                  <option value="3">Type 3</option>
+                  <option value="4">Type 4</option>
+                  <option value="5">Type 5</option>
+                  <option value="6">Type 6 — burns more slowly</option></select
+                ><small
+                  >A 1–6 skin-response scale used in UV planning.</small
+                ></label
               ><select name="outdoorHistory" hidden>
                 <option value="">Recent sun exposure</option>
                 <option value="occasional">Occasional</option>
                 <option value="regular">Regular</option>
                 <option value="extended">Extended</option></select
-              ><input
-                name="medicalMarkers"
-                placeholder="Optional self-reported medical markers"
-              /><select name="photosensitizingMedication" hidden>
+              ><label class="profileField"
+                ><span>Medical markers <em>optional</em></span
+                ><input
+                  name="medicalMarkers"
+                  placeholder="Optional self-reported medical markers"
+                /><small
+                  >Record photosensitivity context, such as medication.</small
+                ></label
+              ><select name="photosensitizingMedication" hidden>
                 <option value="">Photosensitizing medication?</option>
                 <option value="no">No / not reported</option>
                 <option value="yes">
                   Yes — occupational-health review
                 </option></select
-              ><input
-                name="profileSignature"
-                required
-                placeholder="Employee acknowledgement / signature"
-              /><select
-                name="avatar"
-                hidden
-                aria-label="Visual identity avatar"
-              >
+              ><label class="consentCheck"
+                ><input
+                  name="profileSignature"
+                  type="checkbox"
+                  value="acknowledged"
+                  required
+                />
+                <span
+                  >I confirm these profile details are accurate.</span
+                ></label
+              ><select name="avatar" hidden aria-label="Visual identity avatar">
                 <option value="">Choose a crew figurine</option>
                 <option value="☀">☀ Sun</option>
                 <option value="🦺">🦺 Safety vest</option>
@@ -299,7 +344,12 @@
             <p class="eyebrow">OBJECT & LOCATION</p>
             <h2>Add environmental evidence</h2>
             <form id="externalFactorsForm">
-              <select id="externalSite" required></select>
+              <input
+                id="externalObjectName"
+                required
+                placeholder="Object name"
+              />
+              <select id="externalSite" hidden></select>
               <input
                 id="externalLocation"
                 required
@@ -317,7 +367,7 @@
                   multiple
                   required
               /></label>
-              <button>Parse weather & assess object</button>
+              <button>Assess object & parse weather</button>
             </form>
           </article>
           <aside class="weatherCard">

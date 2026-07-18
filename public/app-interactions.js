@@ -1,11 +1,15 @@
 export async function setupInteractions(runtime) {
   const { $, request, readFile } = runtime;
-  $("#foremanProfileForm").onsubmit = (event) => {
+  let editingWorkerId = null;
+  const statePath = (profile) =>
+    `/api/state?foreman=${encodeURIComponent(profile?.name || "")}&company=${encodeURIComponent(profile?.company || "")}`;
+  $("#foremanProfileForm").onsubmit = async (event) => {
     event.preventDefault();
     const profile = Object.fromEntries(new FormData(event.target));
     runtime.foremanProfile = profile;
     localStorage.setItem("umbra_foreman_profile", JSON.stringify(profile));
     event.target.reset();
+    runtime.state = await request(statePath(profile));
     runtime.render();
     runtime.switchMode("team");
   };
@@ -34,6 +38,8 @@ export async function setupInteractions(runtime) {
       (button) =>
         (button.onclick = () => runtime.switchMode(button.dataset.mode)),
     );
+  $("#previousMode").onclick = () => runtime.switchMode("team");
+  $("#nextMode").onclick = () => runtime.switchMode("external");
   $("#sunTime").oninput = () => {
     $("#sunLabel").textContent =
       `${String($("#sunTime").value).padStart(2, "0")}:00`;
@@ -64,26 +70,64 @@ export async function setupInteractions(runtime) {
       const form = new FormData(event.target);
       const photoFile = form.get("photo");
       const photo = photoFile?.size ? await readFile(photoFile) : null;
-      const data = await request("/api/team-member", {
-        method: "POST",
-        body: JSON.stringify({ ...Object.fromEntries(form), photo }),
-      });
+      const data = await request(
+        editingWorkerId
+          ? `/api/team-member/${editingWorkerId}`
+          : "/api/team-member",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            ...Object.fromEntries(form),
+            photo,
+            profile: runtime.foremanProfile,
+          }),
+        },
+      );
       runtime.state = data.state;
-      teamProfileDirty = false;
       event.target.reset();
+      editingWorkerId = null;
+      $(
+        "#teamProfileForm button[type='submit'], #teamProfileForm button",
+      ).textContent = "Add to team";
       runtime.render();
     } catch (error) {
       alert(error.message);
     }
   };
-  $("#teamProfileForm").addEventListener("input", () => {
-    teamProfileDirty = true;
-  });
-  $("#externalFactorsForm").addEventListener("input", () => {
-    externalFactorsDirty = true;
-  });
-  $("#behavioralFactorsForm").addEventListener("input", () => {
-    behavioralFactorsDirty = true;
+  document.addEventListener("click", async (event) => {
+    const edit = event.target.closest(".crewEdit");
+    const remove = event.target.closest(".crewDelete");
+    const workerId = (edit || remove)?.dataset.workerId;
+    if (!workerId) return;
+    const worker = runtime.state.workers.find((item) => item.id === workerId);
+    if (!worker) return;
+    if (edit) {
+      editingWorkerId = workerId;
+      const profile = worker.exposureProfile || {};
+      const form = $("#teamProfileForm");
+      form.elements.name.value = worker.name;
+      form.elements.age.value = worker.age;
+      form.elements.photosensitivity.value = profile.photosensitivity || "";
+      form.elements.fitzpatrickType.value = profile.fitzpatrickType || "";
+      form.elements.medicalMarkers.value = profile.medicalMarkers || "";
+      form.elements.profileSignature.checked = false;
+      $(
+        "#teamProfileForm button[type='submit'], #teamProfileForm button",
+      ).textContent = "Save changes";
+      form.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+    if (!window.confirm(`Delete ${worker.name}'s employee profile?`)) return;
+    try {
+      const data = await request(`/api/team-member/${workerId}/delete`, {
+        method: "POST",
+        body: JSON.stringify({ profile: runtime.foremanProfile }),
+      });
+      runtime.state = data.state;
+      runtime.render();
+    } catch (error) {
+      alert(error.message);
+    }
   });
   $("#behaviorWorker").onchange = () => runtime.renderBehavioralFactors();
   $("#behavioralFactorsForm").onsubmit = async (event) => {
@@ -101,7 +145,6 @@ export async function setupInteractions(runtime) {
       });
       runtime.state = data.state;
       runtime.shownDecisionId = data.decisions[0]?.id;
-      behavioralFactorsDirty = false;
       runtime.render();
     } catch (error) {
       alert(error.message);
@@ -110,7 +153,7 @@ export async function setupInteractions(runtime) {
   $("#externalFactorsForm").onsubmit = async (event) => {
     event.preventDefault();
     try {
-      const siteId = $("#externalSite").value;
+      const siteId = $("#externalSite").value || runtime.state.sites[0]?.id;
       const files = [...$("#externalPhotos").files];
       if (files.length < 2)
         throw new Error("Add at least two photos from different angles");
@@ -132,11 +175,12 @@ export async function setupInteractions(runtime) {
         body: JSON.stringify({
           siteId,
           location: $("#externalLocation").value,
+          objectName: $("#externalObjectName").value,
+          notes: $("#externalNotes").value,
           photos,
         }),
       });
       runtime.state = result.runtime.state;
-      externalFactorsDirty = false;
       $("#weatherResult").innerHTML =
         `<h2>UVI ${esc(weather.site.forecast.uvi)} · ${esc(weather.site.forecast.temperatureC)}C</h2><p>${esc(weather.site.forecast.cloudCover)}% cloud cover · source: ${esc(weather.site.forecast.source || "last known")}</p>`;
       event.target.reset();
@@ -170,7 +214,7 @@ export async function setupInteractions(runtime) {
       alert(error.message);
     }
   };
-  runtime.state = await request("/api/state");
+  runtime.state = await request(statePath(runtime.foremanProfile));
   runtime.render();
   runtime.switchMode("team");
 }

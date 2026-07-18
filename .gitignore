@@ -1,3 +1,4 @@
 .env
 data/umbra.json
+data/workers.json
 node_modules/
