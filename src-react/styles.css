@@ -1,3 +1,4 @@
+@import "../public/styles.css";
 @import url("https://fonts.googleapis.com/css2?family=DM+Mono:wght@500&family=Manrope:wght@400;600;700;800&display=swap");
 * {
   box-sizing: border-box;
@@ -52,6 +53,41 @@ main {
   max-width: 980px;
   margin: 40px auto;
   padding: 0 22px;
+}
+.onboarding {
+  min-height: 100vh;
+  display: grid;
+  place-items: start center;
+  padding-top: 12vh;
+}
+.onboardingCard {
+  width: min(680px, 100%);
+  padding: 42px;
+  border: 1px solid #d9dcf2;
+  border-radius: 24px;
+  background: #fffdf9;
+  box-shadow: 0 18px 40px #27264a0c;
+}
+.onboardingCard > p {
+  color: #68728f;
+  font: 700 0.65rem "DM Mono";
+  letter-spacing: 0.1em;
+}
+.onboardingCard h1,
+.pendingScreen h1 {
+  margin: 10px 0 18px;
+  font-size: clamp(2.5rem, 5vw, 4.5rem);
+  line-height: 0.94;
+  letter-spacing: -0.07em;
+}
+.onboardingCard > span {
+  color: #59617f;
+}
+.onboardingCard form {
+  margin-top: 28px;
+}
+.pendingScreen {
+  min-height: 320px;
 }
 .hero {
   display: grid;
@@ -190,5 +226,213 @@ th {
   form button,
   .previews {
     grid-column: span 1;
+  }
+}
+
+/* Shared visual language with the established static Umbra interface. */
+:root {
+  --canvas: #f4f6f4;
+  --line: #d9dcf2;
+  --muted: #71807c;
+  --lime: #d5f460;
+  --purple: #7d65e8;
+}
+body {
+  background:
+    radial-gradient(circle at 12% 8%, #fff0b5 0 8%, transparent 24%),
+    radial-gradient(circle at 90% 15%, #c8f1ff 0 9%, transparent 26%),
+    var(--canvas);
+}
+.reactHeaderWrap {
+  max-width: 1220px;
+  margin: auto;
+  padding: 28px 30px 0;
+}
+.reactHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+.headerProfileSpacer {
+  width: 146px;
+}
+.brand {
+  color: #162322;
+  font:
+    800 0.9rem "DM Mono",
+    monospace;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+}
+.brand::before {
+  content: "✺";
+  display: inline-grid;
+  width: 24px;
+  height: 24px;
+  margin-right: 7px;
+  place-items: center;
+  border-radius: 9px;
+  background: var(--lime);
+  color: #453b91;
+  font-size: 1rem;
+  vertical-align: middle;
+}
+.brand span {
+  margin-left: 10px;
+  color: #71807c;
+  font-size: 0.65rem;
+}
+.reactHeader .modeNav {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff9;
+}
+.reactHeader .modeNav a,
+.reactHeader .modeNav span {
+  padding: 7px 9px;
+  border-radius: 999px;
+  color: #71807c;
+  font:
+    600 0.68rem Manrope,
+    sans-serif;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.reactHeader .modeNav a.active {
+  background: var(--purple);
+  color: #fffdf8;
+  box-shadow: 0 4px 0 #5542ad;
+}
+.reactHeader .modeNav .locked {
+  opacity: 0.35;
+}
+.reactHeader .foremanIdentity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px 5px 5px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fffdf8;
+  color: #4f5878;
+  font:
+    700 0.7rem "DM Mono",
+    monospace;
+  letter-spacing: 0.04em;
+}
+.reactHeader .foremanIdentity small {
+  display: block;
+  margin-top: 2px;
+  color: #7b82a2;
+  font-size: 0.58rem;
+}
+.foremanOnboarding {
+  max-width: 760px;
+  margin: 80px auto;
+  padding: 44px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: #fffdf8;
+}
+.foremanOnboarding > p:first-child {
+  color: #688078;
+  font:
+    500 0.68rem "DM Mono",
+    monospace;
+  letter-spacing: 0.09em;
+}
+.foremanOnboarding h1 {
+  max-width: 540px;
+  margin: 18px 0 20px;
+  color: #182148;
+  font-size: clamp(2.2rem, 5vw, 4.5rem);
+  line-height: 0.93;
+  letter-spacing: -0.075em;
+}
+.foremanOnboarding .onboardingDescription {
+  color: #59617f;
+}
+.foremanOnboarding form {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 12px;
+  margin-top: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.foremanOnboarding input {
+  min-height: 48px;
+  padding: 0 16px;
+  border: 1px solid #d6d9ef;
+  border-radius: 14px;
+  background: #f8f7ff;
+  color: #232746;
+  font:
+    500 0.9rem Manrope,
+    sans-serif;
+}
+.foremanOnboarding form > button {
+  grid-column: auto;
+  min-height: 48px;
+  padding: 0 22px;
+  border-radius: 14px;
+  background: #ff8e70;
+  box-shadow: 0 4px 0 #c86158;
+  font:
+    800 0.82rem Manrope,
+    sans-serif;
+}
+.modeSliderControls {
+  position: fixed;
+  z-index: 15;
+  top: 50%;
+  right: max(18px, calc((100vw - 1320px) / 2));
+  left: max(18px, calc((100vw - 1320px) / 2));
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+.modeSliderControls button {
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  border: 1px solid #d9dcf2;
+  border-radius: 50%;
+  background: #fffdf8e8;
+  color: #6654d5;
+  font:
+    400 2.15rem/0.8 Arial,
+    sans-serif;
+  opacity: 0.25;
+}
+@media (max-width: 900px) {
+  .reactHeader {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .reactHeader .modeNav {
+    order: 3;
+    max-width: 100%;
+    overflow-x: auto;
+  }
+}
+@media (max-width: 700px) {
+  .reactHeaderWrap {
+    padding: 18px;
+  }
+  .foremanOnboarding {
+    margin: 32px 18px;
+    padding: 26px;
+  }
+  .foremanOnboarding form {
+    grid-template-columns: 1fr;
   }
 }

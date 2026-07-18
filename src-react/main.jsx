@@ -27,6 +27,10 @@ const useUmbra = create((set) => ({
   profile: JSON.parse(localStorage.getItem("umbra_foreman_profile") || "null"),
   state: null,
   setState: (state) => set({ state }),
+  setProfile: (profile) => {
+    localStorage.setItem("umbra_foreman_profile", JSON.stringify(profile));
+    set({ profile, state: null });
+  },
 }));
 
 function useData() {
@@ -41,33 +45,125 @@ function useData() {
 }
 function Shell({ children }) {
   const { profile, state } = useData();
-  const unlocked = Boolean(state?.workers?.length);
   return (
     <>
-      <header className="appHeader">
-        <b>✺ UMBRA</b>
-        <nav>
-          <NavLink to="/team">Team</NavLink>
-          <NavLink
-            className={unlocked ? "" : "locked"}
-            to={unlocked ? "/external" : "/team"}
-          >
-            External Factors
-          </NavLink>
-          <span className="locked">Behavioral Factors</span>
-          <span className="locked">Shift</span>
-          <span className="locked">Live Incident</span>
-          <span className="locked">Reports</span>
-        </nav>
-        {profile && (
-          <span className="profile">
-            👷 {profile.name}
-            <small>{profile.company}</small>
-          </span>
-        )}
-      </header>
+      <AppHeader profile={profile} state={state} />
       {children}
     </>
+  );
+}
+function AppHeader({ profile, state, showControls = true }) {
+  const hasTeam = Boolean(state?.workers?.length);
+  const hasExternalEvidence = Boolean(
+    localStorage.getItem(profileKey(profile)),
+  );
+  const navigation = [
+    { label: "Team", to: "/team", available: true },
+    { label: "External Factors", to: "/external", available: hasTeam },
+    {
+      label: "Behavioral Factors",
+      to: "/behavioral",
+      available: hasTeam && hasExternalEvidence,
+    },
+    { label: "Shift / Morning Brief", to: "/shift", available: false },
+    { label: "Live Incident", to: "/incident", available: false },
+    { label: "Reports", to: "/reports", available: false },
+  ];
+  return (
+    <div className="reactHeaderWrap">
+      <header className="reactHeader">
+        <div className="brand">
+          UMBRA <span>B2B UV-COMPLIANCE</span>
+        </div>
+        <nav className="modeNav">
+          {navigation.map((item) =>
+            item.available ? (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                className={({ isActive }) =>
+                  isActive || (!profile && item.to === "/team") ? "active" : ""
+                }
+              >
+                {item.label}
+              </NavLink>
+            ) : (
+              <span
+                key={item.to}
+                className="locked"
+                title="Complete the previous step first"
+              >
+                {item.label}
+              </span>
+            ),
+          )}
+        </nav>
+        {profile && (
+          <span className="foremanIdentity">
+            <span aria-hidden="true">👷</span>
+            <span>
+              <b>{profile.name}</b>
+              <small>{profile.company}</small>
+            </span>
+          </span>
+        )}
+        {!profile && (
+          <span className="headerProfileSpacer" aria-hidden="true" />
+        )}
+      </header>
+      {showControls && (
+        <div className="modeSliderControls" aria-hidden="true">
+          <button type="button" disabled>
+            ‹
+          </button>
+          <button type="button" disabled>
+            ›
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+function Onboarding() {
+  const setProfile = useUmbra((store) => store.setProfile);
+  const submit = (event) => {
+    event.preventDefault();
+    const values = Object.fromEntries(new FormData(event.currentTarget));
+    setProfile({ name: values.name.trim(), company: values.company.trim() });
+  };
+  return (
+    <>
+      <AppHeader showControls={false} />
+      <section className="foremanOnboarding">
+        <p className="eyebrow">FIRST SHIFT SETUP</p>
+        <h1>Tell Umbra who is leading this crew.</h1>
+        <p className="onboardingDescription">
+          Complete the foreman profile before operational steps become
+          available.
+        </p>
+        <form onSubmit={submit}>
+          <input name="name" required placeholder="Foreman / supervisor name" />
+          <input name="company" required placeholder="Company name" />
+          <button>Start Umbra shift</button>
+        </form>
+      </section>
+    </>
+  );
+}
+function PendingScreen({ title, detail }) {
+  return (
+    <Shell>
+      <main>
+        <section className="panel pendingScreen">
+          <p>REACT MIGRATION</p>
+          <h1>{title}</h1>
+          <p>
+            {detail ||
+              "This screen will be migrated next. The complete existing version remains available at localhost:3000."}
+          </p>
+        </section>
+      </main>
+    </Shell>
   );
 }
 function Team() {
@@ -328,13 +424,36 @@ function External() {
   );
 }
 function App() {
+  const profile = useUmbra((store) => store.profile);
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/team" element={<Team />} />
-        <Route path="/external" element={<External />} />
-        <Route path="*" element={<Navigate to="/team" replace />} />
-      </Routes>
+      {!profile ? (
+        <Onboarding />
+      ) : (
+        <Routes>
+          <Route path="/team" element={<Team />} />
+          <Route path="/external" element={<External />} />
+          <Route
+            path="/behavioral"
+            element={
+              <PendingScreen
+                title="Behavioral Factors"
+                detail="Protection status will be migrated after the environmental evidence screen is reviewed."
+              />
+            }
+          />
+          <Route
+            path="/shift"
+            element={<PendingScreen title="Shift / Morning Brief" />}
+          />
+          <Route
+            path="/incident"
+            element={<PendingScreen title="Live Incident" />}
+          />
+          <Route path="/reports" element={<PendingScreen title="Reports" />} />
+          <Route path="*" element={<Navigate to="/team" replace />} />
+        </Routes>
+      )}
     </BrowserRouter>
   );
 }
