@@ -61,13 +61,15 @@
           <div>
             <p class="eyebrow">TEAM PROFILES</p>
             <h1>Know your crew before the shift begins.</h1>
-            <p id="shiftSummary">
-              Self-reported profiles inform operational rotation priority.
+            <h2>One worker at a time. Consent-aware.</h2>
+            <p>
+              Medical markers are self-reported profile information; Umbra never
+              derives health or physiology.
             </p>
-          </div>
-          <div class="hourRisk">
-            <span>Current profile priority</span><b id="shiftRisk">—</b
-            ><small id="shiftRiskText">Monitoring</small>
+            <!-- <p class="contextNote">
+              Occupational-health context only: Fitzpatrick type, sensitivity,
+              and medical markers are employee-reported.
+            </p> -->
           </div>
           <div class="tabIllustration teamIllustration" aria-hidden="true">
             <span class="sun"></span><span class="figure f1"></span
@@ -82,21 +84,9 @@
             >
           </div>
         </section>
-        <details class="secondaryPanel">
-          <summary>Add employee profile</summary>
+        <section class="secondaryPanel">
+          <p class="eyebrow formLabel">ADD EMPLOYEE PROFILE</p>
           <section class="teamProfilePanel">
-            <div>
-              <p class="eyebrow">ADD EMPLOYEE PROFILE</p>
-              <h2>One worker at a time. Consent-aware.</h2>
-              <p>
-                Photo and medical markers are self-reported profile information;
-                Umbra never derives health or physiology from an image.
-              </p>
-              <p class="contextNote">
-                Occupational-health context only: Fitzpatrick type, sensitivity,
-                and medical markers are employee-reported, not AI-diagnosed.
-              </p>
-            </div>
             <form id="teamProfileForm">
               <input name="name" required placeholder="Full name" /><input
                 name="age"
@@ -105,8 +95,8 @@
                 max="100"
                 required
                 placeholder="Age"
-              /><select name="siteId" id="teamSite" required></select
-              ><select name="role" required>
+              /><select name="siteId" id="teamSite" hidden></select
+              ><select name="role" hidden>
                 <option value="">Select role</option>
                 <option value="supervisor">Supervisor / shift lead</option>
                 <option value="field_worker">Field worker</option>
@@ -115,7 +105,7 @@
                 <option value="technician">Technician</option>
                 <option value="loader">Loader / warehouse worker</option>
                 <option value="inspector">Field inspector</option></select
-              ><select name="tier" required>
+              ><select name="tier" hidden>
                 <option value="">Operational priority</option>
                 <option>standard</option>
                 <option>elevated</option>
@@ -125,17 +115,14 @@
                 <option value="low">Low</option>
                 <option value="moderate">Moderate</option>
                 <option value="high">High</option></select
-              ><!-- Fitzpatrick and exposure history are retained outside the essential entry flow. --><select
-                name="fitzpatrickType"
-                hidden
-              >
+              ><select name="fitzpatrickType" required>
                 <option value="">Self-reported Fitzpatrick type</option>
-                <option value="1">Type 1</option>
+                <option value="1">Type 1 — burns very quickly</option>
                 <option value="2">Type 2</option>
                 <option value="3">Type 3</option>
                 <option value="4">Type 4</option>
                 <option value="5">Type 5</option>
-                <option value="6">Type 6</option></select
+                <option value="6">Type 6 — burns more slowly</option></select
               ><select name="outdoorHistory" hidden>
                 <option value="">Recent sun exposure</option>
                 <option value="occasional">Occasional</option>
@@ -153,10 +140,10 @@
               ><input
                 name="profileSignature"
                 required
-                placeholder="Employee acknowledgement signature"
+                placeholder="Employee acknowledgement / signature"
               /><select
                 name="avatar"
-                required
+                hidden
                 aria-label="Visual identity avatar"
               >
                 <option value="">Choose a crew figurine</option>
@@ -166,18 +153,18 @@
                 <option value="🌿">🌿 Leaf</option>
                 <option value="⚡">⚡ Bolt</option>
                 <option value="🛠">🛠 Tools</option></select
-              ><small class="avatarNote"
+              ><small class="avatarNote" hidden
                 >Avatar is visual crew identity only; it is not used to infer
                 physiology.</small
               ><button>Add to team</button
-              ><small class="signatureNote"
+              ><small class="signatureNote" hidden
                 >By signing, the employee confirms the profile inputs and
                 receipt of a non-medical operational recommendation. This is not
                 consent to an AI medical determination.</small
               >
             </form>
           </section>
-        </details>
+        </section>
         <section class="shiftGrid">
           <article class="crewPanel">
             <div class="panelTitle">
@@ -189,7 +176,7 @@
             </div>
             <div id="crewList"></div>
           </article>
-          <aside class="auditPanel">
+          <aside class="auditPanel" hidden>
             <p class="eyebrow">PHOTO AUDIT TOOL</p>
             <h2>See the surface. Check the protection.</h2>
             <p>

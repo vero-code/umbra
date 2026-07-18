@@ -288,55 +288,50 @@ export function parseRosterCsv(csv, state) {
 }
 
 export function addTeamMember(state, input) {
-  const required = [
-    "name",
-    "age",
-    "siteId",
-    "role",
-    "tier",
-    "photosensitivity",
-    "outdoorHistory",
-    "fitzpatrickType",
-    "profileSignature",
-  ];
+  const required = ["name", "age", "photosensitivity"];
   if (required.some((key) => !String(input[key] || "").trim()))
-    throw new Error(
-      "Name, age, site, role, priority tier, self-reported sensitivity, Fitzpatrick type, outdoor history, and signature are required",
-    );
-  if (!state.sites.some((site) => site.id === input.siteId))
-    throw new Error("Selected site does not exist");
-  if (!riskTiers[input.tier] || !sensitivityFactors[input.photosensitivity])
+    throw new Error("Name, age, and individual sensitivity are required");
+  const siteId = state.sites.some((site) => site.id === input.siteId)
+    ? input.siteId
+    : state.sites[0]?.id;
+  if (!siteId) throw new Error("Create a job site before adding a worker");
+  const tier = riskTiers[input.tier]
+    ? input.tier
+    : input.photosensitivity === "high"
+      ? "high"
+      : input.photosensitivity === "moderate"
+        ? "elevated"
+        : "standard";
+  if (!sensitivityFactors[input.photosensitivity])
     throw new Error("Invalid exposure profile");
   const age = Number(input.age);
   if (!Number.isInteger(age) || age < 18 || age > 100)
     throw new Error("Age must be a whole number from 18 to 100");
-  const fitzpatrickType = Number(input.fitzpatrickType);
-  if (
-    !Number.isInteger(fitzpatrickType) ||
-    fitzpatrickType < 1 ||
-    fitzpatrickType > 6
-  )
-    throw new Error(
-      "Fitzpatrick type must be self-reported as a number from 1 to 6",
-    );
+  const suppliedFitzpatrick = Number(input.fitzpatrickType);
+  const fitzpatrickType =
+    Number.isInteger(suppliedFitzpatrick) &&
+    suppliedFitzpatrick >= 1 &&
+    suppliedFitzpatrick <= 6
+      ? suppliedFitzpatrick
+      : null;
   const worker = {
     id: id("worker"),
     name: input.name.trim(),
     age,
-    siteId: input.siteId,
-    role: input.role.trim(),
-    tier: input.tier,
+    siteId,
+    role: String(input.role || "field_worker").trim(),
+    tier,
     status: "active",
     exposureProfile: {
       photosensitivity: input.photosensitivity,
-      outdoorHistory: input.outdoorHistory,
+      outdoorHistory: input.outdoorHistory || "unrecorded",
       accommodationNote: String(input.accommodationNote || "").trim() || null,
       avatar: input.avatar || "builder",
       medicalMarkers: String(input.medicalMarkers || "").trim() || null,
       fitzpatrickType,
       photosensitizingMedication: input.photosensitizingMedication === "yes",
-      profileSignature: input.profileSignature.trim(),
-      signedAt: now(),
+      profileSignature: String(input.profileSignature || "").trim() || null,
+      signedAt: input.profileSignature ? now() : null,
       requiresOccupationalHealthReview:
         age >= 60 ||
         input.photosensitizingMedication === "yes" ||

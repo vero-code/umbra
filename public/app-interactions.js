@@ -172,5 +172,5 @@ export async function setupInteractions(runtime) {
   };
   runtime.state = await request("/api/state");
   runtime.render();
-  runtime.switchMode("shift");
+  runtime.switchMode("team");
 }

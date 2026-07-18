@@ -111,10 +111,12 @@ function render() {
     select.innerHTML = `<option value="">Select job site</option>${state.sites.map((site) => `<option value="${site.id}">${esc(site.name)}</option>`).join("")}`;
     select.value = saved;
   });
-  $("#teamSite").innerHTML =
-    `<option value="">Assign job site</option>${state.sites.map((site) => `<option value="${site.id}">${esc(site.name)}</option>`).join("")}`;
-  $("#teamProfileForm select[name='avatar']").innerHTML =
-    '<option value="">Choose a crew figurine</option><option value="builder">Builder</option><option value="engineer">Engineer</option><option value="lead">Site lead</option><option value="spotter">Spotter</option><option value="operator">Operator</option><option value="rigger">Rigger</option>';
+  const teamSite = $("#teamSite");
+  if (teamSite)
+    teamSite.innerHTML = `<option value="">Assign job site</option>${state.sites.map((site) => `<option value="${site.id}">${esc(site.name)}</option>`).join("")}`;
+  const teamAvatar = $("#teamProfileForm select[name='avatar']");
+  if (teamAvatar)
+    teamAvatar.innerHTML = '<option value="builder">Builder</option>';
   $("#externalSite").innerHTML =
     `<option value="">Select job site</option>${state.sites.map((site) => `<option value="${site.id}">${esc(site.name)}</option>`).join("")}`;
   const behaviorWorker = $("#behaviorWorker");
@@ -156,8 +158,13 @@ function applyForemanGate() {
   $("#foremanName").textContent = ready ? foremanProfile.name : "";
   $("#foremanCompany").textContent = ready ? foremanProfile.company : "";
   document.querySelectorAll(".modeNav button").forEach((button) => {
-    button.disabled = !ready;
-    button.title = button.disabled ? "Complete the foreman profile first" : "";
+    const available = ready && button.dataset.mode === "team";
+    button.disabled = !available;
+    button.title = available
+      ? ""
+      : ready
+        ? "Complete the Team step before continuing"
+        : "Complete the foreman profile first";
   });
   if (!ready) {
     document
@@ -310,13 +317,6 @@ function renderExternalTimeline() {
 function renderShift() {
   const topSite = state.portfolio[0];
   const decision = state.decisions[0];
-  $("#shiftRisk").textContent = topSite?.exposureScore ?? "—";
-  $("#shiftRiskText").textContent = topSite
-    ? `${topSite.name} is the highest-risk active site.`
-    : "No active site risk.";
-  $("#shiftSummary").textContent =
-    decision?.recommendation ||
-    "No active rotation recommendation. Monitoring current conditions.";
   $("#crewTitle").textContent = topSite
     ? `${topSite.name} crew`
     : "Active crew";
@@ -459,7 +459,7 @@ async function sync() {
 }
 
 function switchMode(mode) {
-  if ((!foremanProfile?.name || !foremanProfile?.company) && mode !== "team") {
+  if (mode !== "team") {
     applyForemanGate();
     return;
   }
