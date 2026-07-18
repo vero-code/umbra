@@ -3,3 +3,4 @@ data/umbra.json
 data/workers.json
 data/objects.json
 node_modules/
+dist/

@@ -5,7 +5,20 @@
   "type": "module",
   "scripts": {
     "dev": "node --watch server.mjs",
+    "dev:ui": "vite",
+    "dev:react": "concurrently \"npm run dev\" \"npm run dev:ui\"",
     "start": "node server.mjs",
     "test": "node --test"
+  },
+  "dependencies": {
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "react-router-dom": "^7.18.1",
+    "zustand": "^5.0.14"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.0.3",
+    "concurrently": "^10.0.3",
+    "vite": "^8.1.5"
   }
 }
