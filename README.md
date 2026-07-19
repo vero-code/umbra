@@ -9,10 +9,15 @@ Umbra continuously monitors the current operational state, but it rebuilds recom
 Requires Node.js 20+.
 
 ```bash
-node server.mjs
+npm run dev
 ```
 
-Open `http://localhost:3000`. The default experience uses reproducible seeded data and requires no API keys.
+Open `http://localhost:3000`. This is the React application. Its local API runs on
+port `3001`; Vite proxies `/api` calls automatically. The default experience uses
+reproducible seeded data and requires no API keys.
+
+`npm run dev:legacy` remains available only as a temporary archive of the native
+JavaScript implementation. It is not the active product UI.
 
 Select **Refresh conditions** to retrieve hourly UV index, temperature, and cloud cover for each seeded site from Open-Meteo. If that provider is unavailable, Umbra retains and visibly records the last-known forecast instead of fabricating a result.
 
@@ -45,8 +50,8 @@ No key is required for development. In that case, the model-status endpoint and
 the test endpoint return an explicitly labeled, deterministic mock response:
 
 ```powershell
-Invoke-RestMethod http://localhost:3000/api/model/status
-Invoke-RestMethod -Method Post http://localhost:3000/api/model/test
+Invoke-RestMethod http://localhost:3001/api/model/status
+Invoke-RestMethod -Method Post http://localhost:3001/api/model/test
 ```
 
 At the end of the hackathon, set the key and repeat the second command. It makes

@@ -5,7 +5,14 @@ let currentMode = "shift";
 // Design review only: allows navigation without changing the real onboarding flow.
 const designPreview =
   new URLSearchParams(window.location.search).get("preview") === "all";
-const previewModes = ["team", "external", "behavioral", "shift", "incident", "reports"];
+const previewModes = [
+  "team",
+  "external",
+  "behavioral",
+  "shift",
+  "incident",
+  "reports",
+];
 const placements = new Map();
 let teamProfileDirty = false;
 let externalFactorsDirty = false;
@@ -202,7 +209,9 @@ function updateModeSlider() {
     const index = previewModes.indexOf(currentMode);
     previous.disabled = index <= 0;
     next.disabled = index < 0 || index >= previewModes.length - 1;
-    previous.title = previous.disabled ? "First preview screen" : "Previous screen";
+    previous.title = previous.disabled
+      ? "First preview screen"
+      : "Previous screen";
     next.title = next.disabled ? "Last preview screen" : "Next screen";
     return;
   }
@@ -576,7 +585,8 @@ function switchMode(mode) {
   const hasEmployees = state?.workers?.length > 0;
   if (
     !designPreview &&
-    (mode !== "team" && !(mode === "external" && hasEmployees))
+    mode !== "team" &&
+    !(mode === "external" && hasEmployees)
   ) {
     applyForemanGate();
     return;

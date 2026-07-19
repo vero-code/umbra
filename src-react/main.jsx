@@ -32,7 +32,10 @@ async function compactImage(file) {
       element.src = source;
     });
     const maxDimension = 1600;
-    const scale = Math.min(1, maxDimension / Math.max(image.width, image.height));
+    const scale = Math.min(
+      1,
+      maxDimension / Math.max(image.width, image.height),
+    );
     const canvas = document.createElement("canvas");
     canvas.width = Math.max(1, Math.round(image.width * scale));
     canvas.height = Math.max(1, Math.round(image.height * scale));
@@ -51,7 +54,9 @@ const useUmbra = create((set) => ({
   state: null,
   setState: (state) => set({ state }),
   setProfile: (profile) => {
-    localStorage.setItem("umbra_foreman_profile", JSON.stringify(profile));
+    if (profile)
+      localStorage.setItem("umbra_foreman_profile", JSON.stringify(profile));
+    else localStorage.removeItem("umbra_foreman_profile");
     set({ profile, state: null });
   },
 }));
@@ -78,6 +83,8 @@ function Shell({ children }) {
 function AppHeader({ profile, state, showControls = true }) {
   const location = useLocation();
   const navigate = useNavigate();
+  const setProfile = useUmbra((store) => store.setProfile);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const hasTeam = Boolean(state?.workers?.length);
   const hasExternalEvidence = Boolean(
     localStorage.getItem(profileKey(profile)),
@@ -100,6 +107,13 @@ function AppHeader({ profile, state, showControls = true }) {
   );
   const previousStep = availableSteps[activeStepIndex - 1];
   const nextStep = availableSteps[activeStepIndex + 1];
+  const signOut = () => {
+    if (!window.confirm("End this shift and return to foreman sign-in?"))
+      return;
+    setProfile(null);
+    setProfileMenuOpen(false);
+    navigate("/");
+  };
   return (
     <div className="reactHeaderWrap">
       <header className="reactHeader">
@@ -130,13 +144,32 @@ function AppHeader({ profile, state, showControls = true }) {
           )}
         </nav>
         {profile && (
-          <span className="foremanIdentity">
-            <span aria-hidden="true">👷</span>
-            <span>
-              <b>{profile.name}</b>
-              <small>{profile.company}</small>
-            </span>
-          </span>
+          <div className="foremanProfileMenu">
+            <button
+              type="button"
+              className="foremanIdentity"
+              aria-expanded={profileMenuOpen}
+              aria-controls="foremanActions"
+              onClick={() => setProfileMenuOpen((open) => !open)}
+            >
+              <span aria-hidden="true">👷</span>
+              <span>
+                <b>{profile.name}</b>
+                <small>{profile.company}</small>
+              </span>
+            </button>
+            {profileMenuOpen && (
+              <div id="foremanActions" className="foremanActions">
+                <button type="button" disabled title="Coming soon">
+                  Settings
+                  <small>Coming soon</small>
+                </button>
+                <button type="button" className="signOut" onClick={signOut}>
+                  Sign out
+                </button>
+              </div>
+            )}
+          </div>
         )}
         {!profile && (
           <span className="headerProfileSpacer" aria-hidden="true" />
@@ -629,9 +662,10 @@ function External() {
                     <div>
                       <dt>Planning external dose</dt>
                       <dd>
-                        {exposure.baseUvi} × {exposure.sunAltitudeFactor}× sun/time
-                        × {exposure.cloudFactor}× cloud × {exposure.albedoFactor}×
-                        albedo = <b>{exposure.doseIndex}</b>
+                        {exposure.baseUvi} × {exposure.sunAltitudeFactor}×
+                        sun/time × {exposure.cloudFactor}× cloud ×{" "}
+                        {exposure.albedoFactor}× albedo ={" "}
+                        <b>{exposure.doseIndex}</b>
                       </dd>
                     </div>
                   </dl>

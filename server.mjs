@@ -34,7 +34,10 @@ const storeDir = join(root, "data");
 const storePath = join(storeDir, "umbra.json");
 const workerStorePath = join(storeDir, "workers.json");
 const objectStorePath = join(storeDir, "objects.json");
-const port = Number(process.env.PORT || 3000);
+const portFlag = process.argv.indexOf("--port");
+const port = Number(
+  process.env.PORT || (portFlag >= 0 ? process.argv[portFlag + 1] : 3000),
+);
 
 const teamId = (profile) =>
   `team_${Buffer.from(
@@ -242,7 +245,8 @@ const server = http.createServer(async (req, res) => {
       const input = await body(req);
       const state = await getState(input.profile);
       const template = state.sites.find((entry) => entry.id === input.siteId);
-      if (!template) return json(res, 404, { error: "Site template not found" });
+      if (!template)
+        return json(res, 404, { error: "Site template not found" });
       const site = {
         ...template,
         id: `object_${crypto.randomUUID().slice(0, 8)}`,
@@ -280,7 +284,9 @@ const server = http.createServer(async (req, res) => {
       const state = await getState(input.profile);
       const draft = input.draft;
       if (!draft?.site || !draft?.assessment || !draft?.forecast)
-        return json(res, 400, { error: "A completed object analysis is required" });
+        return json(res, 400, {
+          error: "A completed object analysis is required",
+        });
       let site = state.sites.find((entry) => entry.id === draft.site.id);
       if (!site) {
         site = {
