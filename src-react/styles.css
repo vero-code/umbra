@@ -471,8 +471,8 @@ main.reactWorkspace {
   color: #65728f;
 }
 #externalMode .externalForm form {
-  display: grid;
-  grid-template-columns: 1fr;
+  display: flex;
+  flex-direction: column;
   margin-top: 18px;
   padding: 0;
   border: 0;
@@ -480,9 +480,47 @@ main.reactWorkspace {
   background: transparent;
   box-shadow: none;
 }
-#externalMode .externalForm form > button {
-  grid-column: auto;
+#externalMode .externalForm form > * {
+  width: 100%;
+}
+#externalMode .externalForm .externalPhotoPreview {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: 100%;
 }
 .externalMessage {
   color: #65728f;
+}
+
+#externalMode .externalPhotoPreview .removeExternalPhoto {
+  z-index: 2;
+  width: 24px;
+  min-width: 24px;
+  height: 24px;
+  min-height: 24px;
+  padding: 0;
+  font: 500 1.1rem/1 Arial, sans-serif;
+  transform: none;
+}
+
+.calculationNote {
+  margin: 14px 0;
+  color: #65728f;
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.parserActions {
+  display: grid;
+  gap: 8px;
+}
+
+.parserActions button {
+  width: 100%;
+}
+
+.parserActions .secondaryButton {
+  border: 1px solid #d6d9f0;
+  background: #fff;
+  color: #536080;
 }

@@ -14,6 +14,8 @@ import {
   parseRosterCsv,
   buildPortfolio,
   assessProperty,
+  calculateEnvironmentalExposure,
+  settingFactors,
   addTeamMember,
   decisionFromPlan,
   auditWorksitePhoto,
@@ -235,6 +237,82 @@ const server = http.createServer(async (req, res) => {
       const decisions = await processEvent(state, event);
       await saveState(state);
       return json(res, 201, { site, assessment, decisions, state });
+    }
+    if (req.method === "POST" && url.pathname === "/api/property/preview") {
+      const input = await body(req);
+      const state = await getState(input.profile);
+      const template = state.sites.find((entry) => entry.id === input.siteId);
+      if (!template) return json(res, 404, { error: "Site template not found" });
+      const site = {
+        ...template,
+        id: `object_${crypto.randomUUID().slice(0, 8)}`,
+        name: String(input.objectName || "New worksite").trim(),
+        task: "Environmental assessment",
+        setting: "uncertain",
+        forecast: { ...template.forecast },
+      };
+      state.sites.push(site);
+      await refreshForecast(site);
+      const { assessment } = await assessProperty(state, input);
+      return json(res, 200, {
+        draft: {
+          siteId: site.id,
+          site: {
+            id: site.id,
+            name: site.name,
+            task: site.task,
+            shift: site.shift,
+            latitude: site.latitude,
+            longitude: site.longitude,
+            equipment: site.equipment,
+          },
+          objectName: site.propertyObjectName,
+          location: site.propertyLocation,
+          photos: site.propertyPhotos,
+          assessment,
+          forecast: site.forecast,
+          exposure: calculateEnvironmentalExposure(site),
+        },
+      });
+    }
+    if (req.method === "POST" && url.pathname === "/api/property/confirm") {
+      const input = await body(req);
+      const state = await getState(input.profile);
+      const draft = input.draft;
+      if (!draft?.site || !draft?.assessment || !draft?.forecast)
+        return json(res, 400, { error: "A completed object analysis is required" });
+      let site = state.sites.find((entry) => entry.id === draft.site.id);
+      if (!site) {
+        site = {
+          ...draft.site,
+          id: String(draft.site.id),
+          name: String(draft.site.name || draft.objectName || "New worksite"),
+          setting: "uncertain",
+          forecast: {},
+        };
+        state.sites.push(site);
+      }
+      const setting = settingFactors[draft.assessment.setting]
+        ? draft.assessment.setting
+        : "uncertain";
+      site.propertyObjectName = String(draft.objectName || site.name);
+      site.propertyLocation = String(draft.location || site.name);
+      site.propertyPhotos = Array.isArray(draft.photos) ? draft.photos : [];
+      site.propertyAssessment = {
+        ...draft.assessment,
+        setting,
+        assessedAt: new Date().toISOString(),
+      };
+      site.forecast = draft.forecast;
+      site.setting = setting;
+      const event = createEvent(state, "property_imagery_assessed", {
+        siteId: site.id,
+        location: site.propertyLocation,
+        setting,
+      });
+      const decisions = await processEvent(state, event);
+      await saveState(state);
+      return json(res, 201, { site, decisions, state });
     }
     if (req.method === "POST" && url.pathname === "/api/photo-audit") {
       const state = await getState();

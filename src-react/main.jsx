@@ -21,6 +21,27 @@ const api = async (path, options = {}) => {
   if (!response.ok) throw new Error(data.error || "Request failed");
   return data;
 };
+
+async function compactImage(file) {
+  const source = URL.createObjectURL(file);
+  try {
+    const image = await new Promise((resolve, reject) => {
+      const element = new Image();
+      element.onload = () => resolve(element);
+      element.onerror = () => reject(new Error(`Cannot read ${file.name}`));
+      element.src = source;
+    });
+    const maxDimension = 1600;
+    const scale = Math.min(1, maxDimension / Math.max(image.width, image.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(image.width * scale));
+    canvas.height = Math.max(1, Math.round(image.height * scale));
+    canvas.getContext("2d").drawImage(image, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL("image/jpeg", 0.82);
+  } finally {
+    URL.revokeObjectURL(source);
+  }
+}
 const profileKey = (profile) =>
   `umbra_external_evidence_${profile?.company || ""}:${profile?.name || ""}`;
 const statePath = (profile) =>
@@ -452,8 +473,9 @@ function ScrollToTop() {
 }
 function External() {
   const { profile, state, setState } = useData();
+  const navigate = useNavigate();
   const [files, setFiles] = useState([]);
-  const [result, setResult] = useState(null);
+  const [draft, setDraft] = useState(null);
   const [message, setMessage] = useState("");
   const savedEvidence = state?.sites
     ?.map((site) => ({ site, assessment: site.propertyAssessment }))
@@ -465,50 +487,53 @@ function External() {
       return setMessage("Add at least two photos from different angles.");
     const form = Object.fromEntries(new FormData(event.currentTarget));
     try {
-      setMessage("Parsing weather and assessing object...");
+      setMessage("Analyzing the object and calculating external exposure...");
       const siteId = state.sites[0]?.id;
-      const weather = await api("/api/refresh-conditions", {
-        method: "POST",
-        body: JSON.stringify({ siteId }),
-      });
       const photos = await Promise.all(
         files.map(async (file, index) => ({
-          image: await new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result);
-            reader.readAsDataURL(file);
-          }),
+          image: await compactImage(file),
           angle: `Angle ${index + 1}`,
           note: form.notes || "",
         })),
       );
-      const assessment = await api("/api/property/assess", {
+      const preview = await api("/api/property/preview", {
         method: "POST",
         body: JSON.stringify({
           siteId,
+          profile,
           objectName: form.objectName,
           location: form.location,
           notes: form.notes,
           photos,
         }),
       });
-      localStorage.setItem(profileKey(profile), "true");
-      setState(assessment.state);
-      setResult({
-        weather: weather.site.forecast,
-        assessment: assessment.assessment,
-        objectName: form.objectName,
-      });
-      setFiles([]);
-      event.currentTarget.reset();
-      setMessage("Assessment saved.");
+      setDraft(preview.draft);
+      setMessage("Review the calculation, then save it or recalculate.");
     } catch (error) {
       setMessage(error.message);
     }
   };
-  const analysis = result?.assessment;
-  const weather = result?.weather;
-  const objectName = result?.objectName;
+  const confirmDraft = async () => {
+    if (!draft) return;
+    try {
+      setMessage("Saving the approved object assessment...");
+      const confirmed = await api("/api/property/confirm", {
+        method: "POST",
+        body: JSON.stringify({ profile, draft }),
+      });
+      localStorage.setItem(profileKey(profile), "true");
+      setState(confirmed.state);
+      setFiles([]);
+      setMessage("Object assessment saved. Opening Behavioral Factors...");
+      navigate("/behavioral");
+    } catch (error) {
+      setMessage(error.message);
+    }
+  };
+  const analysis = draft?.assessment;
+  const weather = draft?.forecast;
+  const exposure = draft?.exposure;
+  const objectName = draft?.objectName;
   const visibleSavedEvidence = hasCrewEvidence ? savedEvidence : null;
   return (
     <Shell>
@@ -560,7 +585,9 @@ function External() {
                           className="removeExternalPhoto"
                           aria-label={`Remove angle ${index + 1}`}
                           onClick={() =>
-                            setFiles(files.filter((_, item) => item !== index))
+                            setFiles((current) =>
+                              current.filter((_, item) => item !== index),
+                            )
                           }
                         >
                           ×
@@ -579,10 +606,10 @@ function External() {
               <p className="eyebrow">CURRENT OBJECT PARSER</p>
               {analysis && weather ? (
                 <>
-                  <h2>{objectName}</h2>
+                  <h2>{objectName} — analysis ready</h2>
                   <dl className="externalAnalysis">
                     <div>
-                      <dt>Current weather parser</dt>
+                      <dt>Current weather</dt>
                       <dd>
                         UVI {weather.uvi} · {weather.temperatureC}°C ·{" "}
                         {weather.cloudCover}% cloud cover ·{" "}
@@ -590,14 +617,45 @@ function External() {
                       </dd>
                     </div>
                     <div>
-                      <dt>Vision assessment</dt>
+                      <dt>Visible site evidence</dt>
                       <dd>{analysis.summary}</dd>
                     </div>
                     <div>
-                      <dt>Albedo multiplier</dt>
-                      <dd>{analysis.setting}</dd>
+                      <dt>Albedo / surface multiplier</dt>
+                      <dd>
+                        {analysis.setting} · {exposure.albedoFactor}×
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Planning external dose</dt>
+                      <dd>
+                        {exposure.baseUvi} × {exposure.sunAltitudeFactor}× sun/time
+                        × {exposure.cloudFactor}× cloud × {exposure.albedoFactor}×
+                        albedo = <b>{exposure.doseIndex}</b>
+                      </dd>
                     </div>
                   </dl>
+                  <p className="calculationNote">
+                    Peak sun factor applies from 11:00–16:00. Dense cloud lowers
+                    the dose; light cloud or haze may increase it. Reflective
+                    concrete, glass, metal, sand, or water can raise the albedo
+                    factor.
+                  </p>
+                  <div className="parserActions">
+                    <button type="button" onClick={confirmDraft}>
+                      OK — save &amp; continue
+                    </button>
+                    <button
+                      type="button"
+                      className="secondaryButton"
+                      onClick={() => {
+                        setDraft(null);
+                        setMessage("Adjust the evidence and recalculate.");
+                      }}
+                    >
+                      Recalculate
+                    </button>
+                  </div>
                 </>
               ) : (
                 <>
