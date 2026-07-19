@@ -506,13 +506,12 @@ function ScrollToTop() {
 }
 function External() {
   const { profile, state, setState } = useData();
-  const navigate = useNavigate();
   const [files, setFiles] = useState([]);
   const [draft, setDraft] = useState(null);
   const [message, setMessage] = useState("");
-  const savedEvidence = state?.sites
-    ?.map((site) => ({ site, assessment: site.propertyAssessment }))
-    .find((entry) => entry.assessment);
+  const savedEvidence = (state?.sites || [])
+    .filter((site) => site.propertyAssessment)
+    .map((site) => ({ site, assessment: site.propertyAssessment }));
   const hasCrewEvidence = Boolean(localStorage.getItem(profileKey(profile)));
   const submit = async (event) => {
     event.preventDefault();
@@ -525,6 +524,7 @@ function External() {
       const photos = await Promise.all(
         files.map(async (file, index) => ({
           image: await compactImage(file),
+          fileName: file.name,
           angle: `Angle ${index + 1}`,
           note: form.notes || "",
         })),
@@ -540,7 +540,7 @@ function External() {
           photos,
         }),
       });
-      setDraft(preview.draft);
+      setDraft({ ...preview.draft, saved: false });
       setMessage("Review the calculation, then save it or recalculate.");
     } catch (error) {
       setMessage(error.message);
@@ -557,8 +557,8 @@ function External() {
       localStorage.setItem(profileKey(profile), "true");
       setState(confirmed.state);
       setFiles([]);
-      setMessage("Object assessment saved. Opening Behavioral Factors...");
-      navigate("/behavioral");
+      setDraft((current) => (current ? { ...current, saved: true } : current));
+      setMessage("Object assessment saved in the table below.");
     } catch (error) {
       setMessage(error.message);
     }
@@ -567,7 +567,7 @@ function External() {
   const weather = draft?.forecast;
   const exposure = draft?.exposure;
   const objectName = draft?.objectName;
-  const visibleSavedEvidence = hasCrewEvidence ? savedEvidence : null;
+  const savedEvidenceRows = hasCrewEvidence ? savedEvidence : [];
   return (
     <Shell>
       <main className="reactWorkspace">
@@ -650,9 +650,23 @@ function External() {
                       </dd>
                     </div>
                     <div>
-                      <dt>Visible site evidence</dt>
+                      <dt>Site evidence assessment</dt>
                       <dd>{analysis.summary}</dd>
                     </div>
+                    <div>
+                      <dt>Assessment mode</dt>
+                      <dd>
+                        {String(analysis.confidence || "").includes("demo")
+                          ? "Demo image assessment — confirm conditions on site"
+                          : "GPT-5.6 Vision assessment"}
+                      </dd>
+                    </div>
+                    {(analysis.factors || []).length > 0 && (
+                      <div>
+                        <dt>Surface and shade context</dt>
+                        <dd>{analysis.factors.join(" ")}</dd>
+                      </div>
+                    )}
                     <div>
                       <dt>Albedo / surface multiplier</dt>
                       <dd>
@@ -676,7 +690,15 @@ function External() {
                     factor.
                   </p>
                   <div className="parserActions">
-                    <button type="button" onClick={confirmDraft}>
+                    <button
+                      type="button"
+                      className="saveObjectButton"
+                      onClick={confirmDraft}
+                      disabled={draft.saved}
+                      aria-label={
+                        draft.saved ? "Saved below" : "OK — save object"
+                      }
+                    >
                       OK — save &amp; continue
                     </button>
                     <button
@@ -705,62 +727,57 @@ function External() {
           </section>
           <section className="reasoning externalEvidence">
             <p className="eyebrow">SAVED EXTERNAL EVIDENCE</p>
-            {visibleSavedEvidence ? (
-              <>
-                <h2>
-                  {visibleSavedEvidence.site.name} ·{" "}
-                  {visibleSavedEvidence.assessment.setting} exposure
-                </h2>
-                <p>{visibleSavedEvidence.assessment.summary}</p>
-                <ul>
-                  {(visibleSavedEvidence.assessment.factors || []).map(
-                    (factor) => (
-                      <li key={factor}>{factor}</li>
-                    ),
-                  )}
-                </ul>
-                <small>
-                  Water feature:{" "}
-                  {visibleSavedEvidence.assessment.waterFeature || "unknown"} ·
-                  confidence:{" "}
-                  {visibleSavedEvidence.assessment.confidence || "unavailable"}
-                </small>
-              </>
-            ) : (
-              <p>
-                Submitted object assessments are saved here for this crew,
-                including visible materials, shade observations, albedo, and
-                confidence.
+            {savedEvidenceRows.length > 0 && (
+              <div className="savedEvidenceTable" role="table">
+                <div className="savedEvidenceHead" role="row">
+                  <span>Object</span>
+                  <span>Location</span>
+                  <span>Site evidence</span>
+                  <span>Albedo</span>
+                  <span>Planning dose</span>
+                  <span>Saved</span>
+                </div>
+                {savedEvidenceRows.map(({ site, assessment }) => {
+                  const storedExposure = assessment.exposure;
+                  return (
+                    <div className="savedEvidenceRow" role="row" key={site.id}>
+                      <span>
+                        <b>{site.propertyObjectName || site.name}</b>
+                        <small>{site.propertyPhotos?.length || 0} angles</small>
+                      </span>
+                      <span>{site.propertyLocation || "Not recorded"}</span>
+                      <span>
+                        {(assessment.reflectiveMaterials || []).join(", ") ||
+                          assessment.summary}
+                      </span>
+                      <span>
+                        {assessment.setting} ·{" "}
+                        {storedExposure?.albedoFactor || "—"}×
+                      </span>
+                      <span>
+                        {storedExposure
+                          ? `${storedExposure.doseIndex} (UVI ${storedExposure.baseUvi})`
+                          : "—"}
+                      </span>
+                      <span>
+                        {assessment.assessedAt
+                          ? new Date(assessment.assessedAt).toLocaleTimeString(
+                              [],
+                              { hour: "2-digit", minute: "2-digit" },
+                            )
+                          : "—"}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            {!savedEvidenceRows.length && (
+              <p className="emptyEvidence">
+                Confirm an object assessment to save its weather, image
+                evidence, albedo multiplier, and planning dose here.
               </p>
             )}
-            <div className="evidenceTimeline">
-              <p className="eyebrow">EVIDENCE TIMELINE</p>
-              {(visibleSavedEvidence ? state?.activity || [] : [])
-                .filter((item) =>
-                  /weather|imagery|photo|UV|surface/i.test(
-                    `${item.message} ${item.detail}`,
-                  ),
-                )
-                .slice(0, 4)
-                .map((item) => (
-                  <div key={item.id}>
-                    <time>
-                      {new Date(item.at).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </time>
-                    <span>{item.message}</span>
-                    <small>{item.detail}</small>
-                  </div>
-                ))}
-              {!visibleSavedEvidence && (
-                <small>
-                  The saved history of object uploads, weather refreshes, and
-                  assessment updates will appear here.
-                </small>
-              )}
-            </div>
           </section>
         </section>
       </main>

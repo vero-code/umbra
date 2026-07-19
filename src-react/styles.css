@@ -586,3 +586,67 @@ main.reactWorkspace {
   background: #fff;
   color: #536080;
 }
+
+.parserActions .saveObjectButton {
+  font-size: 0;
+}
+
+.parserActions .saveObjectButton::before {
+  content: "OK — save object";
+  font-size: 0.73rem;
+}
+
+.parserActions .saveObjectButton:disabled {
+  cursor: default;
+  opacity: 0.72;
+}
+
+.parserActions .saveObjectButton:disabled::before {
+  content: "Saved below";
+}
+
+.savedEvidenceTable {
+  margin-top: 16px;
+  overflow-x: auto;
+  border-top: 1px solid #d9dcf2;
+}
+
+.savedEvidenceHead,
+.savedEvidenceRow {
+  display: grid;
+  grid-template-columns: 1.05fr 1.3fr 1.7fr 0.8fr 0.9fr 0.65fr;
+  min-width: 800px;
+  gap: 14px;
+  align-items: start;
+  padding: 12px 0;
+  border-bottom: 1px solid #ececf4;
+}
+
+.savedEvidenceHead {
+  color: #6d7895;
+  font:
+    700 0.61rem "DM Mono",
+    monospace;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.savedEvidenceRow {
+  color: #59637f;
+  font-size: 0.7rem;
+  line-height: 1.35;
+}
+
+.savedEvidenceRow b,
+.savedEvidenceRow small {
+  display: block;
+}
+
+.savedEvidenceRow b {
+  color: #20284c;
+}
+
+.savedEvidenceRow small {
+  margin-top: 3px;
+  color: #8790ab;
+}

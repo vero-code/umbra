@@ -496,7 +496,7 @@ export async function assessProperty(state, input) {
     throw new Error("At least one property photo is required");
   const assessment = await analyzePropertyWithModel(
     photos,
-    `${input.location || site.name}. Supervisor notes: ${input.notes || "none"}`,
+    `${input.objectName || site.name}. ${input.location || site.name}. Supervisor notes: ${input.notes || "none"}`,
   );
   site.propertyObjectName = String(input.objectName || "").trim() || site.name;
   site.propertyLocation = String(input.location || "").trim() || site.name;

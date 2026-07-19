@@ -86,7 +86,10 @@ async function getState(profile) {
   state.decisions ||= [];
   state.activity ||= [];
   state.photoAudits ||= [];
-  state.sites = (await readObjectStore()).objects;
+  const storedObjects = (await readObjectStore()).objects;
+  state.sites = storedObjects.length
+    ? storedObjects
+    : seedState().sites.map((site) => ({ ...site, isTemplate: true }));
   state.agent ||= {
     status: "monitoring",
     lastCycleAt: null,
@@ -104,7 +107,7 @@ async function saveState(state) {
   await mkdir(storeDir, { recursive: true });
   const { workers, sites, ...persistentState } = state;
   await writeFile(storePath, JSON.stringify(persistentState, null, 2));
-  await saveObjectStore(sites);
+  await saveObjectStore(sites.filter((site) => !site.isTemplate));
 }
 function json(res, status, payload) {
   res.writeHead(status, { "content-type": "application/json; charset=utf-8" });
@@ -250,6 +253,7 @@ const server = http.createServer(async (req, res) => {
       const site = {
         ...template,
         id: `object_${crypto.randomUUID().slice(0, 8)}`,
+        isTemplate: false,
         name: String(input.objectName || "New worksite").trim(),
         task: "Environmental assessment",
         setting: "uncertain",
@@ -257,7 +261,10 @@ const server = http.createServer(async (req, res) => {
       };
       state.sites.push(site);
       await refreshForecast(site);
-      const { assessment } = await assessProperty(state, input);
+      const { assessment } = await assessProperty(state, {
+        ...input,
+        siteId: site.id,
+      });
       return json(res, 200, {
         draft: {
           siteId: site.id,
@@ -293,6 +300,7 @@ const server = http.createServer(async (req, res) => {
           ...draft.site,
           id: String(draft.site.id),
           name: String(draft.site.name || draft.objectName || "New worksite"),
+          isTemplate: false,
           setting: "uncertain",
           forecast: {},
         };
@@ -304,13 +312,14 @@ const server = http.createServer(async (req, res) => {
       site.propertyObjectName = String(draft.objectName || site.name);
       site.propertyLocation = String(draft.location || site.name);
       site.propertyPhotos = Array.isArray(draft.photos) ? draft.photos : [];
+      site.forecast = draft.forecast;
+      site.setting = setting;
       site.propertyAssessment = {
         ...draft.assessment,
         setting,
+        exposure: calculateEnvironmentalExposure(site),
         assessedAt: new Date().toISOString(),
       };
-      site.forecast = draft.forecast;
-      site.setting = setting;
       const event = createEvent(state, "property_imagery_assessed", {
         siteId: site.id,
         location: site.propertyLocation,
