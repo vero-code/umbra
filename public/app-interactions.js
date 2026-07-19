@@ -66,8 +66,27 @@ export async function setupInteractions(runtime) {
       (button) =>
         (button.onclick = () => runtime.switchMode(button.dataset.mode)),
     );
-  $("#previousMode").onclick = () => runtime.switchMode("team");
-  $("#nextMode").onclick = () => runtime.switchMode("external");
+  const previewModes = [
+    "team",
+    "external",
+    "behavioral",
+    "shift",
+    "incident",
+    "reports",
+  ];
+  const isDesignPreview =
+    new URLSearchParams(window.location.search).get("preview") === "all";
+  $("#previousMode").onclick = () => {
+    if (!isDesignPreview) return runtime.switchMode("team");
+    const index = previewModes.indexOf(runtime.currentMode);
+    if (index > 0) runtime.switchMode(previewModes[index - 1]);
+  };
+  $("#nextMode").onclick = () => {
+    if (!isDesignPreview) return runtime.switchMode("external");
+    const index = previewModes.indexOf(runtime.currentMode);
+    if (index >= 0 && index < previewModes.length - 1)
+      runtime.switchMode(previewModes[index + 1]);
+  };
   $("#sunTime").oninput = () => {
     $("#sunLabel").textContent =
       `${String($("#sunTime").value).padStart(2, "0")}:00`;

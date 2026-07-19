@@ -109,7 +109,10 @@ async function body(req) {
   let raw = "";
   for await (const chunk of req) {
     raw += chunk;
-    if (raw.length > 6_000_000) throw new Error("Payload too large");
+    if (raw.length > 25_000_000)
+      throw new Error(
+        "Payload too large: use smaller site photos (25 MB limit).",
+      );
   }
   return raw ? JSON.parse(raw) : {};
 }

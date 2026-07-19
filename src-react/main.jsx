@@ -443,11 +443,22 @@ function InfoTip({ text }) {
     </span>
   );
 }
+function ScrollToTop() {
+  const location = useLocation();
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [location.pathname]);
+  return null;
+}
 function External() {
   const { profile, state, setState } = useData();
   const [files, setFiles] = useState([]);
   const [result, setResult] = useState(null);
   const [message, setMessage] = useState("");
+  const savedEvidence = state?.sites
+    ?.map((site) => ({ site, assessment: site.propertyAssessment }))
+    .find((entry) => entry.assessment);
+  const hasCrewEvidence = Boolean(localStorage.getItem(profileKey(profile)));
   const submit = async (event) => {
     event.preventDefault();
     if (files.length < 2)
@@ -488,92 +499,178 @@ function External() {
         assessment: assessment.assessment,
         objectName: form.objectName,
       });
+      setFiles([]);
+      event.currentTarget.reset();
       setMessage("Assessment saved.");
     } catch (error) {
       setMessage(error.message);
     }
   };
+  const analysis = result?.assessment;
+  const weather = result?.weather;
+  const objectName = result?.objectName;
+  const visibleSavedEvidence = hasCrewEvidence ? savedEvidence : null;
   return (
     <Shell>
-      <main>
-        <section className="hero">
-          <div>
-            <p>ENVIRONMENTAL PARAMETERS</p>
+      <main className="reactWorkspace">
+        <section id="externalMode" className="modeView">
+          <section className="externalHero">
+            <p className="eyebrow">ENVIRONMENTAL PARAMETERS</p>
             <h1>See the conditions that shape UV exposure.</h1>
             <p>
-              Upload two object angles and Umbra will combine current weather
-              with visible surface evidence.
+              Combine location, current meteorology, and a couple of object
+              photos to build a more grounded external-risk assessment.
             </p>
-          </div>
-          <form onSubmit={submit}>
-            <b>OBJECT & LOCATION</b>
-            <label>
-              Object name
-              <input name="objectName" required />
-            </label>
-            <label>
-              Location / work zone
-              <input name="location" required />
-            </label>
-            <label>
-              Object notes <em>optional</em>
-              <input name="notes" placeholder="Concrete, glazing, water…" />
-            </label>
-            <label>
-              Two or more photos
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={(event) => setFiles([...event.target.files])}
-              />
-            </label>
-            <div className="previews">
-              {files.map((file, index) => (
-                <figure key={file.name + index}>
-                  <img src={URL.createObjectURL(file)} />
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setFiles(files.filter((_, item) => item !== index))
-                    }
-                  >
-                    ×
-                  </button>
-                </figure>
-              ))}
+          </section>
+          <section className="externalGrid">
+            <article className="externalForm">
+              <p className="eyebrow">OBJECT &amp; LOCATION</p>
+              <h2>Add environmental evidence</h2>
+              <form onSubmit={submit}>
+                <input name="objectName" required placeholder="Object name" />
+                <input
+                  name="location"
+                  required
+                  placeholder="Object location / work zone"
+                />
+                <input
+                  name="notes"
+                  placeholder="Object notes: asphalt, sand, concrete, glazing"
+                />
+                <label className="externalPhoto">
+                  Add at least two object photos from different angles
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={(event) => setFiles([...event.target.files])}
+                  />
+                </label>
+                {files.length > 0 && (
+                  <div className="externalPhotoPreview">
+                    {files.map((file, index) => (
+                      <figure key={`${file.name}-${index}`}>
+                        <img
+                          src={URL.createObjectURL(file)}
+                          alt={`Object angle ${index + 1}`}
+                        />
+                        <figcaption>Angle {index + 1}</figcaption>
+                        <button
+                          type="button"
+                          className="removeExternalPhoto"
+                          aria-label={`Remove angle ${index + 1}`}
+                          onClick={() =>
+                            setFiles(files.filter((_, item) => item !== index))
+                          }
+                        >
+                          ×
+                        </button>
+                      </figure>
+                    ))}
+                  </div>
+                )}
+                <button>Assess object &amp; parse weather</button>
+                {message && (
+                  <small className="externalMessage">{message}</small>
+                )}
+              </form>
+            </article>
+            <aside className="weatherCard">
+              <p className="eyebrow">CURRENT OBJECT PARSER</p>
+              {analysis && weather ? (
+                <>
+                  <h2>{objectName}</h2>
+                  <dl className="externalAnalysis">
+                    <div>
+                      <dt>Current weather parser</dt>
+                      <dd>
+                        UVI {weather.uvi} · {weather.temperatureC}°C ·{" "}
+                        {weather.cloudCover}% cloud cover ·{" "}
+                        {String(weather.localHour).padStart(2, "0")}:00
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Vision assessment</dt>
+                      <dd>{analysis.summary}</dd>
+                    </div>
+                    <div>
+                      <dt>Albedo multiplier</dt>
+                      <dd>{analysis.setting}</dd>
+                    </div>
+                  </dl>
+                </>
+              ) : (
+                <>
+                  <h2>Analysis results will appear here</h2>
+                  <p>
+                    Add an object name, location, and two photos, then run the
+                    assessment to view current weather, Vision findings, albedo,
+                    and the planning dose calculation.
+                  </p>
+                </>
+              )}
+            </aside>
+          </section>
+          <section className="reasoning externalEvidence">
+            <p className="eyebrow">SAVED EXTERNAL EVIDENCE</p>
+            {visibleSavedEvidence ? (
+              <>
+                <h2>
+                  {visibleSavedEvidence.site.name} ·{" "}
+                  {visibleSavedEvidence.assessment.setting} exposure
+                </h2>
+                <p>{visibleSavedEvidence.assessment.summary}</p>
+                <ul>
+                  {(visibleSavedEvidence.assessment.factors || []).map(
+                    (factor) => (
+                      <li key={factor}>{factor}</li>
+                    ),
+                  )}
+                </ul>
+                <small>
+                  Water feature:{" "}
+                  {visibleSavedEvidence.assessment.waterFeature || "unknown"} ·
+                  confidence:{" "}
+                  {visibleSavedEvidence.assessment.confidence || "unavailable"}
+                </small>
+              </>
+            ) : (
+              <p>
+                Submitted object assessments are saved here for this crew,
+                including visible materials, shade observations, albedo, and
+                confidence.
+              </p>
+            )}
+            <div className="evidenceTimeline">
+              <p className="eyebrow">EVIDENCE TIMELINE</p>
+              {(visibleSavedEvidence ? state?.activity || [] : [])
+                .filter((item) =>
+                  /weather|imagery|photo|UV|surface/i.test(
+                    `${item.message} ${item.detail}`,
+                  ),
+                )
+                .slice(0, 4)
+                .map((item) => (
+                  <div key={item.id}>
+                    <time>
+                      {new Date(item.at).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </time>
+                    <span>{item.message}</span>
+                    <small>{item.detail}</small>
+                  </div>
+                ))}
+              {!visibleSavedEvidence && (
+                <small>
+                  The saved history of object uploads, weather refreshes, and
+                  assessment updates will appear here.
+                </small>
+              )}
             </div>
-            <button>Assess object & parse weather</button>
-            <small>{message}</small>
-          </form>
+          </section>
         </section>
-        <aside className="panel analysis">
-          <p>CURRENT WEATHER PARSER</p>
-          {result ? (
-            <>
-              <h2>{result.objectName}</h2>
-              <p>
-                UVI {result.weather.uvi} · {result.weather.temperatureC}°C ·{" "}
-                {result.weather.cloudCover}% clouds · {result.weather.localHour}
-                :00
-              </p>
-              <p>
-                <b>Vision:</b> {result.assessment.summary}
-              </p>
-              <p>
-                <b>Albedo:</b> {result.assessment.setting}
-              </p>
-            </>
-          ) : (
-            <>
-              <h2>Analysis results will appear here</h2>
-              <p>
-                Add an object name, location and two photos, then run the
-                assessment.
-              </p>
-            </>
-          )}
-        </aside>
       </main>
     </Shell>
   );
@@ -582,6 +679,7 @@ function App() {
   const profile = useUmbra((store) => store.profile);
   return (
     <BrowserRouter>
+      <ScrollToTop />
       {!profile ? (
         <Onboarding />
       ) : (

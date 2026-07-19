@@ -2,6 +2,10 @@ import { setupInteractions } from "/app-interactions.js";
 let state;
 let shownDecisionId;
 let currentMode = "shift";
+// Design review only: allows navigation without changing the real onboarding flow.
+const designPreview =
+  new URLSearchParams(window.location.search).get("preview") === "all";
+const previewModes = ["team", "external", "behavioral", "shift", "incident", "reports"];
 const placements = new Map();
 let teamProfileDirty = false;
 let externalFactorsDirty = false;
@@ -169,9 +173,10 @@ function applyForemanGate() {
   document.querySelectorAll(".modeNav button").forEach((button) => {
     const hasEmployees = state?.workers?.length > 0;
     const available =
-      ready &&
-      (button.dataset.mode === "team" ||
-        (hasEmployees && button.dataset.mode === "external"));
+      designPreview ||
+      (ready &&
+        (button.dataset.mode === "team" ||
+          (hasEmployees && button.dataset.mode === "external")));
     button.disabled = !available;
     button.title = available
       ? ""
@@ -180,7 +185,7 @@ function applyForemanGate() {
         : "Complete the foreman profile first";
   });
   updateModeSlider();
-  if (!ready) {
+  if (!ready && !designPreview) {
     document
       .querySelectorAll(".modeView")
       .forEach((view) => (view.hidden = true));
@@ -193,6 +198,14 @@ function updateModeSlider() {
   const previous = $("#previousMode");
   const next = $("#nextMode");
   if (!previous || !next) return;
+  if (designPreview) {
+    const index = previewModes.indexOf(currentMode);
+    previous.disabled = index <= 0;
+    next.disabled = index < 0 || index >= previewModes.length - 1;
+    previous.title = previous.disabled ? "First preview screen" : "Previous screen";
+    next.title = next.disabled ? "Last preview screen" : "Next screen";
+    return;
+  }
   previous.disabled = !ready || currentMode !== "external";
   next.disabled = !ready || !hasEmployees || currentMode !== "team";
   previous.title = previous.disabled
@@ -561,7 +574,10 @@ async function sync() {
 
 function switchMode(mode) {
   const hasEmployees = state?.workers?.length > 0;
-  if (mode !== "team" && !(mode === "external" && hasEmployees)) {
+  if (
+    !designPreview &&
+    (mode !== "team" && !(mode === "external" && hasEmployees))
+  ) {
     applyForemanGate();
     return;
   }
@@ -670,6 +686,9 @@ await setupInteractions({
   },
   get shownDecisionId() {
     return shownDecisionId;
+  },
+  get currentMode() {
+    return currentMode;
   },
   get foremanProfile() {
     return foremanProfile;

@@ -470,3 +470,19 @@ main.reactWorkspace {
   grid-column: span 2;
   color: #65728f;
 }
+#externalMode .externalForm form {
+  display: grid;
+  grid-template-columns: 1fr;
+  margin-top: 18px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+#externalMode .externalForm form > button {
+  grid-column: auto;
+}
+.externalMessage {
+  color: #65728f;
+}
