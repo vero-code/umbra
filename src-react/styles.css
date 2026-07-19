@@ -411,6 +411,11 @@ body {
   font:
     400 2.15rem/0.8 Arial,
     sans-serif;
+  opacity: 1;
+  cursor: pointer;
+}
+.modeSliderControls button:disabled {
+  cursor: not-allowed;
   opacity: 0.25;
 }
 @media (max-width: 900px) {
@@ -435,4 +440,33 @@ body {
   .foremanOnboarding form {
     grid-template-columns: 1fr;
   }
+}
+
+/* The Team page deliberately reuses the established static page geometry. */
+main.reactWorkspace {
+  max-width: 1220px;
+  margin: auto;
+  padding: 28px 30px 80px;
+}
+#teamMode .teamProfilePanel form {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+#teamMode .teamProfilePanel form > button {
+  grid-column: span 2;
+}
+#teamMode .crewEmpty {
+  margin: 18px 0 0;
+  padding: 16px;
+  border: 1px dashed #d9dcf2;
+  border-radius: 12px;
+  color: #717797;
+}
+.teamMessage {
+  grid-column: span 2;
+  color: #65728f;
 }

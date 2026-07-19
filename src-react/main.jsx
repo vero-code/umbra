@@ -6,6 +6,8 @@ import {
   Navigate,
   Route,
   Routes,
+  useLocation,
+  useNavigate,
 } from "react-router-dom";
 import { create } from "zustand";
 import "./styles.css";
@@ -53,6 +55,8 @@ function Shell({ children }) {
   );
 }
 function AppHeader({ profile, state, showControls = true }) {
+  const location = useLocation();
+  const navigate = useNavigate();
   const hasTeam = Boolean(state?.workers?.length);
   const hasExternalEvidence = Boolean(
     localStorage.getItem(profileKey(profile)),
@@ -69,6 +73,12 @@ function AppHeader({ profile, state, showControls = true }) {
     { label: "Live Incident", to: "/incident", available: false },
     { label: "Reports", to: "/reports", available: false },
   ];
+  const availableSteps = navigation.filter((item) => item.available);
+  const activeStepIndex = availableSteps.findIndex(
+    (item) => item.to === location.pathname,
+  );
+  const previousStep = availableSteps[activeStepIndex - 1];
+  const nextStep = availableSteps[activeStepIndex + 1];
   return (
     <div className="reactHeaderWrap">
       <header className="reactHeader">
@@ -112,11 +122,21 @@ function AppHeader({ profile, state, showControls = true }) {
         )}
       </header>
       {showControls && (
-        <div className="modeSliderControls" aria-hidden="true">
-          <button type="button" disabled>
+        <div className="modeSliderControls" aria-label="Workflow navigation">
+          <button
+            type="button"
+            disabled={!previousStep}
+            onClick={() => previousStep && navigate(previousStep.to)}
+            aria-label="Previous available step"
+          >
             ‹
           </button>
-          <button type="button" disabled>
+          <button
+            type="button"
+            disabled={!nextStep}
+            onClick={() => nextStep && navigate(nextStep.to)}
+            aria-label="Next available step"
+          >
             ›
           </button>
         </div>
@@ -169,123 +189,258 @@ function PendingScreen({ title, detail }) {
 function Team() {
   const { profile, state, setState } = useData();
   const [message, setMessage] = useState("");
+  const [editingWorker, setEditingWorker] = useState(null);
   const submit = async (event) => {
     event.preventDefault();
     const input = Object.fromEntries(new FormData(event.currentTarget));
     try {
-      const data = await api("/api/team-member", {
-        method: "POST",
-        body: JSON.stringify({ ...input, profile }),
-      });
+      const data = await api(
+        editingWorker
+          ? `/api/team-member/${editingWorker.id}`
+          : "/api/team-member",
+        {
+          method: "POST",
+          body: JSON.stringify({ ...input, profile }),
+        },
+      );
       setState(data.state);
       event.currentTarget.reset();
-      setMessage("Employee profile added.");
+      setEditingWorker(null);
+      setMessage(
+        editingWorker ? "Employee profile updated." : "Employee profile added.",
+      );
+    } catch (error) {
+      setMessage(error.message);
+    }
+  };
+  const deleteWorker = async (worker) => {
+    if (!window.confirm(`Delete ${worker.name}'s employee profile?`)) return;
+    try {
+      const data = await api(`/api/team-member/${worker.id}/delete`, {
+        method: "POST",
+        body: JSON.stringify({ profile }),
+      });
+      setState(data.state);
+      if (editingWorker?.id === worker.id) setEditingWorker(null);
     } catch (error) {
       setMessage(error.message);
     }
   };
   return (
     <Shell>
-      <main>
-        <section className="hero">
-          <div>
-            <p>TEAM PROFILES</p>
-            <h1>Know your crew before the shift begins.</h1>
-            <h2>One worker at a time. Consent-aware.</h2>
-            <small>
-              Medical markers and sensitivity are self-reported
-              occupational-health context.
-            </small>
-          </div>
-          <form onSubmit={submit}>
-            <b>ADD EMPLOYEE PROFILE</b>
-            <label>
-              Full name
-              <input name="name" required />
-            </label>
-            <label>
-              Age
-              <input name="age" type="number" min="18" max="100" required />
-            </label>
-            <label>
-              Individual sensitivity
-              <select name="photosensitivity" required>
-                <option value="">Choose</option>
-                <option value="low">Low</option>
-                <option value="moderate">Moderate</option>
-                <option value="high">High</option>
-              </select>
-            </label>
-            <label>
-              Fitzpatrick type
-              <select name="fitzpatrickType" required>
-                <option value="">Choose 1–6</option>
-                {[1, 2, 3, 4, 5, 6].map((type) => (
-                  <option key={type} value={type}>
-                    Type {type}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Medical markers <em>optional</em>
-              <input name="medicalMarkers" />
-            </label>
-            <label className="consent">
-              <input
-                name="profileSignature"
-                type="checkbox"
-                value="acknowledged"
-                required
-              />
-              I confirm these profile details are accurate.
-            </label>
-            <button>Add to team</button>
-            <small>{message}</small>
-          </form>
-        </section>
-        <section className="panel">
-          <p>TODAY'S CREW</p>
-          <h2>Employee profiles</h2>
-          {state?.workers?.length ? (
-            <table>
-              <thead>
-                <tr>
-                  <th>Employee & age</th>
-                  <th>Fitzpatrick type</th>
-                  <th>Sensitivity</th>
-                  <th>Medical markers</th>
-                </tr>
-              </thead>
-              <tbody>
-                {state.workers.map((worker) => (
-                  <tr key={worker.id}>
-                    <td>
-                      👷 <b>{worker.name}</b>
-                      <small>{worker.age || "—"} years old</small>
-                    </td>
-                    <td>
-                      {worker.exposureProfile?.fitzpatrickType ||
-                        "Not recorded"}
-                    </td>
-                    <td>
-                      {worker.exposureProfile?.photosensitivity ||
-                        "Not recorded"}
-                    </td>
-                    <td>
-                      {worker.exposureProfile?.medicalMarkers ||
-                        "None reported"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <p>Add the first employee profile to begin the team roster.</p>
-          )}
+      <main className="reactWorkspace">
+        <section id="teamMode" className="modeView">
+          <section className="shiftHero">
+            <div>
+              <p className="eyebrow">TEAM PROFILES</p>
+              <h1>Know your crew before the shift begins.</h1>
+              <h2>One worker at a time. Consent-aware.</h2>
+              <p>
+                Medical markers and sensitivity are self-reported
+                occupational-health context.
+              </p>
+            </div>
+          </section>
+          <section className="secondaryPanel">
+            <p className="eyebrow formLabel">ADD EMPLOYEE PROFILE</p>
+            <section className="teamProfilePanel">
+              <form key={editingWorker?.id || "new"} onSubmit={submit}>
+                <label className="profileField">
+                  <span>Full name</span>
+                  <input
+                    name="name"
+                    required
+                    placeholder="Full name"
+                    defaultValue={editingWorker?.name || ""}
+                  />
+                  <small>Identifies the employee in the safety plan.</small>
+                </label>
+                <label className="profileField">
+                  <span>Age</span>
+                  <input
+                    name="age"
+                    type="number"
+                    min="18"
+                    max="100"
+                    required
+                    placeholder="Age"
+                    defaultValue={editingWorker?.age || ""}
+                  />
+                  <small>Helps apply a cautious heat-recovery modifier.</small>
+                </label>
+                <label className="profileField">
+                  <span>Individual sensitivity</span>
+                  <select
+                    name="photosensitivity"
+                    required
+                    defaultValue={
+                      editingWorker?.exposureProfile?.photosensitivity || ""
+                    }
+                  >
+                    <option value="">Individual sensitivity</option>
+                    <option value="low">Low</option>
+                    <option value="moderate">Moderate</option>
+                    <option value="high">High</option>
+                  </select>
+                  <small>Self-reported sensitivity affects UV priority.</small>
+                </label>
+                <label className="profileField">
+                  <span>Fitzpatrick type</span>
+                  <select
+                    name="fitzpatrickType"
+                    required
+                    defaultValue={
+                      editingWorker?.exposureProfile?.fitzpatrickType || ""
+                    }
+                  >
+                    <option value="">Self-reported Fitzpatrick type</option>
+                    {[1, 2, 3, 4, 5, 6].map((type) => (
+                      <option key={type} value={type}>
+                        Type {type}
+                      </option>
+                    ))}
+                  </select>
+                  <small>A 1–6 skin-response scale used in UV planning.</small>
+                </label>
+                <label className="profileField">
+                  <span>
+                    Medical markers <em>optional</em>
+                  </span>
+                  <input
+                    name="medicalMarkers"
+                    placeholder="Optional self-reported medical markers"
+                    defaultValue={
+                      editingWorker?.exposureProfile?.medicalMarkers || ""
+                    }
+                  />
+                  <small>
+                    Record photosensitivity context, such as medication.
+                  </small>
+                </label>
+                <label className="consentCheck">
+                  <input
+                    name="profileSignature"
+                    type="checkbox"
+                    value="acknowledged"
+                    required
+                  />
+                  <span>I confirm these profile details are accurate.</span>
+                </label>
+                <button>
+                  {editingWorker ? "Save changes" : "Add to team"}
+                </button>
+                {message && <small className="teamMessage">{message}</small>}
+              </form>
+            </section>
+          </section>
+          <section className="shiftGrid">
+            <article className="crewPanel">
+              <div className="panelTitle">
+                <div>
+                  <p className="eyebrow">TODAY'S CREW</p>
+                  <h2>Employee profiles</h2>
+                </div>
+                <span className="chip">
+                  {state?.workers?.length || 0} profiles
+                </span>
+              </div>
+              {state?.workers?.length ? (
+                <>
+                  <div className="crewProfileHeader">
+                    <span />
+                    <span>
+                      Employee & age{" "}
+                      <InfoTip text="Age helps Umbra apply a cautious heat-recovery modifier." />
+                    </span>
+                    <span>
+                      Fitzpatrick type{" "}
+                      <InfoTip text="A self-reported 1–6 skin-response scale used for UV planning." />
+                    </span>
+                    <span>
+                      Sensitivity{" "}
+                      <InfoTip text="Self-reported individual sensitivity affects UV-planning priority." />
+                    </span>
+                    <span>
+                      Medical markers{" "}
+                      <InfoTip text="Self-reported photosensitivity context, not a medical diagnosis." />
+                    </span>
+                    <span>
+                      Actions{" "}
+                      <InfoTip text="Edit or delete this employee profile." />
+                    </span>
+                  </div>
+                  {state.workers.map((worker) => {
+                    const workerProfile = worker.exposureProfile || {};
+                    return (
+                      <article className="crewProfileRow" key={worker.id}>
+                        <span
+                          className="crewInitial figurine builder"
+                          aria-hidden="true"
+                        >
+                          <i />
+                          <em />
+                        </span>
+                        <span>
+                          <b>{worker.name}</b>
+                          <small>{worker.age || "—"} years old</small>
+                        </span>
+                        <span>
+                          <small>Fitzpatrick type</small>
+                          <b>
+                            {workerProfile.fitzpatrickType || "Not recorded"}
+                          </b>
+                        </span>
+                        <span>
+                          <small>Sensitivity</small>
+                          <b>
+                            {workerProfile.photosensitivity || "Not recorded"}
+                          </b>
+                        </span>
+                        <span>
+                          <small>Medical markers</small>
+                          <b>
+                            {workerProfile.medicalMarkers || "None reported"}
+                          </b>
+                        </span>
+                        <span className="crewActions">
+                          <button
+                            type="button"
+                            className="crewEdit"
+                            title="Edit employee profile"
+                            onClick={() => setEditingWorker(worker)}
+                          >
+                            ✎
+                          </button>
+                          <button
+                            type="button"
+                            className="crewDelete"
+                            title="Delete employee profile"
+                            onClick={() => deleteWorker(worker)}
+                          >
+                            ×
+                          </button>
+                        </span>
+                      </article>
+                    );
+                  })}
+                </>
+              ) : (
+                <p className="crewEmpty">
+                  Add the first employee profile to begin the team roster.
+                </p>
+              )}
+            </article>
+          </section>
         </section>
       </main>
     </Shell>
+  );
+}
+function InfoTip({ text }) {
+  return (
+    <span className="infoTip" data-tooltip={text}>
+      i
+    </span>
   );
 }
 function External() {
