@@ -43,6 +43,42 @@ const portFlag = process.argv.indexOf("--port");
 const port = Number(
   process.env.PORT || (portFlag >= 0 ? process.argv[portFlag + 1] : 3000),
 );
+const operationKeys = [
+  "events",
+  "decisions",
+  "plans",
+  "audit",
+  "activity",
+  "photoAudits",
+];
+
+const emptyOperations = () =>
+  Object.fromEntries(operationKeys.map((key) => [key, []]));
+
+function teamOperations(team) {
+  if (!team) return null;
+  team.operations ||= emptyOperations();
+  operationKeys.forEach((key) => {
+    team.operations[key] ||= [];
+  });
+  return team.operations;
+}
+
+function hydrateTeamOperations(state, team) {
+  const operations = teamOperations(team);
+  if (!operations) return;
+  operationKeys.forEach((key) => {
+    state[key] = operations[key];
+  });
+}
+
+function persistTeamOperations(state, team) {
+  const operations = teamOperations(team);
+  if (!operations) return;
+  operationKeys.forEach((key) => {
+    operations[key] = state[key] || [];
+  });
+}
 
 const teamId = (profile) =>
   `team_${Buffer.from(
@@ -78,6 +114,7 @@ async function teamFor(profile, create = false) {
       id,
       foreman: { name: profile.name, company: profile.company },
       employees: [],
+      operations: emptyOperations(),
     };
     store.teams.push(team);
   }
@@ -104,13 +141,39 @@ async function getState(profile) {
       : "Simulated reasoning for demo",
   };
   const { team } = await teamFor(profile);
+  if (team) {
+    hydrateTeamOperations(state, team);
+  } else if (profile?.name || profile?.company) {
+    Object.assign(state, emptyOperations());
+  }
   state.workers = team?.employees || [];
   state.portfolio = buildPortfolio(state);
   return state;
 }
-async function saveState(state) {
+async function saveState(state, { persistOperations = true } = {}) {
   await mkdir(storeDir, { recursive: true });
-  const { workers, sites, ...persistentState } = state;
+  const {
+    workers,
+    sites,
+    events,
+    decisions,
+    plans,
+    audit,
+    activity,
+    photoAudits,
+    portfolio,
+    ...persistentState
+  } = state;
+  if (persistOperations) {
+    Object.assign(persistentState, {
+      events,
+      decisions,
+      plans,
+      audit,
+      activity,
+      photoAudits,
+    });
+  }
   await writeFile(storePath, JSON.stringify(persistentState, null, 2));
   await saveObjectStore(sites.filter((site) => !site.isTemplate));
 }
@@ -374,7 +437,10 @@ const server = http.createServer(async (req, res) => {
     }
     if (req.method === "POST" && url.pathname === "/api/property/confirm") {
       const input = await body(req);
+      const { store, team } = await teamFor(input.profile);
+      if (!team) throw new Error("Create a crew before saving site evidence");
       const state = await getState(input.profile);
+      hydrateTeamOperations(state, team);
       const draft = input.draft;
       if (!draft?.site || !draft?.assessment || !draft?.forecast)
         return json(res, 400, {
@@ -412,7 +478,9 @@ const server = http.createServer(async (req, res) => {
         setting,
       });
       const decisions = await processEvent(state, event);
-      await saveState(state);
+      persistTeamOperations(state, team);
+      await saveState(state, { persistOperations: false });
+      await saveWorkerStore(store);
       return json(res, 201, { site, decisions, state });
     }
     const deletePropertyMatch = url.pathname.match(
@@ -421,7 +489,10 @@ const server = http.createServer(async (req, res) => {
     if (req.method === "POST" && deletePropertyMatch) {
       const input = await body(req);
       const siteId = decodeURIComponent(deletePropertyMatch[1]);
+      const { store, team } = await teamFor(input.profile);
+      if (!team) throw new Error("Team profile not found");
       const state = await getState(input.profile);
+      hydrateTeamOperations(state, team);
       const site = state.sites.find((entry) => entry.id === siteId);
       if (!site || site.isTemplate)
         return json(res, 404, { error: "Saved object assessment not found" });
@@ -439,7 +510,9 @@ const server = http.createServer(async (req, res) => {
         (audit) => audit.siteId !== siteId,
       );
       state.portfolio = buildPortfolio(state);
-      await saveState(state);
+      persistTeamOperations(state, team);
+      await saveState(state, { persistOperations: false });
+      await saveWorkerStore(store);
       return json(res, 200, { state });
     }
     if (req.method === "POST" && url.pathname === "/api/photo-audit") {
@@ -464,6 +537,7 @@ const server = http.createServer(async (req, res) => {
       const input = await body(req);
       const { store, team } = await teamFor(input.profile, true);
       const state = await getState(input.profile);
+      hydrateTeamOperations(state, team);
       const worker = addTeamMember(state, input);
       team.employees = state.workers;
       const event = createEvent(state, "team_member_added", {
@@ -472,7 +546,8 @@ const server = http.createServer(async (req, res) => {
       });
       event.status = "processed";
       state.portfolio = buildPortfolio(state);
-      await saveState(state);
+      persistTeamOperations(state, team);
+      await saveState(state, { persistOperations: false });
       await saveWorkerStore(store);
       return json(res, 201, { worker, state });
     }
@@ -482,10 +557,12 @@ const server = http.createServer(async (req, res) => {
       const { store, team } = await teamFor(input.profile);
       if (!team) throw new Error("Team profile not found");
       const state = await getState(input.profile);
+      hydrateTeamOperations(state, team);
       const worker = updateTeamMember(state, teamMemberMatch[1], input);
       team.employees = state.workers;
       state.portfolio = buildPortfolio(state);
-      await saveState(state);
+      persistTeamOperations(state, team);
+      await saveState(state, { persistOperations: false });
       await saveWorkerStore(store);
       return json(res, 200, { worker, state });
     }
@@ -497,10 +574,12 @@ const server = http.createServer(async (req, res) => {
       const { store, team } = await teamFor(input.profile);
       if (!team) throw new Error("Team profile not found");
       const state = await getState(input.profile);
+      hydrateTeamOperations(state, team);
       removeTeamMember(state, deleteTeamMemberMatch[1]);
       team.employees = state.workers;
       state.portfolio = buildPortfolio(state);
-      await saveState(state);
+      persistTeamOperations(state, team);
+      await saveState(state, { persistOperations: false });
       await saveWorkerStore(store);
       return json(res, 200, { state });
     }
@@ -517,6 +596,7 @@ const server = http.createServer(async (req, res) => {
       const { store, team } = await teamFor(input.profile);
       if (!team) throw new Error("Team profile not found");
       const state = await getState(input.profile);
+      hydrateTeamOperations(state, team);
       const worker = updateBehavioralFactors(state, input);
       team.employees = state.workers;
       const event = createEvent(state, "behavioral_factors_updated", {
@@ -524,7 +604,8 @@ const server = http.createServer(async (req, res) => {
         siteId: worker.siteId,
       });
       const decisions = await processEvent(state, event);
-      await saveState(state);
+      persistTeamOperations(state, team);
+      await saveState(state, { persistOperations: false });
       await saveWorkerStore(store);
       return json(res, 201, { worker, decisions, state });
     }

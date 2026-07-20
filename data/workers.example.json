@@ -3,7 +3,15 @@
     {
       "id": "team_example",
       "foreman": { "name": "Example Foreman", "company": "Example Company" },
-      "employees": []
+      "employees": [],
+      "operations": {
+        "events": [],
+        "decisions": [],
+        "plans": [],
+        "audit": [],
+        "activity": [],
+        "photoAudits": []
+      }
     }
   ]
 }

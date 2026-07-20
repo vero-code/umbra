@@ -1,4 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import BehavioralMap, {
+  defaultMapPositions,
+  mapPositionKey,
+} from "./BehavioralMap.jsx";
+import PlanUpdatedResult from "./PlanUpdatedResult.jsx";
+import ProtectionChoices from "./ProtectionChoices.jsx";
 import { api, useData } from "./umbra-data.js";
 
 const protectionDefaults = {
@@ -72,161 +78,6 @@ const riskBand = (risk) => {
   return { label: "Managed", tone: "managed" };
 };
 
-const defaultMapPositions = {
-  direct: { x: 49, y: 43 },
-  partial: { x: 43, y: 59 },
-  canopy: { x: 33, y: 78 },
-};
-
-const clamp = (value, minimum, maximum) =>
-  Math.min(maximum, Math.max(minimum, value));
-
-const shadeForMapPosition = (x, y) => {
-  if (x >= 27 && x <= 66 && y >= 66 && y <= 90) return "canopy";
-  if (x >= 24 && x <= 76 && y >= 46 && y < 66) return "partial";
-  return "direct";
-};
-
-const mapPositionKey = (workerId, siteId) => `${workerId}:${siteId}`;
-
-function ProtectionChoices({ label, options, value, onChange }) {
-  return (
-    <section className="protectionGroup">
-      <p className="eyebrow">{label}</p>
-      <div className="protectionChoices">
-        {options.map((option) => (
-          <button
-            key={option.id}
-            type="button"
-            className={value === option.id ? "isSelected" : ""}
-            aria-pressed={value === option.id}
-            onClick={() => onChange(option.id)}
-          >
-            <b>{option.label}</b>
-            <small>{option.detail}</small>
-            {option.badge && <em>{option.badge}</em>}
-          </button>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function SiteMap({
-  worker,
-  site,
-  shadeAvailability,
-  preview,
-  mapPosition,
-  onMove,
-}) {
-  const mapRef = useRef(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const image = preview?.site?.image || site?.propertyPhotos?.[0]?.image;
-  const positionCopy =
-    shadeAvailability === "canopy"
-      ? "Relief zone"
-      : shadeAvailability === "partial"
-        ? " Moving shade"
-        : " Direct sun";
-  const resolvedPosition =
-    mapPosition ||
-    defaultMapPositions[shadeAvailability] ||
-    defaultMapPositions.direct;
-  const updateFromPointer = (event) => {
-    const bounds = mapRef.current?.getBoundingClientRect();
-    if (!bounds) return;
-    const x = clamp(
-      ((event.clientX - bounds.left) / bounds.width) * 100,
-      6,
-      90,
-    );
-    const y = clamp(
-      ((event.clientY - bounds.top) / bounds.height) * 100,
-      8,
-      88,
-    );
-    onMove({ x, y, shadeAvailability: shadeForMapPosition(x, y) });
-  };
-  const nudgeMarker = (event) => {
-    const directions = {
-      ArrowUp: [0, -4],
-      ArrowDown: [0, 4],
-      ArrowLeft: [-4, 0],
-      ArrowRight: [4, 0],
-    };
-    const direction = directions[event.key];
-    if (!direction) return;
-    event.preventDefault();
-    const x = clamp(resolvedPosition.x + direction[0], 6, 90);
-    const y = clamp(resolvedPosition.y + direction[1], 8, 88);
-    onMove({ x, y, shadeAvailability: shadeForMapPosition(x, y) });
-  };
-  return (
-    <>
-      <section
-        ref={mapRef}
-        className={`behaviorSiteMap shade-${shadeAvailability}`}
-      >
-        {image ? (
-          <img src={image} alt={`${site?.name || "Worksite"} exposure map`} />
-        ) : (
-          <div
-            className="behaviorMapFallback"
-            aria-label="Worksite schematic"
-          />
-        )}
-        <div className="behaviorMapOverlay" aria-hidden="true" />
-        <span className="mapSunMarker" aria-hidden="true">
-          Sun · 13:00
-        </span>
-        <span className="mapExposureZone directZone">Roof / direct sun</span>
-        <span className="mapExposureZone shadeZone">Canopy / shade zone</span>
-        <button
-          type="button"
-          className={`mapWorkerMarker ${isDragging ? "isDragging" : ""}`}
-          style={{
-            left: `${resolvedPosition.x}%`,
-            top: `${resolvedPosition.y}%`,
-            right: "auto",
-            bottom: "auto",
-          }}
-          aria-label={`Move ${worker?.name || "worker"} on the worksite map`}
-          onKeyDown={nudgeMarker}
-          onPointerDown={(event) => {
-            event.preventDefault();
-            event.currentTarget.setPointerCapture?.(event.pointerId);
-            setIsDragging(true);
-            updateFromPointer(event);
-          }}
-          onPointerMove={(event) => {
-            if (isDragging) updateFromPointer(event);
-          }}
-          onPointerUp={(event) => {
-            if (isDragging) updateFromPointer(event);
-            setIsDragging(false);
-          }}
-          onPointerCancel={() => setIsDragging(false)}
-        >
-          <span className="crewInitial figurine builder" aria-hidden="true">
-            <i />
-            <em />
-          </span>
-          <span>
-            <b>{worker?.name || "Worker"}</b>
-            <small>{positionCopy}</small>
-          </span>
-        </button>
-      </section>
-      <p className="mapPlacementHint">
-        Drag the worker onto the photo. Umbra treats the upper deck as direct
-        sun, interior lower floors as partial shade, and the outlined relief
-        area as canopy shade.
-      </p>
-    </>
-  );
-}
-
 export default function Behavioral() {
   const { profile, state, setState } = useData();
   const workers = state?.workers || [];
@@ -239,6 +90,7 @@ export default function Behavioral() {
   const [message, setMessage] = useState("");
   const [isApplying, setIsApplying] = useState(false);
   const [mapPositions, setMapPositions] = useState({});
+  const [appliedResult, setAppliedResult] = useState(null);
 
   const selectedWorker = workers.find(
     (worker) => worker.id === selectedWorkerId,
@@ -308,10 +160,16 @@ export default function Behavioral() {
     setSelectedWorkerId(worker.id);
     setSelectedSiteId(siteFor(worker, sites));
     setProtection(protectionFor(worker));
+    setAppliedResult(null);
+  };
+
+  const updateProtection = (key, value) => {
+    setAppliedResult(null);
+    setProtection((current) => ({ ...current, [key]: value }));
   };
 
   const updateShadeAvailability = (shadeAvailability) => {
-    setProtection((current) => ({ ...current, shadeAvailability }));
+    updateProtection("shadeAvailability", shadeAvailability);
     if (!selectedMapKey) return;
     setMapPositions((current) => ({
       ...current,
@@ -324,6 +182,7 @@ export default function Behavioral() {
 
   const moveWorkerOnMap = (position) => {
     if (!selectedMapKey) return;
+    setAppliedResult(null);
     setMapPositions((current) => ({ ...current, [selectedMapKey]: position }));
     setProtection((current) => ({
       ...current,
@@ -351,6 +210,34 @@ export default function Behavioral() {
         }),
       });
       setState(data.state);
+      const updatedPlan = data.state.plans?.find(
+        (plan) => plan.siteId === activeSite.id,
+      );
+      const priorityIndex = updatedPlan?.priorityWorkers?.findIndex(
+        (worker) => worker.id === selectedWorker.id,
+      );
+      const rotation = updatedPlan?.rotationBlocks?.find((block) =>
+        block.workers.includes(selectedWorker.id),
+      );
+      const decision = data.decisions?.[0];
+      setAppliedResult({
+        workerName: selectedWorker.name,
+        zone: shadeOptions.find(
+          (option) => option.id === protection.shadeAvailability,
+        )?.label,
+        previousRisk: preview?.baselineRisk,
+        projectedRisk: preview?.projectedRisk,
+        reductionPercent: preview?.reductionPercent,
+        priority:
+          typeof priorityIndex === "number" && priorityIndex >= 0
+            ? priorityIndex + 1
+            : null,
+        nextBreak: rotation?.window || null,
+        recommendation:
+          decision?.recommendation ||
+          "The affected worksite plan has been rebuilt.",
+        reviewRequired: decision?.status === "needs_review",
+      });
       setMessage(
         `${selectedWorker.name}'s protection status was applied. Umbra updated the affected site plan.`,
       );
@@ -440,17 +327,13 @@ export default function Behavioral() {
             label="UPF / protective equipment"
             options={ppeOptions}
             value={protection.upf}
-            onChange={(upf) =>
-              setProtection((current) => ({ ...current, upf }))
-            }
+            onChange={(upf) => updateProtection("upf", upf)}
           />
           <ProtectionChoices
             label="Sunscreen"
             options={spfOptions}
             value={protection.spf}
-            onChange={(spf) =>
-              setProtection((current) => ({ ...current, spf }))
-            }
+            onChange={(spf) => updateProtection("spf", spf)}
           />
 
           <section className="sunscreenClock">
@@ -472,10 +355,10 @@ export default function Behavioral() {
               disabled={protection.spf === "none"}
               aria-label="Hours since sunscreen application"
               onChange={(event) =>
-                setProtection((current) => ({
-                  ...current,
-                  sunscreenHoursAgo: Number(event.target.value),
-                }))
+                updateProtection(
+                  "sunscreenHoursAgo",
+                  Number(event.target.value),
+                )
               }
             />
           </section>
@@ -517,7 +400,7 @@ export default function Behavioral() {
                 </div>
               )}
             </div>
-            <SiteMap
+            <BehavioralMap
               worker={selectedWorker}
               site={activeSite}
               shadeAvailability={protection.shadeAvailability}
@@ -591,6 +474,7 @@ export default function Behavioral() {
                 ? "Updating plan..."
                 : "Apply protection update & replan"}
             </button>
+            <PlanUpdatedResult result={appliedResult} />
             {message && <small className="behaviorMessage">{message}</small>}
           </article>
         </section>

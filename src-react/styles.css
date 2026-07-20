@@ -1458,6 +1458,76 @@ main.reactWorkspace {
   margin-top: 9px;
 }
 
+.planUpdatedResult {
+  margin-top: 12px;
+  padding: 14px;
+  border: 1px solid #b9e8ce;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #edfff4, #f8fffb);
+}
+
+.planUpdatedResult .eyebrow {
+  margin: 0;
+  color: #3a805b;
+}
+
+.planUpdatedResult h3 {
+  margin: 4px 0 0;
+  color: #274b3b;
+  font-size: 0.92rem;
+  letter-spacing: -0.03em;
+}
+
+.planUpdatedStats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+  margin-top: 12px;
+}
+
+.planUpdatedStats span {
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid #cdebd8;
+  border-radius: 9px;
+  background: #fffefa;
+}
+
+.planUpdatedStats small,
+.planUpdatedStats b {
+  display: block;
+}
+
+.planUpdatedStats small {
+  color: #668276;
+  font-size: 0.55rem;
+  line-height: 1.25;
+}
+
+.planUpdatedStats b {
+  overflow: hidden;
+  margin-top: 5px;
+  color: #2e5b45;
+  font-size: 0.69rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.planUpdatedResult > p {
+  margin: 10px 0 0;
+  color: #466b58;
+  font-size: 0.66rem;
+  line-height: 1.4;
+}
+
+.approvalRequired {
+  display: block;
+  margin-top: 8px;
+  color: #9a671d;
+  font-size: 0.62rem;
+  line-height: 1.4;
+}
+
 .behavioralEmpty {
   max-width: 660px;
   margin: 80px auto;
@@ -1495,6 +1565,10 @@ main.reactWorkspace {
 
   .protectionChoices,
   .impactFlow {
+    grid-template-columns: 1fr;
+  }
+
+  .planUpdatedStats {
     grid-template-columns: 1fr;
   }
 
