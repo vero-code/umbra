@@ -854,6 +854,10 @@ main.reactWorkspace {
 }
 
 .behavioralHero {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(360px, 1.1fr);
+  gap: 34px;
+  align-items: end;
   padding: 48px 0 30px;
 }
 
@@ -866,7 +870,7 @@ main.reactWorkspace {
   letter-spacing: -0.07em;
 }
 
-.behavioralHero > p:last-child {
+.behavioralHeroCopy > p:last-child {
   max-width: 650px;
   margin: 0;
   color: #65728f;
@@ -1170,7 +1174,21 @@ main.reactWorkspace {
   position: absolute;
   z-index: 1;
   inset: 0;
-  background: linear-gradient(180deg, #151b4b08, #151b4b78);
+  background: linear-gradient(180deg, #151b4b05 45%, #151b4b26);
+  pointer-events: none;
+}
+
+.behaviorSiteMap::after {
+  position: absolute;
+  z-index: 1;
+  bottom: 14%;
+  left: 37%;
+  width: 39%;
+  height: 20%;
+  border: 1px dashed #f1edffcc;
+  border-radius: 10px;
+  background: #4d4b7924;
+  content: "";
   pointer-events: none;
 }
 
@@ -1200,15 +1218,26 @@ main.reactWorkspace {
   font-weight: 700;
 }
 
-.directZone {
-  top: 44%;
-  right: 9%;
+.behaviorSiteMap .directZone {
+  top: 24%;
+  right: auto;
+  bottom: auto;
+  left: 35%;
+  width: auto;
+  height: auto;
+  clip-path: none;
+  transform: none;
   background: #ef7257dc;
 }
 
-.shadeZone {
-  bottom: 13%;
-  left: 9%;
+.behaviorSiteMap .shadeZone {
+  position: absolute;
+  bottom: 20%;
+  left: 46%;
+  width: auto;
+  height: auto;
+  clip-path: none;
+  transform: none;
   background: #4d4b79dc;
 }
 
@@ -1218,15 +1247,30 @@ main.reactWorkspace {
   column-gap: 7px;
   align-items: center;
   padding: 6px 9px 6px 6px;
-  border: 1px solid #fff8;
+  border: 1px solid rgba(255, 255, 255, 0.533);
   border-radius: 10px;
   background: #242a50e8;
   color: #fff;
+  cursor: grab;
+  font-family: inherit;
+  text-align: left;
+  touch-action: none;
+  user-select: none;
   transition:
     left 180ms ease,
     top 180ms ease,
     right 180ms ease,
     bottom 180ms ease;
+}
+
+.mapWorkerMarker:focus-visible {
+  outline: 3px solid #fff1a8;
+  outline-offset: 2px;
+}
+
+.mapWorkerMarker.isDragging {
+  cursor: grabbing;
+  box-shadow: 0 8px 18px #10142e80;
 }
 
 .mapWorkerMarker .crewInitial {
@@ -1253,18 +1297,26 @@ main.reactWorkspace {
 }
 
 .shade-direct .mapWorkerMarker {
-  top: 39%;
-  right: 20%;
+  top: 43%;
+  right: auto;
+  left: 49%;
 }
 
 .shade-partial .mapWorkerMarker {
-  top: 58%;
-  left: 36%;
+  top: 59%;
+  left: 43%;
 }
 
 .shade-canopy .mapWorkerMarker {
-  bottom: 17%;
-  left: 14%;
+  bottom: 22%;
+  left: 33%;
+}
+
+.mapPlacementHint {
+  margin: 9px 0 0;
+  color: #6e7998;
+  font-size: 0.64rem;
+  line-height: 1.4;
 }
 
 .protectionImpact {
@@ -1426,6 +1478,11 @@ main.reactWorkspace {
 }
 
 @media (max-width: 960px) {
+  .behavioralHero {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
   .behavioralGrid {
     grid-template-columns: 1fr;
   }

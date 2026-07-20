@@ -407,11 +407,33 @@ export function updateBehavioralFactors(state, input) {
     sunscreenHoursAgo > 24
   )
     throw new Error("Sunscreen timing must be between 0 and 24 hours");
+  let mapPosition = null;
+  if (input.mapPosition) {
+    const x = Number(input.mapPosition.x);
+    const y = Number(input.mapPosition.y);
+    if (
+      !Number.isFinite(x) ||
+      !Number.isFinite(y) ||
+      x < 0 ||
+      x > 100 ||
+      y < 0 ||
+      y > 100
+    )
+      throw new Error(
+        "Worker map position must stay within the worksite image",
+      );
+    mapPosition = {
+      x: Math.round(x * 10) / 10,
+      y: Math.round(y * 10) / 10,
+      siteId: worker.siteId,
+    };
+  }
   worker.behavioralFactors = {
     upf: input.upf,
     spf: input.spf,
     sunscreenHoursAgo,
     shadeAvailability: input.shadeAvailability,
+    mapPosition,
     updatedAt: now(),
   };
   return worker;
