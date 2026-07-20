@@ -211,10 +211,12 @@ function Team() {
   const [editingWorker, setEditingWorker] = useState(null);
   const submit = async (event) => {
     event.preventDefault();
-    const input = Object.fromEntries(new FormData(event.currentTarget));
+    const form = event.currentTarget;
+    const wasEditing = Boolean(editingWorker);
+    const input = Object.fromEntries(new FormData(form));
     try {
       const data = await api(
-        editingWorker
+        wasEditing
           ? `/api/team-member/${editingWorker.id}`
           : "/api/team-member",
         {
@@ -223,10 +225,10 @@ function Team() {
         },
       );
       setState(data.state);
-      event.currentTarget.reset();
+      form.reset();
       setEditingWorker(null);
       setMessage(
-        editingWorker ? "Employee profile updated." : "Employee profile added.",
+        wasEditing ? "Employee profile updated." : "Employee profile added.",
       );
     } catch (error) {
       setMessage(error.message);
