@@ -509,6 +509,7 @@ function External() {
   const [files, setFiles] = useState([]);
   const [draft, setDraft] = useState(null);
   const [message, setMessage] = useState("");
+  const [expandedEvidenceId, setExpandedEvidenceId] = useState(null);
   const savedEvidence = (state?.sites || [])
     .filter((site) => site.propertyAssessment)
     .map((site) => ({ site, assessment: site.propertyAssessment }));
@@ -556,6 +557,7 @@ function External() {
       });
       localStorage.setItem(profileKey(profile), "true");
       setState(confirmed.state);
+      setExpandedEvidenceId(confirmed.site.id);
       setDraft((current) => (current ? { ...current, saved: true } : current));
       setMessage("Object assessment saved in the table below.");
     } catch (error) {
@@ -579,6 +581,7 @@ function External() {
         setDraft(null);
         setFiles([]);
       }
+      if (expandedEvidenceId === site.id) setExpandedEvidenceId(null);
       setMessage(`${objectName} was removed from saved external evidence.`);
     } catch (error) {
       setMessage(error.message);
@@ -780,46 +783,147 @@ function External() {
                 </div>
                 {savedEvidenceRows.map(({ site, assessment }) => {
                   const storedExposure = assessment.exposure;
+                  const isExpanded = expandedEvidenceId === site.id;
                   return (
-                    <div className="savedEvidenceRow" role="row" key={site.id}>
-                      <span>
-                        <b>{site.propertyObjectName || site.name}</b>
-                        <small>{site.propertyPhotos?.length || 0} angles</small>
-                      </span>
-                      <span>{site.propertyLocation || "Not recorded"}</span>
-                      <span>
-                        {(assessment.reflectiveMaterials || []).join(", ") ||
-                          assessment.summary}
-                      </span>
-                      <span>
-                        {assessment.setting} ·{" "}
-                        {storedExposure?.albedoFactor || "—"}×
-                      </span>
-                      <span>
-                        {storedExposure
-                          ? `${storedExposure.doseIndex} (UVI ${storedExposure.baseUvi})`
-                          : "—"}
-                      </span>
-                      <span>
-                        {assessment.assessedAt
-                          ? new Date(assessment.assessedAt).toLocaleTimeString(
-                              [],
-                              { hour: "2-digit", minute: "2-digit" },
-                            )
-                          : "—"}
-                      </span>
-                      <span className="savedEvidenceActions">
-                        <button
-                          type="button"
-                          className="savedEvidenceDelete"
-                          title="Delete saved object assessment"
-                          aria-label={`Delete ${site.propertyObjectName || site.name}`}
-                          onClick={() => deleteObject(site)}
+                    <React.Fragment key={site.id}>
+                      <div className="savedEvidenceRow" role="row">
+                        <span>
+                          <b>{site.propertyObjectName || site.name}</b>
+                          <small>
+                            {site.propertyPhotos?.length || 0} angles
+                          </small>
+                        </span>
+                        <span>{site.propertyLocation || "Not recorded"}</span>
+                        <span>
+                          {(assessment.reflectiveMaterials || []).join(", ") ||
+                            assessment.summary}
+                        </span>
+                        <span>
+                          {assessment.setting} ·{" "}
+                          {storedExposure?.albedoFactor || "—"}×
+                        </span>
+                        <span>
+                          {storedExposure
+                            ? `${storedExposure.doseIndex} (UVI ${storedExposure.baseUvi})`
+                            : "—"}
+                        </span>
+                        <span>
+                          {assessment.assessedAt
+                            ? new Date(
+                                assessment.assessedAt,
+                              ).toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })
+                            : "—"}
+                        </span>
+                        <span className="savedEvidenceActions">
+                          <button
+                            type="button"
+                            className="savedEvidenceView"
+                            aria-expanded={isExpanded}
+                            onClick={() =>
+                              setExpandedEvidenceId((current) =>
+                                current === site.id ? null : site.id,
+                              )
+                            }
+                          >
+                            {isExpanded ? "Hide" : "View"}
+                          </button>
+                          <button
+                            type="button"
+                            className="savedEvidenceDelete"
+                            title="Delete saved object assessment"
+                            aria-label={`Delete ${site.propertyObjectName || site.name}`}
+                            onClick={() => deleteObject(site)}
+                          >
+                            ×
+                          </button>
+                        </span>
+                      </div>
+                      {isExpanded && (
+                        <section
+                          className="savedEvidenceDetail"
+                          aria-label={`${site.propertyObjectName || site.name} full assessment`}
                         >
-                          ×
-                        </button>
-                      </span>
-                    </div>
+                          <div className="savedEvidenceDetailHeader">
+                            <div>
+                              <p className="eyebrow">FULL OBJECT ASSESSMENT</p>
+                              <h3>{site.propertyObjectName || site.name}</h3>
+                            </div>
+                            <span className="detailDose">
+                              Planning dose{" "}
+                              <b>{storedExposure?.doseIndex || "—"}</b>
+                            </span>
+                          </div>
+                          <div className="savedEvidenceDetailGrid">
+                            <article>
+                              <p className="eyebrow">
+                                {site.forecast?.source === "photo-matched"
+                                  ? "DAYLIGHT EXPOSURE SCENARIO"
+                                  : "CURRENT WEATHER"}
+                              </p>
+                              <p>
+                                UVI {site.forecast?.uvi ?? "—"} ·{" "}
+                                {site.forecast?.temperatureC ?? "—"}°C ·{" "}
+                                {site.forecast?.cloudCover ?? "—"}% cloud cover
+                                ·{" "}
+                                {String(
+                                  site.forecast?.localHour ?? "—",
+                                ).padStart(2, "0")}
+                                :00
+                              </p>
+                            </article>
+                            <article>
+                              <p className="eyebrow">SITE EVIDENCE</p>
+                              <p>{assessment.summary}</p>
+                            </article>
+                            <article className="detailWide">
+                              <p className="eyebrow">
+                                SURFACE AND SHADE CONTEXT
+                              </p>
+                              <ul>
+                                {(assessment.factors || []).map((factor) => (
+                                  <li key={factor}>{factor}</li>
+                                ))}
+                              </ul>
+                            </article>
+                            {assessment.operationalImpact && (
+                              <article className="detailWide">
+                                <p className="eyebrow">
+                                  OPERATIONAL IMPLICATION
+                                </p>
+                                <p>{assessment.operationalImpact}</p>
+                              </article>
+                            )}
+                            <article className="detailWide doseBreakdown">
+                              <p className="eyebrow">PLANNING EXTERNAL DOSE</p>
+                              <p>
+                                {storedExposure?.baseUvi ?? "—"} ×{" "}
+                                {storedExposure?.sunAltitudeFactor ?? "—"}×
+                                sun/time × {storedExposure?.cloudFactor ?? "—"}×
+                                cloud × {storedExposure?.albedoFactor ?? "—"}×
+                                albedo ={" "}
+                                <b>{storedExposure?.doseIndex ?? "—"}</b>
+                              </p>
+                            </article>
+                          </div>
+                          {site.propertyPhotos?.length > 0 && (
+                            <div className="savedEvidencePhotos">
+                              {site.propertyPhotos.map((photo, index) => (
+                                <figure key={`${photo.angle}-${index}`}>
+                                  <img
+                                    src={photo.image}
+                                    alt={`${site.propertyObjectName || site.name}, ${photo.angle}`}
+                                  />
+                                  <figcaption>{photo.angle}</figcaption>
+                                </figure>
+                              ))}
+                            </div>
+                          )}
+                        </section>
+                      )}
+                    </React.Fragment>
                   );
                 })}
               </div>

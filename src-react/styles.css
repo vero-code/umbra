@@ -669,8 +669,8 @@ main.reactWorkspace {
 .savedEvidenceHead,
 .savedEvidenceRow {
   display: grid;
-  grid-template-columns: 1.05fr 1.3fr 1.7fr 0.8fr 0.9fr 0.65fr 0.45fr;
-  min-width: 860px;
+  grid-template-columns: 1.05fr 1.3fr 1.7fr 0.8fr 0.9fr 0.65fr 0.7fr;
+  min-width: 940px;
   gap: 14px;
   align-items: start;
   padding: 12px 0;
@@ -708,25 +708,162 @@ main.reactWorkspace {
 
 .savedEvidenceActions {
   display: flex;
+  gap: 6px;
   justify-content: flex-start;
 }
 
+.savedEvidenceView,
 .savedEvidenceDelete {
   display: grid;
-  width: 26px;
   height: 26px;
   place-items: center;
   padding: 0;
   border: 1px solid #dfe3f6;
   border-radius: 8px;
   background: #fff;
+  color: #584c98;
+  line-height: 1;
+}
+
+.savedEvidenceView {
+  min-width: 38px;
+  padding: 0 8px;
+  font-size: 0.64rem;
+  font-weight: 700;
+}
+
+.savedEvidenceView:hover {
+  border-color: #9b8cf0;
+  background: #f4f1ff;
+}
+
+.savedEvidenceDelete {
+  width: 26px;
   color: #7b6498;
   font-size: 1rem;
-  line-height: 1;
 }
 
 .savedEvidenceDelete:hover {
   border-color: #ff9d8a;
   background: #fff1ed;
   color: #d45f51;
+}
+
+.savedEvidenceDetail {
+  margin: -1px 0 10px;
+  padding: 18px;
+  border: 1px solid #d9dcf2;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #f8f8ff, #f2fbff);
+}
+
+.savedEvidenceDetailHeader {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #d9dcf2;
+}
+
+.savedEvidenceDetailHeader h3 {
+  margin: 5px 0 0;
+  color: #20284c;
+  font-size: 1rem;
+}
+
+.detailDose {
+  color: #65728f;
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+
+.detailDose b {
+  margin-left: 4px;
+  color: #6654d5;
+  font-size: 1rem;
+}
+
+.savedEvidenceDetailGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.savedEvidenceDetailGrid article {
+  padding: 12px;
+  border: 1px solid #e0e2f4;
+  border-radius: 10px;
+  background: #fffdf9b8;
+}
+
+.savedEvidenceDetailGrid article > p:last-child,
+.savedEvidenceDetailGrid li {
+  margin: 6px 0 0;
+  color: #59637f;
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.savedEvidenceDetailGrid ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+
+.savedEvidenceDetailGrid .detailWide {
+  grid-column: 1 / -1;
+}
+
+.doseBreakdown b {
+  color: #6654d5;
+}
+
+.savedEvidencePhotos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.savedEvidencePhotos figure {
+  position: relative;
+  overflow: hidden;
+  min-height: 150px;
+  margin: 0;
+  border-radius: 10px;
+  background: #e9eefb;
+}
+
+.savedEvidencePhotos img {
+  display: block;
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+}
+
+.savedEvidencePhotos figcaption {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  background: #252b50cf;
+  color: #fff;
+  font-size: 0.62rem;
+}
+
+@media (max-width: 600px) {
+  .savedEvidenceDetailGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .savedEvidenceDetailGrid .detailWide {
+    grid-column: auto;
+  }
+
+  .savedEvidenceDetailHeader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
 }
