@@ -6,6 +6,17 @@ import {
 
 export const riskTiers = { standard: 1, elevated: 1.25, high: 1.5 };
 export const sensitivityFactors = { low: 1, moderate: 1.15, high: 1.3 };
+// Operational precaution multipliers. Fitzpatrick type and health context are
+// self-reported inputs; Umbra uses them for conservative work planning, never
+// for a medical diagnosis.
+export const fitzpatrickFactors = {
+  1: 1.3,
+  2: 1.2,
+  3: 1.1,
+  4: 1,
+  5: 0.93,
+  6: 0.86,
+};
 export const upfFactors = { cotton: 0.95, visor: 0.82, upf50: 0.55 };
 export const spfFactors = { none: 1, spf30: 0.82, spf50: 0.7 };
 export const shadeFactors = { direct: 1, partial: 0.76, canopy: 0.58 };
@@ -209,9 +220,36 @@ export function calculateEnvironmentalExposure(site) {
   };
 }
 
+export function getWorkerProfileFactors(worker) {
+  const profile = worker.exposureProfile || {};
+  const fitzpatrickType = Number(profile.fitzpatrickType);
+  const fitzpatrickFactor = fitzpatrickFactors[fitzpatrickType] || 1;
+  const age = Number(worker.age);
+  const ageFactor = age >= 60 ? 1.12 : age >= 50 ? 1.05 : 1;
+  const reviewRequired = Boolean(profile.requiresOccupationalHealthReview);
+  const factor = Math.round(fitzpatrickFactor * ageFactor * 100) / 100;
+  const inputs = [
+    profile.photosensitivity
+      ? `self-reported ${profile.photosensitivity} sensitivity`
+      : "recorded operational sensitivity",
+  ];
+  if (fitzpatrickFactors[fitzpatrickType])
+    inputs.push(`self-reported Fitzpatrick type ${fitzpatrickType}`);
+  if (age >= 50) inputs.push(`age ${age}`);
+  if (reviewRequired) inputs.push("occupational-health review flag");
+  return {
+    factor,
+    fitzpatrickFactor,
+    ageFactor,
+    reviewRequired,
+    inputs,
+  };
+}
+
 export function scoreWorker(site, worker) {
   const environment = calculateEnvironmentalExposure(site);
   const behavior = worker.behavioralFactors || {};
+  const profileFactors = getWorkerProfileFactors(worker);
   const sunscreenExpired = Number(behavior.sunscreenHoursAgo) > 2;
   const protectionFactor =
     (upfFactors[behavior.upf] || 1) *
@@ -231,6 +269,7 @@ export function scoreWorker(site, worker) {
         equipmentFactor *
         riskTiers[worker.tier] *
         (sensitivityFactors[worker.exposureProfile?.photosensitivity] || 1) *
+        profileFactors.factor *
         protectionFactor *
         10,
     ) / 10

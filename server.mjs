@@ -15,7 +15,12 @@ import {
   buildPortfolio,
   assessProperty,
   calculateEnvironmentalExposure,
+  scoreWorker,
+  getWorkerProfileFactors,
   settingFactors,
+  upfFactors,
+  spfFactors,
+  shadeFactors,
   addTeamMember,
   decisionFromPlan,
   auditWorksitePhoto,
@@ -108,6 +113,81 @@ async function saveState(state) {
   const { workers, sites, ...persistentState } = state;
   await writeFile(storePath, JSON.stringify(persistentState, null, 2));
   await saveObjectStore(sites.filter((site) => !site.isTemplate));
+}
+
+function protectionPreview(state, input) {
+  const worker = state.workers.find((entry) => entry.id === input.workerId);
+  if (!worker) throw new Error("Team member not found");
+  if (!upfFactors[input.upf]) throw new Error("Select protective equipment");
+  if (!spfFactors[input.spf]) throw new Error("Select sunscreen use");
+  if (!shadeFactors[input.shadeAvailability])
+    throw new Error("Select shade availability");
+  const sunscreenHoursAgo = Number(input.sunscreenHoursAgo);
+  if (
+    !Number.isFinite(sunscreenHoursAgo) ||
+    sunscreenHoursAgo < 0 ||
+    sunscreenHoursAgo > 24
+  )
+    throw new Error("Sunscreen timing must be between 0 and 24 hours");
+  const site =
+    state.sites.find((entry) => entry.id === input.siteId) ||
+    state.sites.find((entry) => entry.id === worker.siteId) ||
+    state.sites[0];
+  if (!site) throw new Error("Create a worksite before setting protection");
+  const proposedWorker = {
+    ...worker,
+    siteId: site.id,
+    behavioralFactors: {
+      upf: input.upf,
+      spf: input.spf,
+      sunscreenHoursAgo,
+      shadeAvailability: input.shadeAvailability,
+    },
+  };
+  const baselineRisk = scoreWorker(site, worker);
+  const projectedRisk = scoreWorker(site, proposedWorker);
+  const profileFactors = getWorkerProfileFactors(worker);
+  const sunscreenExpired = sunscreenHoursAgo > 2;
+  const reductionPercent = Math.max(
+    0,
+    Math.round(
+      ((baselineRisk - projectedRisk) / Math.max(baselineRisk, 1)) * 100,
+    ),
+  );
+  const environment = calculateEnvironmentalExposure(site);
+  const activeSpfFactor = sunscreenExpired ? 1 : spfFactors[input.spf];
+  const protectionFactor =
+    upfFactors[input.upf] *
+    activeSpfFactor *
+    shadeFactors[input.shadeAvailability];
+  return {
+    site: {
+      id: site.id,
+      name: site.propertyObjectName || site.name,
+      location: site.propertyLocation || site.name,
+      image: site.propertyPhotos?.[0]?.image || null,
+    },
+    worker: { id: worker.id, name: worker.name, role: worker.role },
+    environment,
+    profileFactors,
+    baselineRisk,
+    projectedRisk,
+    reductionPercent,
+    protectionFactor: Math.round(protectionFactor * 100) / 100,
+    sunscreenExpired,
+    sunscreenStatus:
+      input.spf === "none"
+        ? "No SPF reduction is applied."
+        : sunscreenExpired
+          ? `${input.spf.toUpperCase()} is treated as expired after more than two active hours.`
+          : `${input.spf.toUpperCase()} remains active in the current protection calculation.`,
+    recommendation:
+      input.shadeAvailability === "direct" && environment.doseIndex >= 15
+        ? "Direct-sun placement remains the highest-risk option at this site."
+        : input.shadeAvailability === "canopy"
+          ? "Canopy placement provides the strongest available shade reduction."
+          : "This protection profile reduces modeled individual exposure for the current site conditions.",
+  };
 }
 function json(res, status, payload) {
   res.writeHead(status, { "content-type": "application/json; charset=utf-8" });
@@ -424,15 +504,28 @@ const server = http.createServer(async (req, res) => {
       await saveWorkerStore(store);
       return json(res, 200, { state });
     }
+    if (
+      req.method === "POST" &&
+      url.pathname === "/api/behavioral-factors/preview"
+    ) {
+      const input = await body(req);
+      const state = await getState(input.profile);
+      return json(res, 200, { preview: protectionPreview(state, input) });
+    }
     if (req.method === "POST" && url.pathname === "/api/behavioral-factors") {
-      const state = await getState();
-      const worker = updateBehavioralFactors(state, await body(req));
+      const input = await body(req);
+      const { store, team } = await teamFor(input.profile);
+      if (!team) throw new Error("Team profile not found");
+      const state = await getState(input.profile);
+      const worker = updateBehavioralFactors(state, input);
+      team.employees = state.workers;
       const event = createEvent(state, "behavioral_factors_updated", {
         workerId: worker.id,
         siteId: worker.siteId,
       });
       const decisions = await processEvent(state, event);
       await saveState(state);
+      await saveWorkerStore(store);
       return json(res, 201, { worker, decisions, state });
     }
     if (req.method === "POST" && url.pathname === "/api/what-if") {

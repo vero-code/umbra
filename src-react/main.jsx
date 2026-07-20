@@ -9,18 +9,9 @@ import {
   useLocation,
   useNavigate,
 } from "react-router-dom";
-import { create } from "zustand";
+import Behavioral from "./Behavioral.jsx";
+import { api, profileKey, useData, useUmbra } from "./umbra-data.js";
 import "./styles.css";
-
-const api = async (path, options = {}) => {
-  const response = await fetch(path, {
-    headers: { "Content-Type": "application/json" },
-    ...options,
-  });
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.error || "Request failed");
-  return data;
-};
 
 async function compactImage(file) {
   const source = URL.createObjectURL(file);
@@ -44,32 +35,6 @@ async function compactImage(file) {
   } finally {
     URL.revokeObjectURL(source);
   }
-}
-const profileKey = (profile) =>
-  `umbra_external_evidence_${profile?.company || ""}:${profile?.name || ""}`;
-const statePath = (profile) =>
-  `/api/state?foreman=${encodeURIComponent(profile?.name || "")}&company=${encodeURIComponent(profile?.company || "")}`;
-const useUmbra = create((set) => ({
-  profile: JSON.parse(localStorage.getItem("umbra_foreman_profile") || "null"),
-  state: null,
-  setState: (state) => set({ state }),
-  setProfile: (profile) => {
-    if (profile)
-      localStorage.setItem("umbra_foreman_profile", JSON.stringify(profile));
-    else localStorage.removeItem("umbra_foreman_profile");
-    set({ profile, state: null });
-  },
-}));
-
-function useData() {
-  const profile = useUmbra((store) => store.profile);
-  const state = useUmbra((store) => store.state);
-  const setState = useUmbra((store) => store.setState);
-  const refresh = async () => setState(await api(statePath(profile)));
-  useEffect(() => {
-    refresh();
-  }, []);
-  return { profile, state, setState, refresh };
 }
 function Shell({ children }) {
   const { profile, state } = useData();
@@ -954,10 +919,9 @@ function App() {
           <Route
             path="/behavioral"
             element={
-              <PendingScreen
-                title="Behavioral Factors"
-                detail="Protection status will be migrated after the environmental evidence screen is reviewed."
-              />
+              <Shell>
+                <Behavioral />
+              </Shell>
             }
           />
           <Route

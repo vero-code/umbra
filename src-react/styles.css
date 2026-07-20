@@ -853,6 +853,612 @@ main.reactWorkspace {
   font-size: 0.62rem;
 }
 
+.behavioralHero {
+  padding: 48px 0 30px;
+}
+
+.behavioralHero h1 {
+  max-width: 760px;
+  margin: 8px 0 12px;
+  color: #20284c;
+  font-size: clamp(2.8rem, 5vw, 4.8rem);
+  line-height: 0.94;
+  letter-spacing: -0.07em;
+}
+
+.behavioralHero > p:last-child {
+  max-width: 650px;
+  margin: 0;
+  color: #65728f;
+  font-size: 0.94rem;
+  line-height: 1.5;
+}
+
+.behaviorCrewRail,
+.protectionControls,
+.behaviorMapPanel,
+.protectionImpact,
+.behavioralEmpty {
+  border: 1px solid #d9dcf2;
+  border-radius: 20px;
+  background: #fffdf9;
+  box-shadow: 0 14px 32px #3d40730d;
+}
+
+.behaviorCrewRail {
+  padding: 16px;
+}
+
+.behaviorCrewRail > .eyebrow {
+  margin: 0 0 10px;
+}
+
+.behaviorCrewList {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
+  gap: 8px;
+}
+
+.behaviorCrewList button {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid #e0e2f4;
+  border-radius: 12px;
+  background: #fff;
+  color: #20284c;
+  text-align: left;
+}
+
+.behaviorCrewList button.isSelected {
+  border-color: #8b78eb;
+  background: #f3efff;
+  box-shadow: inset 0 0 0 1px #8b78eb;
+}
+
+.behaviorCrewList .crewInitial {
+  width: 32px;
+  height: 32px;
+}
+
+.behaviorCrewList b,
+.behaviorCrewList small,
+.behaviorCrewList em {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.behaviorCrewList b {
+  display: block;
+  font-size: 0.72rem;
+}
+
+.behaviorCrewList small {
+  display: block;
+  margin-top: 2px;
+  color: #7d86a4;
+  font-size: 0.62rem;
+}
+
+.behaviorCrewList em {
+  grid-column: 2;
+  color: #715bd9;
+  font-size: 0.59rem;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.behavioralGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.98fr) minmax(0, 1.02fr);
+  gap: 18px;
+  align-items: start;
+  margin-top: 18px;
+}
+
+.protectionControls {
+  padding: 22px;
+}
+
+.selectedWorkerHeading {
+  display: flex;
+  gap: 11px;
+  align-items: center;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #e1e2f1;
+}
+
+.selectedWorkerHeading .crewInitial {
+  width: 46px;
+  height: 46px;
+}
+
+.selectedWorkerHeading h2,
+.behaviorMapHeader h2,
+.impactHeader h2 {
+  margin: 4px 0 0;
+  color: #20284c;
+  font-size: 1.25rem;
+  letter-spacing: -0.04em;
+}
+
+.selectedWorkerHeading small,
+.behaviorMapHeader small {
+  color: #7c86a5;
+  font-size: 0.69rem;
+}
+
+.protectionGroup {
+  margin-top: 18px;
+}
+
+.protectionGroup > .eyebrow {
+  margin: 0 0 8px;
+}
+
+.protectionChoices {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.protectionChoices button {
+  min-height: 90px;
+  padding: 10px;
+  border: 1px solid #dfe2f5;
+  border-radius: 12px;
+  background: #fff;
+  color: #303a63;
+  text-align: left;
+}
+
+.protectionChoices button.isSelected {
+  border-color: #8b78eb;
+  background: #f4f1ff;
+  box-shadow: inset 0 0 0 1px #8b78eb;
+}
+
+.protectionChoices b,
+.protectionChoices small,
+.protectionChoices em {
+  display: block;
+}
+
+.protectionChoices b {
+  font-size: 0.69rem;
+}
+
+.protectionChoices small {
+  margin-top: 5px;
+  color: #77819f;
+  font-size: 0.6rem;
+  line-height: 1.35;
+}
+
+.protectionChoices em {
+  margin-top: 7px;
+  color: #715bd9;
+  font-size: 0.57rem;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.sunscreenClock {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 145px;
+  gap: 16px;
+  align-items: center;
+  margin-top: 18px;
+  padding: 14px;
+  border-radius: 14px;
+  background: linear-gradient(120deg, #fff2ce, #f7f4ff);
+}
+
+.sunscreenClock .eyebrow {
+  margin: 0;
+}
+
+.sunscreenClock b,
+.sunscreenClock small {
+  display: block;
+}
+
+.sunscreenClock b {
+  margin-top: 5px;
+  color: #303a63;
+  font-size: 0.94rem;
+}
+
+.sunscreenClock small {
+  margin-top: 4px;
+  color: #717b9a;
+  font-size: 0.61rem;
+  line-height: 1.35;
+}
+
+.sunscreenClock input {
+  width: 100%;
+  accent-color: #765ce5;
+}
+
+.sunscreenClock input:disabled {
+  opacity: 0.35;
+}
+
+.behaviorVisualStack {
+  display: grid;
+  gap: 18px;
+}
+
+.behaviorMapPanel {
+  padding: 18px;
+}
+
+.behaviorMapHeader {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.behaviorMapHeader .eyebrow,
+.impactHeader .eyebrow {
+  margin: 0;
+}
+
+.behaviorSiteTabs {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 5px;
+  max-width: 50%;
+}
+
+.behaviorSiteTabs button {
+  max-width: 130px;
+  overflow: hidden;
+  padding: 6px 8px;
+  border: 1px solid #dfe2f5;
+  border-radius: 999px;
+  background: #fff;
+  color: #66708e;
+  font-size: 0.61rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.behaviorSiteTabs button.isSelected {
+  border-color: #8b78eb;
+  background: #765ce5;
+  color: #fff;
+}
+
+.behaviorSiteMap {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 275px;
+  border-radius: 14px;
+  background: #ccd8ed;
+}
+
+.behaviorSiteMap > img,
+.behaviorMapFallback {
+  width: 100%;
+  height: 275px;
+  object-fit: cover;
+}
+
+.behaviorMapFallback {
+  display: block;
+  background:
+    linear-gradient(
+      125deg,
+      transparent 46%,
+      #4d5e714d 46% 53%,
+      transparent 53%
+    ),
+    linear-gradient(155deg, #a6dff0 0 44%, #d8d3bd 44% 72%, #6d7d8a 72%);
+}
+
+.behaviorMapOverlay {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  background: linear-gradient(180deg, #151b4b08, #151b4b78);
+  pointer-events: none;
+}
+
+.mapSunMarker,
+.mapExposureZone,
+.mapWorkerMarker {
+  position: absolute;
+  z-index: 2;
+}
+
+.mapSunMarker {
+  top: 12px;
+  right: 12px;
+  padding: 6px 8px;
+  border-radius: 999px;
+  background: #fff0b8e8;
+  color: #7a561e;
+  font-size: 0.61rem;
+  font-weight: 700;
+}
+
+.mapExposureZone {
+  padding: 5px 7px;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 0.58rem;
+  font-weight: 700;
+}
+
+.directZone {
+  top: 44%;
+  right: 9%;
+  background: #ef7257dc;
+}
+
+.shadeZone {
+  bottom: 13%;
+  left: 9%;
+  background: #4d4b79dc;
+}
+
+.mapWorkerMarker {
+  display: grid;
+  grid-template-columns: 34px auto;
+  column-gap: 7px;
+  align-items: center;
+  padding: 6px 9px 6px 6px;
+  border: 1px solid #fff8;
+  border-radius: 10px;
+  background: #242a50e8;
+  color: #fff;
+  transition:
+    left 180ms ease,
+    top 180ms ease,
+    right 180ms ease,
+    bottom 180ms ease;
+}
+
+.mapWorkerMarker .crewInitial {
+  grid-row: span 2;
+  width: 34px;
+  height: 34px;
+}
+
+.mapWorkerMarker b,
+.mapWorkerMarker small {
+  overflow: hidden;
+  max-width: 110px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mapWorkerMarker b {
+  font-size: 0.64rem;
+}
+
+.mapWorkerMarker small {
+  color: #d9dcf8;
+  font-size: 0.56rem;
+}
+
+.shade-direct .mapWorkerMarker {
+  top: 39%;
+  right: 20%;
+}
+
+.shade-partial .mapWorkerMarker {
+  top: 58%;
+  left: 36%;
+}
+
+.shade-canopy .mapWorkerMarker {
+  bottom: 17%;
+  left: 14%;
+}
+
+.protectionImpact {
+  padding: 20px;
+  background: linear-gradient(135deg, #f7f4ff, #edfbff);
+}
+
+.impactHeader {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.riskPill {
+  flex: 0 0 auto;
+  padding: 6px 8px;
+  border-radius: 999px;
+  font-size: 0.6rem;
+  font-weight: 700;
+}
+
+.riskPill.critical {
+  background: #ffe4df;
+  color: #c75647;
+}
+
+.riskPill.high {
+  background: #fff0ca;
+  color: #9a671d;
+}
+
+.riskPill.elevated {
+  background: #e9e4ff;
+  color: #6654c0;
+}
+
+.riskPill.managed {
+  background: #e0f8e9;
+  color: #34835b;
+}
+
+.impactFlow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 14px minmax(0, 1fr) 14px minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+  margin-top: 16px;
+}
+
+.impactFlow span {
+  min-height: 70px;
+  padding: 10px;
+  border: 1px solid #e0e2f4;
+  border-radius: 10px;
+  background: #fffdf9cc;
+}
+
+.impactFlow small,
+.impactFlow b {
+  display: block;
+}
+
+.impactFlow small {
+  color: #74809d;
+  font-size: 0.58rem;
+  line-height: 1.25;
+}
+
+.impactFlow b {
+  margin-top: 7px;
+  color: #2d3863;
+  font-size: 1.05rem;
+}
+
+.impactFlow i {
+  display: grid;
+  place-items: center;
+  color: #8778d7;
+  font-size: 0.9rem;
+  font-style: normal;
+}
+
+.impactDelta,
+.impactProfile,
+.impactRecommendation,
+.spfStatus,
+.impactEmpty,
+.behaviorMessage {
+  color: #61708e;
+  font-size: 0.7rem;
+  line-height: 1.45;
+}
+
+.impactDelta {
+  margin: 13px 0 0;
+  color: #6654d5;
+  font-weight: 700;
+}
+
+.impactProfile {
+  margin: 7px 0 0;
+  color: #65728f;
+}
+
+.impactProfile b {
+  color: #44517a;
+}
+
+.impactRecommendation {
+  margin: 7px 0 0;
+  color: #34426b;
+}
+
+.spfStatus {
+  margin: 7px 0 0;
+}
+
+.applyProtection {
+  width: 100%;
+  margin-top: 16px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #4894d6, #7d65e8);
+  color: #fff;
+  font:
+    700 0.73rem Manrope,
+    sans-serif;
+  padding: 12px;
+}
+
+.applyProtection:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.behaviorMessage {
+  display: block;
+  margin-top: 9px;
+}
+
+.behavioralEmpty {
+  max-width: 660px;
+  margin: 80px auto;
+  padding: 30px;
+}
+
+.behavioralEmpty h1 {
+  margin: 8px 0 12px;
+  color: #20284c;
+  font-size: 2rem;
+  letter-spacing: -0.05em;
+}
+
+.behavioralEmpty p:last-child {
+  margin: 0;
+  color: #65728f;
+  line-height: 1.5;
+}
+
+@media (max-width: 960px) {
+  .behavioralGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .behavioralHero {
+    padding-top: 30px;
+  }
+
+  .protectionChoices,
+  .impactFlow {
+    grid-template-columns: 1fr;
+  }
+
+  .impactFlow i {
+    display: none;
+  }
+
+  .sunscreenClock {
+    grid-template-columns: 1fr;
+  }
+
+  .behaviorMapHeader {
+    flex-direction: column;
+  }
+
+  .behaviorSiteTabs {
+    justify-content: flex-start;
+    max-width: 100%;
+  }
+}
+
 @media (max-width: 600px) {
   .savedEvidenceDetailGrid {
     grid-template-columns: 1fr;

@@ -4,6 +4,9 @@ import {
   riskTiers,
   sensitivityFactors,
   settingFactors,
+  upfFactors,
+  spfFactors,
+  shadeFactors,
   scoreWorker,
   recordActivity,
   createPlan,
@@ -20,7 +23,7 @@ const operationalMessages = {
   heat_wave: "Incoming heat-wave advisory...",
   photo_analyzed: "Reflective surface detected...",
   property_imagery_assessed: "New site imagery received...",
-  behavioral_factors_updated: "Worker protection expired...",
+  behavioral_factors_updated: "Worker protection status updated...",
   worker_absent: "Worker absence reported...",
   equipment_failed: "Equipment failure reported...",
   manual_review_requested: "Supervisor scenario requested...",
@@ -388,6 +391,11 @@ export function removeTeamMember(state, workerId) {
 export function updateBehavioralFactors(state, input) {
   const worker = state.workers.find((entry) => entry.id === input.workerId);
   if (!worker) throw new Error("Team member not found");
+  if (input.siteId) {
+    const site = state.sites.find((entry) => entry.id === input.siteId);
+    if (!site) throw new Error("Select an active worksite");
+    worker.siteId = site.id;
+  }
   if (!upfFactors[input.upf]) throw new Error("Select protective equipment");
   if (!spfFactors[input.spf]) throw new Error("Select sunscreen use");
   if (!shadeFactors[input.shadeAvailability])
