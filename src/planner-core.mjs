@@ -3,6 +3,7 @@ import {
   buildEvidencePacket,
   evidenceAgentDecision,
 } from "./planner-evidence.mjs";
+import { buildRotationBlocks } from "./rotation-windows.mjs";
 
 export const riskTiers = { standard: 1, elevated: 1.25, high: 1.5 };
 export const sensitivityFactors = { low: 1, moderate: 1.15, high: 1.3 };
@@ -276,19 +277,6 @@ export function scoreWorker(site, worker) {
   );
 }
 
-function rotations(workers, equipment) {
-  const blocks = ["09:30-09:50", "11:15-11:35", "13:00-13:20"];
-  const maxOut =
-    equipment === "failed" ? 1 : Math.max(1, Math.floor(workers.length / 2));
-  return blocks.map((window, index) => ({
-    window,
-    breakMinutes: 20,
-    workers: workers
-      .slice(index % workers.length, (index % workers.length) + maxOut)
-      .map((w) => w.id),
-  }));
-}
-
 export function validatePlan(plan, workers) {
   if (!workers.length)
     return { valid: false, reason: "No active workers assigned" };
@@ -332,7 +320,7 @@ function buildDecisionBasis(site, ranked, event) {
     ranked[0].exposureProfile
       ? `Worker risk profile: ${ranked[0].name} reports ${ranked[0].exposureProfile.photosensitivity || "unrecorded"} photosensitivity and Fitzpatrick type ${ranked[0].exposureProfile.fitzpatrickType || "unrecorded"}.`
       : `Worker risk profile: ${ranked[0].name}'s operational tier is ${ranked[0].tier}; no additional self-reported profile is recorded.`,
-    `Crew availability: ${ranked.length} active worker(s) are assigned to this site; break rotations preserve coverage.`,
+    `Crew availability: ${ranked.length} active worker(s) are assigned to this site; each scheduled break keeps other crew members assigned.`,
   ];
   const factors = ranked[0].behavioralFactors;
   if (factors) {
@@ -396,7 +384,7 @@ function rulePlan(site, workers, event) {
         score,
       }),
     ),
-    rotationBlocks: rotations(ranked, site.equipment),
+    rotationBlocks: buildRotationBlocks(site, ranked, site.equipment),
     environmentalExposure: calculateEnvironmentalExposure(site),
     alerts: [],
     reasoningChain: buildDecisionBasis(site, ranked, event),
@@ -436,13 +424,13 @@ export function decisionFromPlan(plan, event) {
     siteId: plan.siteId,
     siteName: plan.siteName,
     severity: first.score,
-    recommendation: `${first.name} should come out of the sun first.`,
+    recommendation: `${first.name} should take the next shaded relief break.`,
     triggeringEvent:
       event?.type?.replaceAll("_", " ") || "Continuous portfolio monitoring",
     whatChanged: event
       ? `New ${event.type.replaceAll("_", " ")} evidence changed site priority.`
       : "Portfolio priority was refreshed.",
-    whyWorker: `${first.name} has the highest exposure score (${first.score}) after risk tier, site conditions, and coverage constraints.`,
+    whyWorker: `${first.name} has the highest exposure score (${first.score}) after risk tier, site conditions, and current crew availability.`,
     whyNow:
       plan.alerts[0] ||
       "Exposure conditions require a current rotation decision.",

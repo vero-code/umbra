@@ -1281,6 +1281,7 @@ main.reactWorkspace {
 
 .mapWorkerMarker b,
 .mapWorkerMarker small {
+  display: block;
   overflow: hidden;
   max-width: 110px;
   text-overflow: ellipsis;

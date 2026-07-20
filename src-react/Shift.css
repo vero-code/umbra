@@ -1,0 +1,549 @@
+.shiftWorkspace {
+  padding-bottom: 72px;
+}
+
+.shiftHero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(250px, 0.42fr);
+  gap: 32px;
+  align-items: end;
+  padding: 48px 0 30px;
+}
+
+.shiftHero h1 {
+  max-width: 790px;
+  margin: 8px 0 12px;
+  color: #20284c;
+  font-size: clamp(2.6rem, 4.8vw, 4.65rem);
+  line-height: 0.94;
+  letter-spacing: -0.07em;
+}
+
+.shiftHeroSummary {
+  max-width: 700px;
+  margin: 0;
+  color: #697590;
+  font-size: 0.93rem;
+  line-height: 1.55;
+}
+
+.shiftPlanStatus,
+.shiftPriorityCard,
+.shiftMapCard,
+.shiftRotations,
+.shiftReasoning,
+.shiftEmptyState {
+  border: 1px solid #d9dcf2;
+  border-radius: 20px;
+  background: #fffdf9;
+  box-shadow: 0 14px 32px #3d40730d;
+}
+
+.shiftPlanStatus {
+  display: grid;
+  gap: 6px;
+  min-height: 146px;
+  padding: 18px;
+}
+
+.shiftPlanStatus .eyebrow {
+  margin: 0;
+}
+
+.shiftPlanStatus b {
+  color: #2f3b66;
+  font-size: 1.04rem;
+  letter-spacing: -0.035em;
+}
+
+.shiftPlanStatus span {
+  color: #6d7897;
+  font-size: 0.7rem;
+  line-height: 1.45;
+}
+
+.shiftPlanStatus.review {
+  border-color: #ecd2a4;
+  background: linear-gradient(135deg, #fff9ea, #fffdf9);
+}
+
+.shiftPlanStatus.review b {
+  color: #986520;
+}
+
+.shiftPlanStatus.approved {
+  border-color: #bce6cd;
+  background: linear-gradient(135deg, #effff4, #fffdf9);
+}
+
+.shiftPlanStatus.approved b {
+  color: #347653;
+}
+
+.shiftDecisionGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.84fr) minmax(440px, 1.16fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.shiftPriorityCard {
+  display: flex;
+  flex-direction: column;
+  padding: 22px;
+  background:
+    radial-gradient(circle at 94% 2%, #ede8ff 0, transparent 28%), #fffdf9;
+}
+
+.shiftPriorityHeading {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding-bottom: 19px;
+  border-bottom: 1px solid #e2e3f0;
+}
+
+.shiftPriorityHeading .eyebrow {
+  margin: 0;
+}
+
+.shiftPriorityHeading h2 {
+  margin: 7px 0 3px;
+  color: #20284c;
+  font-size: clamp(1.5rem, 2.4vw, 2.1rem);
+  letter-spacing: -0.055em;
+}
+
+.shiftPriorityHeading > div > small {
+  color: #7883a0;
+  font-size: 0.72rem;
+}
+
+.shiftScore {
+  flex: 0 0 auto;
+  min-width: 102px;
+  padding: 11px 13px;
+  border-radius: 13px;
+  background: #242b51;
+  color: #fff;
+}
+
+.shiftScore small,
+.shiftScore b {
+  display: block;
+}
+
+.shiftScore small {
+  color: #c6cdee;
+  font-size: 0.59rem;
+}
+
+.shiftScore b {
+  margin-top: 4px;
+  color: #d8f550;
+  font-size: 1.55rem;
+  letter-spacing: -0.06em;
+}
+
+.shiftPriorityFacts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 18px 0;
+}
+
+.shiftPriorityFacts span {
+  min-width: 0;
+  padding: 10px 0 0;
+  border-top: 1px solid #e5e6f2;
+}
+
+.shiftPriorityFacts small,
+.shiftPriorityFacts b {
+  display: block;
+}
+
+.shiftPriorityFacts small {
+  margin-bottom: 5px;
+  color: #6d8390;
+  font:
+    700 0.56rem "DM Mono",
+    monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.shiftPriorityFacts b {
+  overflow: hidden;
+  color: #3d486e;
+  font-size: 0.68rem;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+}
+
+.shiftAction {
+  margin-top: auto;
+  padding: 15px;
+  border-radius: 14px;
+  background: #f2efff;
+}
+
+.shiftAction p {
+  margin: 0 0 11px;
+  color: #39456d;
+  font-size: 0.77rem;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.shiftApproveButton {
+  width: 100%;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #4894d6, #7d65e8);
+  color: #fff;
+  font:
+    700 0.75rem Manrope,
+    sans-serif;
+  padding: 12px;
+}
+
+.shiftApproveButton:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.shiftApprovalMessage {
+  display: block;
+  margin-top: 9px;
+  color: #5d6b8c;
+  font-size: 0.64rem;
+  line-height: 1.4;
+}
+
+.shiftSectionHeading {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 13px;
+}
+
+.shiftSectionHeading .eyebrow {
+  margin: 0;
+}
+
+.shiftSectionHeading h2 {
+  margin: 5px 0 0;
+  color: #20284c;
+  font-size: 1.16rem;
+  letter-spacing: -0.045em;
+}
+
+.shiftMapTime,
+.shiftRotations > .shiftSectionHeading > span,
+.shiftReasoningHeading > span {
+  flex: 0 0 auto;
+  padding: 6px 8px;
+  border-radius: 999px;
+  background: #fff0ba;
+  color: #846124;
+  font-size: 0.6rem;
+  font-weight: 700;
+}
+
+.shiftRotations {
+  margin-top: 18px;
+  padding: 20px 22px;
+}
+
+.shiftRotationTable {
+  overflow: hidden;
+  border-top: 1px solid #dee1ef;
+}
+
+.shiftRotationHeader,
+.shiftRotationRow {
+  display: grid;
+  grid-template-columns: 0.72fr 1.2fr 1fr 1.2fr;
+  gap: 14px;
+  align-items: center;
+}
+
+.shiftRotationHeader {
+  padding: 10px 0;
+  color: #74809b;
+  font:
+    700 0.56rem "DM Mono",
+    monospace;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.shiftRotationRow {
+  min-height: 58px;
+  border-top: 1px solid #e4e5f0;
+  color: #596581;
+  font-size: 0.69rem;
+}
+
+.shiftRotationCaption {
+  max-width: 680px;
+  margin: 12px 0 0;
+  color: #6b7896;
+  font-size: 0.65rem;
+  line-height: 1.45;
+}
+
+.shiftRotationRow b {
+  color: #2d3962;
+  font-size: 0.72rem;
+}
+
+.shiftRotationAction b,
+.shiftRotationAction small {
+  display: block;
+}
+
+.shiftRotationAction b {
+  color: #364269;
+  font-size: 0.71rem;
+}
+
+.shiftRotationAction small {
+  margin-top: 3px;
+  color: #74809b;
+  font-size: 0.61rem;
+}
+
+.shiftRotationReason {
+  color: #715bd9;
+  font-size: 0.66rem;
+  font-weight: 800;
+}
+
+.shiftReasoning {
+  margin-top: 18px;
+  padding: 22px;
+  background: linear-gradient(135deg, #f5f8ff, #fefeff);
+}
+
+.shiftReasoningHeading {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 17px;
+}
+
+.shiftReasoningHeading .eyebrow {
+  margin: 0;
+}
+
+.shiftReasoningHeading h2 {
+  margin: 6px 0 0;
+  color: #20284c;
+  font-size: 1.28rem;
+  letter-spacing: -0.05em;
+}
+
+.shiftReasoningHeading > span {
+  max-width: 190px;
+  overflow: hidden;
+  background: #dff7e8;
+  color: #347653;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.shiftReasoningGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.shiftReasoningCard {
+  min-height: 114px;
+  padding: 13px;
+  border: 1px solid #dfe3f4;
+  border-radius: 13px;
+  background: #fffdf9;
+}
+
+.shiftReasoningCard > p {
+  margin: 0 0 10px;
+  color: #647a87;
+  font:
+    700 0.57rem "DM Mono",
+    monospace;
+  letter-spacing: 0.08em;
+}
+
+.shiftReasoningCard strong {
+  display: block;
+  color: #344168;
+  font-size: 0.72rem;
+  line-height: 1.38;
+}
+
+.shiftReasoningCard small {
+  display: block;
+  margin-top: 8px;
+  color: #596784;
+  font-size: 0.62rem;
+  line-height: 1.42;
+}
+
+.shiftReasoningDetails {
+  margin-top: 11px;
+  padding: 10px 12px;
+  border: 1px solid #dde2f1;
+  border-radius: 10px;
+  background: #fffdf9;
+}
+
+.shiftReasoningDetails summary {
+  color: #51449c;
+  cursor: pointer;
+  font-size: 0.66rem;
+  font-weight: 800;
+}
+
+.shiftReasoningDetails ul {
+  display: grid;
+  gap: 6px;
+  margin: 10px 0 0;
+  padding: 0;
+  color: #596784;
+  font-size: 0.63rem;
+  line-height: 1.4;
+  list-style: none;
+}
+
+.shiftReasoningDetails li::before {
+  margin-right: 6px;
+  color: #765ce5;
+  content: "•";
+}
+
+.shiftReasoningCard.evidence {
+  background: #eff5ff;
+}
+
+.shiftReasoningCard.reasoning {
+  border-color: #ded7ff;
+}
+
+.shiftReasoningCard.tradeoffs {
+  background: #fff9ed;
+}
+
+.shiftReasoningCard.decision {
+  border-color: #27315b;
+  background: #27315b;
+  color: #fff;
+}
+
+.shiftReasoningCard.decision > p,
+.shiftReasoningCard.decision small {
+  color: #d7f058;
+}
+
+.shiftReasoningCard.decision strong {
+  display: block;
+  font-size: 0.83rem;
+  line-height: 1.35;
+}
+
+.shiftReasoningCard.decision small {
+  display: block;
+  margin-top: 13px;
+  color: #d5dbf4;
+  font-size: 0.61rem;
+  line-height: 1.4;
+}
+
+.shiftEmptyState {
+  max-width: 700px;
+  margin: 96px auto;
+  padding: 32px;
+}
+
+.shiftEmptyState .eyebrow {
+  margin: 0;
+}
+
+.shiftEmptyState h1 {
+  margin: 9px 0 12px;
+  color: #20284c;
+  font-size: clamp(2.2rem, 5vw, 3.8rem);
+  line-height: 0.95;
+  letter-spacing: -0.065em;
+}
+
+.shiftEmptyState > p:last-child {
+  max-width: 600px;
+  margin: 0;
+  color: #66728f;
+  line-height: 1.55;
+}
+
+@media (max-width: 920px) {
+  .shiftHero,
+  .shiftDecisionGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .shiftPlanStatus {
+    min-height: auto;
+  }
+
+  .shiftReasoningGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .shiftHero {
+    gap: 18px;
+    padding-top: 28px;
+  }
+
+  .shiftPriorityCard,
+  .shiftRotations,
+  .shiftReasoning {
+    padding: 16px;
+  }
+
+  .shiftPriorityFacts,
+  .shiftReasoningGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .shiftRotationHeader {
+    display: none;
+  }
+
+  .shiftRotationRow {
+    grid-template-columns: 0.65fr 1fr;
+    gap: 5px 12px;
+    padding: 10px 0;
+  }
+
+  .shiftRotationRow span:nth-child(3),
+  .shiftRotationRow span:nth-child(4) {
+    color: #7883a0;
+    font-size: 0.6rem;
+  }
+
+  .shiftReasoningHeading {
+    display: block;
+  }
+
+  .shiftReasoningHeading > span {
+    display: inline-block;
+    margin-top: 10px;
+  }
+}

@@ -14,6 +14,28 @@ export const api = async (path, options = {}) => {
 export const profileKey = (profile) =>
   `umbra_external_evidence_${profile?.company || ""}:${profile?.name || ""}`;
 
+export const protectionPlanKey = (profile) =>
+  `umbra_protection_plan_${profile?.company || ""}:${profile?.name || ""}`;
+
+export const hasWorkerPlacement = (worker, sites = []) => {
+  const position = worker?.behavioralFactors?.mapPosition;
+  const hasCoordinates =
+    Number.isFinite(Number(position?.x)) &&
+    Number.isFinite(Number(position?.y));
+  const hasAssessedSite = sites.some(
+    (site) => site.id === position?.siteId && site.propertyAssessment,
+  );
+  return Boolean(hasCoordinates && hasAssessedSite);
+};
+
+export const hasCompleteCrewPlacement = (state) => {
+  const workers = state?.workers || [];
+  return (
+    workers.length > 0 &&
+    workers.every((worker) => hasWorkerPlacement(worker, state?.sites || []))
+  );
+};
+
 const statePath = (profile) =>
   `/api/state?foreman=${encodeURIComponent(profile?.name || "")}&company=${encodeURIComponent(profile?.company || "")}`;
 

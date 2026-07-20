@@ -609,6 +609,45 @@ const server = http.createServer(async (req, res) => {
       await saveWorkerStore(store);
       return json(res, 201, { worker, decisions, state });
     }
+    if (req.method === "POST" && url.pathname === "/api/shift/approve") {
+      const input = await body(req);
+      const { store, team } = await teamFor(input.profile);
+      if (!team) throw new Error("Team profile not found");
+
+      const state = await getState(input.profile);
+      hydrateTeamOperations(state, team);
+      const plan = state.plans.find((entry) => entry.id === input.planId);
+      if (!plan) return json(res, 404, { error: "Plan not found" });
+
+      const approvedAt = new Date().toISOString();
+      plan.status = "approved";
+      plan.approvedAt = approvedAt;
+
+      const matchingDecision = state.decisions.find(
+        (decision) => decision.planId === plan.id,
+      );
+      if (matchingDecision) {
+        matchingDecision.status = "approved";
+        matchingDecision.approvedAt = approvedAt;
+      }
+
+      state.audit.unshift({
+        at: approvedAt,
+        type: "plan_approved",
+        detail: plan.siteName || "Morning Brief",
+      });
+      recordActivity(
+        state,
+        "decision",
+        "Morning plan approved...",
+        `${plan.siteName || "The affected site"} rotation plan is approved and scheduled for crew check-in.`,
+      );
+      state.portfolio = buildPortfolio(state);
+      persistTeamOperations(state, team);
+      await saveState(state, { persistOperations: false });
+      await saveWorkerStore(store);
+      return json(res, 200, { plan, state });
+    }
     if (req.method === "POST" && url.pathname === "/api/what-if") {
       const state = await getState();
       const { question } = await body(req);

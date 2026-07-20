@@ -140,7 +140,7 @@ export function buildEvidenceAgentMock(packet, failed = false) {
     mode: failed ? "fallback" : "mock",
     modelRole: failed ? "deterministic rules engine" : "GPT-5.6 Sol simulation",
     priorityWorkerId: first.id,
-    decision: `Rotate ${first.name} first and retain validated crew coverage.`,
+    decision: `Schedule ${first.name} for the first shaded relief break while other active crew remain assigned.`,
     triggeringEvent: packet.event.type.replaceAll("_", " "),
     evidence: packet.validatedPlan.reasoningChain,
     reasoning: [

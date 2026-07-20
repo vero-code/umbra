@@ -764,7 +764,7 @@ main:before {
 .consentCheck {
   display: flex;
   grid-column: span 2;
-  align-items: flex-start;
+  align-items: center;
   gap: 9px;
   padding: 10px 2px;
   color: #525a7c;
@@ -871,7 +871,9 @@ main:before {
   line-height: 1.5;
 }
 .consentCheck input {
+  flex: 0 0 16px;
   width: 16px;
+  min-height: 16px;
   height: 16px;
   margin: 0;
   accent-color: #7564df;

@@ -5,7 +5,13 @@ import BehavioralMap, {
 } from "./BehavioralMap.jsx";
 import PlanUpdatedResult from "./PlanUpdatedResult.jsx";
 import ProtectionChoices from "./ProtectionChoices.jsx";
-import { api, useData } from "./umbra-data.js";
+import {
+  api,
+  hasCompleteCrewPlacement,
+  hasWorkerPlacement,
+  protectionPlanKey,
+  useData,
+} from "./umbra-data.js";
 
 const protectionDefaults = {
   upf: "cotton",
@@ -82,6 +88,9 @@ export default function Behavioral() {
   const { profile, state, setState } = useData();
   const workers = state?.workers || [];
   const sites = state?.sites || [];
+  const placedCrewCount = workers.filter((worker) =>
+    hasWorkerPlacement(worker, sites),
+  ).length;
   const [selectedWorkerId, setSelectedWorkerId] = useState(null);
   const [selectedSiteId, setSelectedSiteId] = useState(null);
   const [protection, setProtection] = useState(protectionDefaults);
@@ -192,6 +201,12 @@ export default function Behavioral() {
 
   const applyProtection = async () => {
     if (!selectedWorker || !activeSite) return;
+    if (!selectedMapPosition) {
+      setMessage(
+        "Place this worker on the worksite image before rebuilding the plan.",
+      );
+      return;
+    }
     try {
       setIsApplying(true);
       setMessage(
@@ -209,6 +224,10 @@ export default function Behavioral() {
           ...protection,
         }),
       });
+      localStorage.setItem(
+        protectionPlanKey(profile),
+        JSON.stringify({ appliedAt: new Date().toISOString() }),
+      );
       setState(data.state);
       const updatedPlan = data.state.plans?.find(
         (plan) => plan.siteId === activeSite.id,
@@ -238,8 +257,13 @@ export default function Behavioral() {
           "The affected worksite plan has been rebuilt.",
         reviewRequired: decision?.status === "needs_review",
       });
+      const updatedPlacedCount = (data.state.workers || []).filter((worker) =>
+        hasWorkerPlacement(worker, data.state.sites || []),
+      ).length;
       setMessage(
-        `${selectedWorker.name}'s protection status was applied. Umbra updated the affected site plan.`,
+        hasCompleteCrewPlacement(data.state)
+          ? "All crew members are placed. Morning Brief is now available."
+          : `${selectedWorker.name}'s protection status was applied. ${updatedPlacedCount}/${data.state.workers.length} crew members are placed.`,
       );
     } catch (error) {
       setMessage(error.message);
@@ -276,10 +300,13 @@ export default function Behavioral() {
         </div>
 
         <aside className="behaviorCrewRail" aria-label="Crew protection status">
-          <p className="eyebrow">CREW PROTECTION STATUS</p>
+          <p className="eyebrow">
+            CREW PROTECTION STATUS · {placedCrewCount}/{workers.length} PLACED
+          </p>
           <div className="behaviorCrewList">
             {workers.map((worker) => {
               const factors = worker.behavioralFactors;
+              const isPlaced = hasWorkerPlacement(worker, sites);
               return (
                 <button
                   key={worker.id}
@@ -301,7 +328,13 @@ export default function Behavioral() {
                     <b>{worker.name}</b>
                     <small>{roleLabel(worker.role)}</small>
                   </span>
-                  <em>{factors ? "Protection set" : "Needs setup"}</em>
+                  <em>
+                    {isPlaced
+                      ? "Placed on site"
+                      : factors
+                        ? "Place on map"
+                        : "Needs setup"}
+                  </em>
                 </button>
               );
             })}
@@ -467,13 +500,19 @@ export default function Behavioral() {
             <button
               type="button"
               className="applyProtection"
-              disabled={!preview || isApplying}
+              disabled={!preview || isApplying || !selectedMapPosition}
               onClick={applyProtection}
             >
               {isApplying
-                ? "Updating plan..."
-                : "Apply protection update & replan"}
+                ? "Saving placement & updating plan..."
+                : "Save placement & update plan"}
             </button>
+            {!selectedMapPosition && (
+              <small className="behaviorMessage">
+                Place this worker on the image before applying the protection
+                update.
+              </small>
+            )}
             <PlanUpdatedResult result={appliedResult} />
             {message && <small className="behaviorMessage">{message}</small>}
           </article>

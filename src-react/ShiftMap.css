@@ -1,0 +1,237 @@
+.shiftMapCard {
+  padding: 22px;
+  background: linear-gradient(135deg, #f4fbff, #fffdf9);
+}
+
+.shiftMapCard .shiftSectionHeading h2 {
+  font-size: 1.32rem;
+}
+
+.shiftStaticMap {
+  position: relative;
+  isolation: isolate;
+  min-height: 280px;
+  overflow: hidden;
+  border-radius: 13px;
+  background: #cfdcf0;
+}
+
+.shiftStaticMap > img,
+.shiftMapFallback {
+  display: block;
+  width: 100%;
+  height: 280px;
+  object-fit: cover;
+}
+
+.shiftMapFallback {
+  background:
+    linear-gradient(
+      125deg,
+      transparent 46%,
+      #4d5e714d 46% 53%,
+      transparent 53%
+    ),
+    linear-gradient(155deg, #a6dff0 0 44%, #d8d3bd 44% 72%, #6d7d8a 72%);
+}
+
+.shiftMapOverlay {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  background: linear-gradient(180deg, #151b4b05 45%, #151b4b35);
+  pointer-events: none;
+}
+
+.shiftReliefRoute {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.shiftReliefRoute path {
+  fill: none;
+  stroke: #d8f44f;
+  stroke-dasharray: 3 2;
+  stroke-linecap: round;
+  stroke-width: 1.1;
+}
+
+.shiftReliefRoute marker path {
+  fill: #d8f44f;
+  stroke: none;
+}
+
+.shiftStaticMap::after {
+  position: absolute;
+  z-index: 1;
+  bottom: 12%;
+  left: 35%;
+  width: 38%;
+  height: 22%;
+  border: 1px dashed #f7f3ffdc;
+  border-radius: 9px;
+  background: #4d4b7930;
+  content: "";
+  pointer-events: none;
+}
+
+.shiftMapZone,
+.shiftMapCrewMarker {
+  position: absolute;
+  z-index: 2;
+}
+
+.shiftMapZone {
+  padding: 6px 9px;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 0.64rem;
+  font-weight: 700;
+}
+
+.shiftDirectZone {
+  top: 16%;
+  left: 59%;
+  background: #ef7257dc;
+}
+
+.shiftCanopyZone {
+  bottom: 18%;
+  left: 43%;
+  background: #4d4b79dc;
+}
+
+.shiftMapCrewMarker {
+  display: grid;
+  width: 33px;
+  height: 33px;
+  place-items: center;
+  border: 1px solid #ffffffb3;
+  border-radius: 50%;
+  background: #4d4b79e8;
+  box-shadow: 0 3px 10px #1116324d;
+  transform: translate(-50%, -50%);
+}
+
+.shiftMapCrewMarker.isPriority {
+  width: 42px;
+  height: 42px;
+  border: 2px solid #d8f44f;
+  background: #242a50;
+  box-shadow: 0 4px 13px #11163270;
+}
+
+.shiftMapCrewMarker .crewInitial {
+  width: 26px;
+  height: 26px;
+}
+
+.shiftMapCrewMarker > b {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  display: grid;
+  width: 16px;
+  height: 16px;
+  place-items: center;
+  border: 1px solid #fff;
+  border-radius: 50%;
+  background: #d8f44f;
+  color: #38416f;
+  font-size: 0.56rem;
+  line-height: 1;
+}
+
+.shiftMapCrewLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.shiftMapCrewLegend li {
+  flex: 1 1 160px;
+  display: grid;
+  grid-template-columns: 29px minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+  padding: 7px 9px 7px 7px;
+  border: 1px solid #d9dff3;
+  border-radius: 9px;
+  background: #fff;
+}
+
+.shiftMapCrewLegend li.isPriority {
+  border-color: #cbe26b;
+  background: #fbffea;
+}
+
+.shiftMapLegendAvatar {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ffe3a5, #cfc4ff);
+  color: #504399;
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.shiftMapCrewLegend b,
+.shiftMapCrewLegend small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.shiftMapCrewLegend b {
+  color: #303a63;
+  font-size: 0.67rem;
+}
+
+.shiftMapCrewLegend small {
+  margin-top: 2px;
+  color: #727c9b;
+  font-size: 0.59rem;
+}
+
+.shiftMapCaption {
+  margin: 4px 0 0;
+  color: #6e7998;
+  font-size: 0.68rem;
+  line-height: 1.4;
+}
+
+.shiftMapInstruction {
+  margin: 12px 0 0;
+  color: #425073;
+  font-size: 0.7rem;
+  line-height: 1.45;
+}
+
+.shiftMapInstruction b {
+  color: #4f3cbb;
+}
+
+@media (max-width: 620px) {
+  .shiftMapCard {
+    padding: 16px;
+  }
+
+  .shiftStaticMap,
+  .shiftStaticMap > img,
+  .shiftMapFallback {
+    min-height: 215px;
+    height: 215px;
+  }
+}

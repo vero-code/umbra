@@ -28,6 +28,8 @@ export default function BehavioralMap({
   const mapRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
   const image = preview?.site?.image || site?.propertyPhotos?.[0]?.image;
+  const sunHour =
+    site?.propertyAssessment?.exposure?.hour ?? site?.forecast?.localHour ?? 12;
   const positionCopy =
     shadeAvailability === "canopy"
       ? "Relief zone"
@@ -86,7 +88,7 @@ export default function BehavioralMap({
         )}
         <div className="behaviorMapOverlay" aria-hidden="true" />
         <span className="mapSunMarker" aria-hidden="true">
-          Sun · 13:00
+          Sun · {String(Number(sunHour) || 0).padStart(2, "0")}:00
         </span>
         <span className="mapExposureZone directZone">Roof / direct sun</span>
         <span className="mapExposureZone shadeZone">Canopy / shade zone</span>

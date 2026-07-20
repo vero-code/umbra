@@ -10,6 +10,7 @@ import {
   scoreWorker,
   recordActivity,
   createPlan,
+  decisionFromPlan,
 } from "./planner-core.mjs";
 import {
   analyzeAuditWithModel,
@@ -100,7 +101,7 @@ export async function processEvent(state, event) {
       state,
       "reasoning",
       "Comparing crew allocations...",
-      "Evaluating worker risk, protection status, site exposure, and coverage constraints.",
+      "Evaluating worker risk, protection status, site exposure, and current crew assignments.",
     );
   const decisions = [];
   for (const siteId of affected) {
@@ -186,15 +187,18 @@ export function buildPortfolio(state) {
       const latest = state.decisions.find(
         (decision) => decision.siteId === site.id,
       );
+      const hasActiveCrew = active.length > 0;
       return {
         siteId: site.id,
         name: site.name,
         activeCrew: active.length,
-        exposureScore: active.length
+        exposureScore: hasActiveCrew
           ? Math.max(...active.map((worker) => scoreWorker(site, worker)))
-          : 99,
-        recommendation: latest?.recommendation || "Monitoring conditions",
-        status: latest?.status || "monitoring",
+          : 0,
+        recommendation: hasActiveCrew
+          ? latest?.recommendation || "Monitoring conditions"
+          : "No active crew assigned",
+        status: hasActiveCrew ? latest?.status || "monitoring" : "monitoring",
         setting: site.setting,
         uvi: site.forecast.uvi,
         temperatureC: site.forecast.temperatureC,
@@ -205,12 +209,17 @@ export function buildPortfolio(state) {
           "moderate",
         lastUpdate:
           latest?.createdAt || site.propertyAssessment?.updatedAt || null,
-        priorityReason:
-          latest?.whyNow ||
-          `UVI ${site.forecast.uvi}, ${site.setting} setting, and ${active.length} active worker(s) require monitoring.`,
+        priorityReason: hasActiveCrew
+          ? latest?.whyNow ||
+            `UVI ${site.forecast.uvi}, ${site.setting} setting, and ${active.length} active worker(s) require monitoring.`
+          : "No active crew is assigned; environmental conditions remain under monitoring.",
       };
     })
-    .sort((a, b) => b.exposureScore - a.exposureScore);
+    .sort(
+      (a, b) =>
+        Number(b.activeCrew > 0) - Number(a.activeCrew > 0) ||
+        b.exposureScore - a.exposureScore,
+    );
   return ranked.map((site, index) => ({
     ...site,
     rank: index + 1,
@@ -407,27 +416,26 @@ export function updateBehavioralFactors(state, input) {
     sunscreenHoursAgo > 24
   )
     throw new Error("Sunscreen timing must be between 0 and 24 hours");
-  let mapPosition = null;
-  if (input.mapPosition) {
-    const x = Number(input.mapPosition.x);
-    const y = Number(input.mapPosition.y);
-    if (
-      !Number.isFinite(x) ||
-      !Number.isFinite(y) ||
-      x < 0 ||
-      x > 100 ||
-      y < 0 ||
-      y > 100
-    )
-      throw new Error(
-        "Worker map position must stay within the worksite image",
-      );
-    mapPosition = {
-      x: Math.round(x * 10) / 10,
-      y: Math.round(y * 10) / 10,
-      siteId: worker.siteId,
-    };
-  }
+  if (!input.mapPosition)
+    throw new Error(
+      "Place the worker on the worksite image before rebuilding the plan",
+    );
+  const x = Number(input.mapPosition.x);
+  const y = Number(input.mapPosition.y);
+  if (
+    !Number.isFinite(x) ||
+    !Number.isFinite(y) ||
+    x < 0 ||
+    x > 100 ||
+    y < 0 ||
+    y > 100
+  )
+    throw new Error("Worker map position must stay within the worksite image");
+  const mapPosition = {
+    x: Math.round(x * 10) / 10,
+    y: Math.round(y * 10) / 10,
+    siteId: worker.siteId,
+  };
   worker.behavioralFactors = {
     upf: input.upf,
     spf: input.spf,

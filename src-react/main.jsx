@@ -10,7 +10,15 @@ import {
   useNavigate,
 } from "react-router-dom";
 import Behavioral from "./Behavioral.jsx";
-import { api, profileKey, useData, useUmbra } from "./umbra-data.js";
+import ProtectedShift from "./ProtectedShift.jsx";
+import {
+  api,
+  hasCompleteCrewPlacement,
+  profileKey,
+  protectionPlanKey,
+  useData,
+  useUmbra,
+} from "./umbra-data.js";
 import "./styles.css";
 
 async function compactImage(file) {
@@ -54,6 +62,13 @@ function AppHeader({ profile, state, showControls = true }) {
   const hasExternalEvidence = Boolean(
     localStorage.getItem(profileKey(profile)),
   );
+  const hasAppliedProtectionPlan = Boolean(
+    localStorage.getItem(protectionPlanKey(profile)),
+  );
+  const hasPlacedEveryCrewMember = hasCompleteCrewPlacement(state);
+  const hasApprovedMorningPlan = Boolean(
+    state?.plans?.some((plan) => plan.status === "approved"),
+  );
   const navigation = [
     { label: "Team", to: "/team", available: true },
     { label: "External Factors", to: "/external", available: hasTeam },
@@ -62,8 +77,20 @@ function AppHeader({ profile, state, showControls = true }) {
       to: "/behavioral",
       available: hasTeam && hasExternalEvidence,
     },
-    { label: "Shift / Morning Brief", to: "/shift", available: false },
-    { label: "Live Incident", to: "/incident", available: false },
+    {
+      label: "Shift / Morning Brief",
+      to: "/shift",
+      available:
+        hasTeam &&
+        hasExternalEvidence &&
+        hasPlacedEveryCrewMember &&
+        hasAppliedProtectionPlan,
+    },
+    {
+      label: "Live Incident",
+      to: "/incident",
+      available: hasApprovedMorningPlan,
+    },
     { label: "Reports", to: "/reports", available: false },
   ];
   const availableSteps = navigation.filter((item) => item.available);
@@ -101,7 +128,11 @@ function AppHeader({ profile, state, showControls = true }) {
               <span
                 key={item.to}
                 className="locked"
-                title="Complete the previous step first"
+                title={
+                  item.to === "/shift" && !hasPlacedEveryCrewMember
+                    ? "Place every crew member on an assessed worksite first"
+                    : "Complete the previous step first"
+                }
               >
                 {item.label}
               </span>
@@ -523,6 +554,7 @@ function External() {
         body: JSON.stringify({ profile, draft }),
       });
       localStorage.setItem(profileKey(profile), "true");
+      localStorage.removeItem(protectionPlanKey(profile));
       setState(confirmed.state);
       setExpandedEvidenceId(confirmed.site.id);
       setDraft((current) => (current ? { ...current, saved: true } : current));
@@ -543,6 +575,10 @@ function External() {
           body: JSON.stringify({ profile }),
         },
       );
+      localStorage.removeItem(protectionPlanKey(profile));
+      if (!(data.state.sites || []).some((entry) => entry.propertyAssessment)) {
+        localStorage.removeItem(profileKey(profile));
+      }
       setState(data.state);
       if (draft?.site?.id === site.id) {
         setDraft(null);
@@ -928,11 +964,20 @@ function App() {
           />
           <Route
             path="/shift"
-            element={<PendingScreen title="Shift / Morning Brief" />}
+            element={
+              <Shell>
+                <ProtectedShift />
+              </Shell>
+            }
           />
           <Route
             path="/incident"
-            element={<PendingScreen title="Live Incident" />}
+            element={
+              <PendingScreen
+                title="Live Incident"
+                detail="The approved morning plan is active. This next workspace will surface only incoming operational evidence and rebuild the affected rotation."
+              />
+            }
           />
           <Route path="/reports" element={<PendingScreen title="Reports" />} />
           <Route path="*" element={<Navigate to="/team" replace />} />
