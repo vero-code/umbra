@@ -66,9 +66,6 @@ function AppHeader({ profile, state, showControls = true }) {
     localStorage.getItem(protectionPlanKey(profile)),
   );
   const hasPlacedEveryCrewMember = hasCompleteCrewPlacement(state);
-  const hasApprovedMorningPlan = Boolean(
-    state?.plans?.some((plan) => plan.status === "approved"),
-  );
   const navigation = [
     { label: "Team", to: "/team", available: true },
     { label: "External Factors", to: "/external", available: hasTeam },
@@ -89,9 +86,15 @@ function AppHeader({ profile, state, showControls = true }) {
     {
       label: "Live Incident",
       to: "/incident",
-      available: hasApprovedMorningPlan,
+      available: false,
+      lockedMessage: "Coming soon — Live Incident is outside this MVP flow.",
     },
-    { label: "Reports", to: "/reports", available: false },
+    {
+      label: "Reports",
+      to: "/reports",
+      available: false,
+      lockedMessage: "Coming soon — Reports is outside this MVP flow.",
+    },
   ];
   const availableSteps = navigation.filter((item) => item.available);
   const activeStepIndex = availableSteps.findIndex(
@@ -128,10 +131,12 @@ function AppHeader({ profile, state, showControls = true }) {
               <span
                 key={item.to}
                 className="locked"
+                aria-disabled="true"
                 title={
-                  item.to === "/shift" && !hasPlacedEveryCrewMember
+                  item.lockedMessage ||
+                  (item.to === "/shift" && !hasPlacedEveryCrewMember
                     ? "Place every crew member on an assessed worksite first"
-                    : "Complete the previous step first"
+                    : "Complete the previous step first")
                 }
               >
                 {item.label}
@@ -218,22 +223,6 @@ function Onboarding() {
         </form>
       </section>
     </>
-  );
-}
-function PendingScreen({ title, detail }) {
-  return (
-    <Shell>
-      <main>
-        <section className="panel pendingScreen">
-          <p>REACT MIGRATION</p>
-          <h1>{title}</h1>
-          <p>
-            {detail ||
-              "This screen will be migrated next. The complete existing version remains available at localhost:3000."}
-          </p>
-        </section>
-      </main>
-    </Shell>
   );
 }
 function Team() {
@@ -970,16 +959,8 @@ function App() {
               </Shell>
             }
           />
-          <Route
-            path="/incident"
-            element={
-              <PendingScreen
-                title="Live Incident"
-                detail="The approved morning plan is active. This next workspace will surface only incoming operational evidence and rebuild the affected rotation."
-              />
-            }
-          />
-          <Route path="/reports" element={<PendingScreen title="Reports" />} />
+          <Route path="/incident" element={<Navigate to="/shift" replace />} />
+          <Route path="/reports" element={<Navigate to="/shift" replace />} />
           <Route path="*" element={<Navigate to="/team" replace />} />
         </Routes>
       )}

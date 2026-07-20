@@ -417,6 +417,15 @@ export function decisionFromPlan(plan, event) {
     score: 99,
   };
   const alternative = plan.priorityWorkers[1] || first;
+  const breakMinutes = plan.rotationBlocks?.[0]?.breakMinutes || 20;
+  const remainingCrewCount = Math.max(0, plan.priorityWorkers.length - 1);
+  const operationalImpact = remainingCrewCount
+    ? `${first.name}'s ${breakMinutes}-minute relief break removes them from direct-exposure work; ${remainingCrewCount} other active crew ${remainingCrewCount === 1 ? "member remains" : "members remain"} assigned.`
+    : "The relief break removes the only active worker from direct-exposure work, so supervisor coverage review is required.";
+  const alternativeAction =
+    alternative.id && alternative.id !== first.id
+      ? `Alternative: rotate ${alternative.name} first. This leaves ${first.name} in the higher-risk placement longer, so risk relief is lower.`
+      : "No lower-risk alternate crew member is currently available.";
   return {
     id: id("dec"),
     createdAt: now(),
@@ -434,8 +443,8 @@ export function decisionFromPlan(plan, event) {
     whyNow:
       plan.alerts[0] ||
       "Exposure conditions require a current rotation decision.",
-    operationalImpact: `Expected exposure reduction: ${Math.min(28, Math.round(first.score * 1.35))}%. Estimated work delay: 20 minutes.`,
-    alternative: `Alternative: rotate ${alternative.name} first for an estimated ${Math.min(20, Math.round(alternative.score * 1.1))}% reduction, with lower risk relief.`,
+    operationalImpact,
+    alternative: alternativeAction,
     confidence: plan.confidence,
     reasoningChain: plan.reasoningChain,
     evidenceAgent: plan.evidenceAgent,

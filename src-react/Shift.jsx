@@ -260,7 +260,9 @@ function WorksiteMap({
       <p className="shiftMapInstruction">
         <b>{isAlreadyInShade ? "Placement:" : "Scheduled route:"}</b>{" "}
         {priorityWorker?.name || "Priority worker"}{" "}
-        {isAlreadyInShade ? "stays in the shaded zone" : "moves from"}{" "}
+        {isAlreadyInShade
+          ? "is already in the shaded zone"
+          : "is scheduled to move from"}{" "}
         {!isAlreadyInShade &&
           `${zoneLabels[priorityPlacement?.shade] || "their current zone"} to the shaded relief zone`}{" "}
         at {nextRotation?.window?.split("-")[0] || "the next rotation"} for{" "}
@@ -279,6 +281,9 @@ function RotationRows({ plan, workers, site, environment }) {
   const workerById = new Map(workers.map((worker) => [worker.id, worker]));
   const priorityById = new Map(
     plan.priorityWorkers.map((worker, index) => [worker.id, index + 1]),
+  );
+  const scoreByWorkerId = new Map(
+    plan.priorityWorkers.map((worker) => [worker.id, worker.score]),
   );
   const rotationBlocks = displayRotationBlocks(
     plan.rotationBlocks,
@@ -336,7 +341,9 @@ function RotationRows({ plan, workers, site, environment }) {
               </span>
               <span role="cell" className="shiftRotationReason">
                 {priority === 1
-                  ? `Highest score · ${formatScore(people[0]?.score)}`
+                  ? `Highest score · ${formatScore(
+                      scoreByWorkerId.get(people[0]?.id),
+                    )}`
                   : priority
                     ? `Priority #${priority} compliance rotation`
                     : "Scheduled compliance rotation"}
@@ -378,19 +385,20 @@ function ReasoningChain({ decision, plan, site, worker }) {
       plan.alerts?.[0] ||
       "The current conditions require a rotation decision.",
   ];
-  const tradeoffs = [
-    decision?.operationalImpact ||
-      "The break reduces individual exposure while other active crew remain assigned.",
-    decision?.alternative ||
-      "No lower-risk alternative was identified for the current crew allocation.",
-  ];
+  const breakMinutes = plan.rotationBlocks?.[0]?.breakMinutes || 20;
+  const remainingCrewCount = Math.max(0, plan.priorityWorkers.length - 1);
+  const tradeoffSummary = remainingCrewCount
+    ? `${worker?.name || "The priority worker"}'s ${breakMinutes}-minute relief break removes them from direct-exposure work; ${remainingCrewCount} other active crew ${remainingCrewCount === 1 ? "member remains" : "members remain"} assigned.`
+    : "The relief break removes the only active worker from direct-exposure work, so supervisor coverage review is required.";
+  const alternativeWorker = plan.priorityWorkers?.[1];
+  const alternativeSummary = alternativeWorker
+    ? `Alternative: rotate ${alternativeWorker.name} first. That leaves ${worker?.name || "the higher-risk worker"} in direct sun longer, so it provides lower risk relief.`
+    : "No lower-risk alternate crew member is currently available.";
+  const tradeoffs = [tradeoffSummary, alternativeSummary];
   const conditionSummary = `UVI ${environment.baseUvi ?? "--"} at ${formatHour(environment.hour)} with ${environment.albedoFactor ?? "--"}× surface exposure.`;
   const workerRiskSummary =
     decision?.whyWorker ||
     `${worker?.name || "Priority worker"} has the highest modeled exposure score at this site.`;
-  const tradeoffSummary =
-    decision?.operationalImpact ||
-    "The break reduces individual exposure while other active crew remain assigned.";
   const evidenceDetails = [...evidence, ...reasoning, ...tradeoffs];
 
   return (
@@ -411,18 +419,15 @@ function ReasoningChain({ decision, plan, site, worker }) {
             multiplier.
           </small>
         </article>
+        <article className="shiftReasoningCard tradeoffs">
+          <p>OPERATIONAL TRADE-OFF</p>
+          <strong>{tradeoffSummary}</strong>
+          <small>{alternativeSummary}</small>
+        </article>
         <article className="shiftReasoningCard reasoning">
           <p>WORKER RISK</p>
           <strong>{workerRiskSummary}</strong>
           <small>{protectionSummary(worker)}</small>
-        </article>
-        <article className="shiftReasoningCard tradeoffs">
-          <p>OPERATIONAL TRADE-OFF</p>
-          <strong>{tradeoffSummary}</strong>
-          <small>
-            {decision?.alternative ||
-              "The next rotation keeps the remaining crew available at the site."}
-          </small>
         </article>
       </div>
       <details className="shiftReasoningDetails">
@@ -491,8 +496,8 @@ export default function Shift() {
   const startTime = nextRotation?.window?.split("-")[0] || "the next window";
   const endTime = nextRotation?.window?.split("-")[1] || "";
   const actionCopy = priorityInShade
-    ? `${worker?.name || priority.name} is scheduled for a relief break at ${startTime}.`
-    : `${worker?.name || priority.name} leaves direct sun at ${startTime}.`;
+    ? `${worker?.name || priority.name} should take a relief break at ${startTime}.`
+    : `${worker?.name || priority.name} should leave direct sun at ${startTime}.`;
 
   const approvePlan = async () => {
     if (!plan || isApproved) return;
@@ -594,7 +599,10 @@ export default function Shift() {
             </span>
             <span>
               <small>Scheduled break</small>
-              <b>Shaded relief · 20 min</b>
+              <b>
+                {priorityInShade ? "Relief check-in" : "Shaded relief"} ·{" "}
+                {nextRotation?.breakMinutes || 20} min
+              </b>
             </span>
             <span>
               <small>Scheduled window</small>

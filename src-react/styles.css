@@ -309,6 +309,8 @@ body {
 }
 .reactHeader .modeNav .locked {
   opacity: 0.35;
+  cursor: not-allowed;
+  user-select: none;
 }
 .reactHeader .foremanIdentity {
   display: flex;

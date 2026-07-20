@@ -135,6 +135,14 @@ export function buildEvidenceAgentMock(packet, failed = false) {
     tier: "unavailable",
   };
   const alternative = packet.validatedPlan.priorityWorkers[1] || first;
+  const remainingCrewCount = Math.max(0, packet.crew.length - 1);
+  const tradeoff = remainingCrewCount
+    ? `${first.name}'s 20-minute relief break removes them from direct-exposure work; ${remainingCrewCount} other active crew ${remainingCrewCount === 1 ? "member remains" : "members remain"} assigned.`
+    : "The relief break removes the only active worker from direct-exposure work, so supervisor coverage review is required.";
+  const alternativeDecision =
+    alternative.id !== first.id
+      ? `Rotate ${alternative.name} first. This leaves ${first.name} in the higher-risk placement longer, so risk relief is lower.`
+      : "No lower-risk alternate crew member is currently available.";
   return {
     source: failed ? "deterministic fallback" : "simulated evidence agent",
     mode: failed ? "fallback" : "mock",
@@ -147,12 +155,10 @@ export function buildEvidenceAgentMock(packet, failed = false) {
       `${first.name} ranks first in the validated exposure calculation.`,
       "The agent cannot override break, coverage, or supervisor-review constraints.",
     ],
-    tradeoffs: [
-      `Immediate relief for ${first.name} may delay ${packet.site.task} work during the rotation block.`,
-    ],
+    tradeoffs: [tradeoff],
     alternative: {
       workerId: alternative.id,
-      decision: `Rotate ${alternative.name} first with lower modeled risk relief.`,
+      decision: alternativeDecision,
     },
     confidence: packet.validatedPlan.confidence,
     supervisorReviewRequired: true,
