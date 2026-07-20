@@ -498,6 +498,13 @@ export async function assessProperty(state, input) {
     photos,
     `${input.objectName || site.name}. ${input.location || site.name}. Supervisor notes: ${input.notes || "none"}`,
   );
+  if (assessment.weatherScenario) {
+    site.forecast = {
+      ...site.forecast,
+      ...assessment.weatherScenario,
+      refreshedAt: now(),
+    };
+  }
   site.propertyObjectName = String(input.objectName || "").trim() || site.name;
   site.propertyLocation = String(input.location || "").trim() || site.name;
   site.propertyPhotos = photos.map((photo) => ({

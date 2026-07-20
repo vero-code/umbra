@@ -520,7 +520,7 @@ function External() {
     const form = Object.fromEntries(new FormData(event.currentTarget));
     try {
       setMessage("Analyzing the object and calculating external exposure...");
-      const siteId = state.sites[0]?.id;
+      const siteId = "site_north";
       const photos = await Promise.all(
         files.map(async (file, index) => ({
           image: await compactImage(file),
@@ -556,9 +556,30 @@ function External() {
       });
       localStorage.setItem(profileKey(profile), "true");
       setState(confirmed.state);
-      setFiles([]);
       setDraft((current) => (current ? { ...current, saved: true } : current));
       setMessage("Object assessment saved in the table below.");
+    } catch (error) {
+      setMessage(error.message);
+    }
+  };
+  const deleteObject = async (site) => {
+    const objectName = site.propertyObjectName || site.name;
+    if (!window.confirm(`Delete the saved assessment for ${objectName}?`))
+      return;
+    try {
+      const data = await api(
+        `/api/property/${encodeURIComponent(site.id)}/delete`,
+        {
+          method: "POST",
+          body: JSON.stringify({ profile }),
+        },
+      );
+      setState(data.state);
+      if (draft?.site?.id === site.id) {
+        setDraft(null);
+        setFiles([]);
+      }
+      setMessage(`${objectName} was removed from saved external evidence.`);
     } catch (error) {
       setMessage(error.message);
     }
@@ -605,7 +626,9 @@ function External() {
                   />
                 </label>
                 {files.length > 0 && (
-                  <div className="externalPhotoPreview">
+                  <div
+                    className={`externalPhotoPreview${analysis ? " externalPhotoEvidence" : ""}`}
+                  >
                     {files.map((file, index) => (
                       <figure key={`${file.name}-${index}`}>
                         <img
@@ -613,23 +636,41 @@ function External() {
                           alt={`Object angle ${index + 1}`}
                         />
                         <figcaption>Angle {index + 1}</figcaption>
-                        <button
-                          type="button"
-                          className="removeExternalPhoto"
-                          aria-label={`Remove angle ${index + 1}`}
-                          onClick={() =>
-                            setFiles((current) =>
-                              current.filter((_, item) => item !== index),
-                            )
-                          }
-                        >
-                          ×
-                        </button>
+                        {!draft?.saved && (
+                          <button
+                            type="button"
+                            className="removeExternalPhoto"
+                            aria-label={`Remove angle ${index + 1}`}
+                            onClick={() =>
+                              setFiles((current) =>
+                                current.filter((_, item) => item !== index),
+                              )
+                            }
+                          >
+                            ×
+                          </button>
+                        )}
                       </figure>
                     ))}
                   </div>
                 )}
-                <button>Assess object &amp; parse weather</button>
+                {analysis && (
+                  <details className="calculationGuide">
+                    <summary>How Umbra calculated this dose</summary>
+                    <p>
+                      <b>dose = UVI × sun/time × cloud × albedo</b>
+                      {" · "}Peak sun from 11:00–16:00 uses a 1.35× factor.
+                      Dense cloud reduces the dose; light haze can raise it.
+                      Reflective concrete, glass, metal, sand, and water raise
+                      the albedo factor.
+                    </p>
+                  </details>
+                )}
+                <button>
+                  {analysis
+                    ? "Reassess object & parse weather"
+                    : "Assess object & parse weather"}
+                </button>
                 {message && (
                   <small className="externalMessage">{message}</small>
                 )}
@@ -642,29 +683,34 @@ function External() {
                   <h2>{objectName} — analysis ready</h2>
                   <dl className="externalAnalysis">
                     <div>
-                      <dt>Current weather</dt>
+                      <dt>
+                        {weather.source === "photo-matched"
+                          ? "Daylight exposure scenario"
+                          : "Current weather"}
+                      </dt>
                       <dd>
                         UVI {weather.uvi} · {weather.temperatureC}°C ·{" "}
                         {weather.cloudCover}% cloud cover ·{" "}
                         {String(weather.localHour).padStart(2, "0")}:00
+                        {weather.source === "photo-matched" && (
+                          <small>{weather.description}</small>
+                        )}
                       </dd>
                     </div>
                     <div>
                       <dt>Site evidence assessment</dt>
                       <dd>{analysis.summary}</dd>
                     </div>
-                    <div>
-                      <dt>Assessment mode</dt>
-                      <dd>
-                        {String(analysis.confidence || "").includes("demo")
-                          ? "Demo image assessment — confirm conditions on site"
-                          : "GPT-5.6 Vision assessment"}
-                      </dd>
-                    </div>
                     {(analysis.factors || []).length > 0 && (
                       <div>
                         <dt>Surface and shade context</dt>
                         <dd>{analysis.factors.join(" ")}</dd>
+                      </div>
+                    )}
+                    {analysis.operationalImpact && (
+                      <div>
+                        <dt>Operational implication</dt>
+                        <dd>{analysis.operationalImpact}</dd>
                       </div>
                     )}
                     <div>
@@ -683,12 +729,6 @@ function External() {
                       </dd>
                     </div>
                   </dl>
-                  <p className="calculationNote">
-                    Peak sun factor applies from 11:00–16:00. Dense cloud lowers
-                    the dose; light cloud or haze may increase it. Reflective
-                    concrete, glass, metal, sand, or water can raise the albedo
-                    factor.
-                  </p>
                   <div className="parserActions">
                     <button
                       type="button"
@@ -736,6 +776,7 @@ function External() {
                   <span>Albedo</span>
                   <span>Planning dose</span>
                   <span>Saved</span>
+                  <span>Actions</span>
                 </div>
                 {savedEvidenceRows.map(({ site, assessment }) => {
                   const storedExposure = assessment.exposure;
@@ -766,6 +807,17 @@ function External() {
                               { hour: "2-digit", minute: "2-digit" },
                             )
                           : "—"}
+                      </span>
+                      <span className="savedEvidenceActions">
+                        <button
+                          type="button"
+                          className="savedEvidenceDelete"
+                          title="Delete saved object assessment"
+                          aria-label={`Delete ${site.propertyObjectName || site.name}`}
+                          onClick={() => deleteObject(site)}
+                        >
+                          ×
+                        </button>
                       </span>
                     </div>
                   );

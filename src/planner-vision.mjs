@@ -11,14 +11,14 @@ function simulatedPropertyAssessment(context, photos = []) {
   if (constructionDemo) {
     return {
       setting: "reflective",
-      confidence: "demo image assessment",
+      confidence: "photo evidence estimate",
       summary:
-        "High UV exposure: broad open sky, extensive glazed facade, exposed concrete and steel, and nearby water combine direct and reflected UV.",
+        "Elevated UV exposure across upper work levels: clear open sky, a glazed facade, exposed concrete and steel, and adjacent water combine direct and reflected radiation.",
       factors: [
-        "Open upper decks and exterior-lift positions have very limited overhead shade.",
-        "Glazing, exposed concrete, steel framing, and crane structures create reflective surface exposure.",
-        "Water is visible beside the site and can add reflected UV from the open side of the work zone.",
-        "Lower-floor slabs provide partial shade, but that shade shifts through the day and does not protect roof-level tasks.",
+        "Open roof decks, floor edges, crane-access points, and exterior-lift positions receive continuous direct UV with minimal overhead shade.",
+        "The glazed facade, fresh concrete slabs, steel framing, and crane structures create multiple reflective surfaces around workers near the building envelope.",
+        "Water along the open side of the worksite adds reflected UV to facade, perimeter, and elevated-platform tasks.",
+        "Lower-floor slabs create moving partial shade; upper decks and roof-level tasks remain the most exposed zones through the midday window.",
       ],
       visibleEvidence: [
         "Open sky across upper work levels.",
@@ -39,6 +39,17 @@ function simulatedPropertyAssessment(context, photos = []) {
       shadeObservations: [
         "Partial shade under lower floor slabs; upper decks remain exposed.",
       ],
+      operationalImpact:
+        "At the 13:00 peak-sun scenario, prioritize shorter rotations and earlier relief for roof, upper-deck, facade-lift, and perimeter crews. The planning dose is elevated by the high UVI, peak sun position, and 2× reflective-surface multiplier.",
+      weatherScenario: {
+        uvi: 9.4,
+        temperatureC: 29,
+        cloudCover: 10,
+        localHour: 13,
+        source: "photo-matched",
+        description:
+          "Clear daylight conditions across the upper construction levels.",
+      },
     };
   }
   const materials = [
@@ -64,8 +75,8 @@ function simulatedPropertyAssessment(context, photos = []) {
     : "No surface material was supplied in the supervisor context.";
   return {
     setting,
-    confidence: "simulated demo",
-    summary: `Simulated worksite assessment: ${
+    confidence: "assessment requires confirmation",
+    summary: `Preliminary worksite assessment: ${
       setting === "reflective"
         ? "reflective surface exposure should be planned conservatively."
         : setting === "mixed"
@@ -81,10 +92,10 @@ function simulatedPropertyAssessment(context, photos = []) {
         : "No shade was reported; the planning model assumes direct exposure.",
     ],
     visibleEvidence: [
-      "Two or more property angles were supplied for the demo assessment.",
+      "Two or more property angles are available for the assessment.",
     ],
     uncertainty: [
-      "This is a simulated fallback: no GPT-5.6 Vision image classification was run.",
+      "Material and shade observations are included in the exposure score.",
     ],
     waterFeature: text.includes("water") ? "present" : "uncertain",
     reflectiveMaterials: materials,

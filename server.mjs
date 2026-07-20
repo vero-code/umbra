@@ -247,7 +247,13 @@ const server = http.createServer(async (req, res) => {
     if (req.method === "POST" && url.pathname === "/api/property/preview") {
       const input = await body(req);
       const state = await getState(input.profile);
-      const template = state.sites.find((entry) => entry.id === input.siteId);
+      const templates = seedState().sites;
+      const template =
+        state.sites.find(
+          (entry) => entry.id === input.siteId && entry.isTemplate,
+        ) ||
+        templates.find((entry) => entry.id === input.siteId) ||
+        templates[0];
       if (!template)
         return json(res, 404, { error: "Site template not found" });
       const site = {
@@ -328,6 +334,33 @@ const server = http.createServer(async (req, res) => {
       const decisions = await processEvent(state, event);
       await saveState(state);
       return json(res, 201, { site, decisions, state });
+    }
+    const deletePropertyMatch = url.pathname.match(
+      /^\/api\/property\/([^/]+)\/delete$/,
+    );
+    if (req.method === "POST" && deletePropertyMatch) {
+      const input = await body(req);
+      const siteId = decodeURIComponent(deletePropertyMatch[1]);
+      const state = await getState(input.profile);
+      const site = state.sites.find((entry) => entry.id === siteId);
+      if (!site || site.isTemplate)
+        return json(res, 404, { error: "Saved object assessment not found" });
+      state.sites = state.sites.filter((entry) => entry.id !== siteId);
+      state.events = (state.events || []).filter(
+        (event) => event.payload?.siteId !== siteId,
+      );
+      state.decisions = (state.decisions || []).filter(
+        (decision) => decision.siteId !== siteId,
+      );
+      state.plans = (state.plans || []).filter(
+        (plan) => plan.siteId !== siteId,
+      );
+      state.photoAudits = (state.photoAudits || []).filter(
+        (audit) => audit.siteId !== siteId,
+      );
+      state.portfolio = buildPortfolio(state);
+      await saveState(state);
+      return json(res, 200, { state });
     }
     if (req.method === "POST" && url.pathname === "/api/photo-audit") {
       const state = await getState();
