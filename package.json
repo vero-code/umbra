@@ -6,11 +6,9 @@
   "scripts": {
     "dev": "concurrently -n api,ui \"npm run dev:api\" \"npm run dev:ui\"",
     "dev:api": "node --watch server.mjs --port 3001",
-    "dev:watch": "node --watch server.mjs --port 3001",
     "dev:ui": "vite --host localhost --port 3000",
-    "dev:react": "npm run dev",
-    "dev:legacy": "node server.mjs",
-    "start": "node server.mjs",
+    "start": "npm run dev",
+    "build": "vite build",
     "test": "node --test"
   },
   "dependencies": {

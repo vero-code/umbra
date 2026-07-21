@@ -1,7 +1,7 @@
 import http from "node:http";
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { existsSync } from "node:fs";
-import { join, extname } from "node:path";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   createPlan,
@@ -34,7 +34,6 @@ import {
 } from "./src/planner.mjs";
 
 const root = fileURLToPath(new URL(".", import.meta.url));
-const publicDir = join(root, "public");
 const storeDir = join(root, "data");
 const storePath = join(storeDir, "umbra.json");
 const workerStorePath = join(storeDir, "workers.json");
@@ -267,13 +266,6 @@ async function body(req) {
   }
   return raw ? JSON.parse(raw) : {};
 }
-const mime = {
-  ".html": "text/html; charset=utf-8",
-  ".js": "text/javascript; charset=utf-8",
-  ".css": "text/css; charset=utf-8",
-  ".svg": "image/svg+xml",
-};
-
 const server = http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url, `http://${req.headers.host}`);
@@ -687,16 +679,12 @@ const server = http.createServer(async (req, res) => {
       await saveState(state);
       return json(res, 200, state);
     }
-    if (req.method === "GET") {
-      const path = url.pathname === "/" ? "/index.html" : url.pathname;
-      const safe = join(publicDir, path);
-      if (!safe.startsWith(publicDir) || !existsSync(safe))
-        return json(res, 404, { error: "Not found" });
-      res.writeHead(200, {
-        "content-type": mime[extname(safe)] || "application/octet-stream",
+    if (req.method === "GET" && url.pathname === "/")
+      return json(res, 200, {
+        service: "Umbra API",
+        ui: "Open http://localhost:3000 for the React application.",
       });
-      return res.end(await readFile(safe));
-    }
+    if (req.method === "GET") return json(res, 404, { error: "Not found" });
     json(res, 405, { error: "Method not allowed" });
   } catch (error) {
     json(res, 500, { error: error.message || "Unexpected error" });
