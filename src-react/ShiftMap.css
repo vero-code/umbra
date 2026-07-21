@@ -4,7 +4,7 @@
 }
 
 .shiftMapCard .shiftSectionHeading h2 {
-  font-size: 1.32rem;
+  font-size: 1.5rem;
 }
 
 .shiftStaticMap {
@@ -90,7 +90,7 @@
   padding: 6px 9px;
   border-radius: 6px;
   color: #fff;
-  font-size: 0.64rem;
+  font-size: 0.76rem;
   font-weight: 700;
 }
 
@@ -143,7 +143,7 @@
   border-radius: 50%;
   background: #d8f44f;
   color: #38416f;
-  font-size: 0.56rem;
+  font-size: 0.64rem;
   line-height: 1;
 }
 
@@ -182,7 +182,7 @@
   border-radius: 50%;
   background: linear-gradient(135deg, #ffe3a5, #cfc4ff);
   color: #504399;
-  font-size: 0.68rem;
+  font-size: 0.78rem;
   font-weight: 800;
 }
 
@@ -196,26 +196,26 @@
 
 .shiftMapCrewLegend b {
   color: #303a63;
-  font-size: 0.67rem;
+  font-size: 0.78rem;
 }
 
 .shiftMapCrewLegend small {
   margin-top: 2px;
   color: #727c9b;
-  font-size: 0.59rem;
+  font-size: 0.69rem;
 }
 
 .shiftMapCaption {
   margin: 4px 0 0;
   color: #6e7998;
-  font-size: 0.68rem;
+  font-size: 0.78rem;
   line-height: 1.4;
 }
 
 .shiftMapInstruction {
   margin: 12px 0 0;
   color: #425073;
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   line-height: 1.45;
 }
 

@@ -25,6 +25,7 @@ const operationalMessages = {
   photo_analyzed: "Reflective surface detected...",
   property_imagery_assessed: "New site imagery received...",
   behavioral_factors_updated: "Worker protection status updated...",
+  morning_brief_requested: "Morning Brief requested...",
   worker_absent: "Worker absence reported...",
   equipment_failed: "Equipment failure reported...",
   manual_review_requested: "Supervisor scenario requested...",
@@ -81,6 +82,9 @@ export async function processEvent(state, event) {
       (entry) => entry.id === event.payload.workerId,
     );
     if (worker) affected.add(worker.siteId);
+  }
+  if (event.type === "morning_brief_requested" && event.payload.siteId) {
+    affected.add(event.payload.siteId);
   }
   if (event.type === "equipment_failed") {
     const site = state.sites.find((entry) => entry.id === event.payload.siteId);

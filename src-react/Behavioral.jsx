@@ -224,14 +224,22 @@ export default function Behavioral() {
           ...protection,
         }),
       });
-      localStorage.setItem(
-        protectionPlanKey(profile),
-        JSON.stringify({ appliedAt: new Date().toISOString() }),
-      );
       setState(data.state);
       const updatedPlan = data.state.plans?.find(
-        (plan) => plan.siteId === activeSite.id,
+        (plan) =>
+          plan.siteId === activeSite.id &&
+          plan.priorityWorkers?.some(
+            (worker) => worker.id === selectedWorker.id,
+          ),
       );
+      if (updatedPlan) {
+        localStorage.setItem(
+          protectionPlanKey(profile),
+          JSON.stringify({ appliedAt: new Date().toISOString() }),
+        );
+      } else {
+        localStorage.removeItem(protectionPlanKey(profile));
+      }
       const priorityIndex = updatedPlan?.priorityWorkers?.findIndex(
         (worker) => worker.id === selectedWorker.id,
       );

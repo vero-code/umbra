@@ -283,19 +283,23 @@ export function validatePlan(plan, workers) {
   if (!plan.rotationBlocks.length || !plan.priorityWorkers.length)
     return { valid: false, reason: "Missing rotations or priority order" };
   const active = new Set(workers.map((w) => w.id));
+  let requiresSupervisorCoverage = false;
   for (const block of plan.rotationBlocks) {
     if (
       block.breakMinutes < 15 ||
       block.workers.some((workerId) => !active.has(workerId))
     )
       return { valid: false, reason: "Invalid break block" };
-    if (block.workers.length >= workers.length)
+    if (block.workers.length >= workers.length && workers.length > 1)
       return {
         valid: false,
         reason: "Cannot rotate the entire crew out at once",
       };
+    if (block.workers.length >= workers.length) {
+      requiresSupervisorCoverage = true;
+    }
   }
-  return { valid: true };
+  return { valid: true, requiresSupervisorCoverage };
 }
 
 function buildDecisionBasis(site, ranked, event) {
@@ -408,6 +412,16 @@ function rulePlan(site, workers, event) {
   const checked = validatePlan(plan, workers);
   if (!workers.length) return plan;
   if (!checked.valid) throw new Error(checked.reason);
+  if (checked.requiresSupervisorCoverage) {
+    plan.status = "needs_review";
+    plan.requiresSupervisorCoverage = true;
+    plan.alerts.unshift(
+      "Single-worker site: supervisor coverage is required before the relief break.",
+    );
+    plan.reasoningChain.push(
+      "Only one active worker is assigned to this site. The relief break is scheduled as a supervisor-reviewed coverage handoff.",
+    );
+  }
   return plan;
 }
 

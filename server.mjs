@@ -79,6 +79,21 @@ function persistTeamOperations(state, team) {
   });
 }
 
+function hasUsablePlanForSite(state, siteId) {
+  const activeWorkerIds = new Set(
+    (state.workers || [])
+      .filter(
+        (worker) => worker.status === "active" && worker.siteId === siteId,
+      )
+      .map((worker) => worker.id),
+  );
+  return (state.plans || []).some(
+    (plan) =>
+      plan.siteId === siteId &&
+      plan.priorityWorkers?.some((worker) => activeWorkerIds.has(worker.id)),
+  );
+}
+
 const teamId = (profile) =>
   `team_${Buffer.from(
     `${profile?.company || ""}:${profile?.name || ""}`.toLowerCase(),
@@ -600,6 +615,47 @@ const server = http.createServer(async (req, res) => {
       await saveState(state, { persistOperations: false });
       await saveWorkerStore(store);
       return json(res, 201, { worker, decisions, state });
+    }
+    if (req.method === "POST" && url.pathname === "/api/shift/rebuild") {
+      const input = await body(req);
+      const { store, team } = await teamFor(input.profile);
+      if (!team) throw new Error("Team profile not found");
+
+      const state = await getState(input.profile);
+      hydrateTeamOperations(state, team);
+      const siteIds = [
+        ...new Set(
+          state.workers
+            .filter(
+              (worker) =>
+                worker.status === "active" &&
+                worker.behavioralFactors?.mapPosition?.siteId ===
+                  worker.siteId &&
+                state.sites.some(
+                  (site) =>
+                    site.id === worker.siteId &&
+                    Boolean(site.propertyAssessment),
+                ),
+            )
+            .map((worker) => worker.siteId),
+        ),
+      ].filter((siteId) => !hasUsablePlanForSite(state, siteId));
+
+      if (!siteIds.length) {
+        return json(res, 200, { state, decisions: [] });
+      }
+
+      const decisions = [];
+      for (const siteId of siteIds) {
+        const event = createEvent(state, "morning_brief_requested", {
+          siteId,
+        });
+        decisions.push(...(await processEvent(state, event)));
+      }
+      persistTeamOperations(state, team);
+      await saveState(state, { persistOperations: false });
+      await saveWorkerStore(store);
+      return json(res, 200, { state, decisions });
     }
     if (req.method === "POST" && url.pathname === "/api/shift/approve") {
       const input = await body(req);

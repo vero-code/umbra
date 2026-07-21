@@ -23,7 +23,7 @@
   max-width: 700px;
   margin: 0;
   color: #697590;
-  font-size: 0.93rem;
+  font-size: 1.06rem;
   line-height: 1.55;
 }
 
@@ -52,13 +52,13 @@
 
 .shiftPlanStatus b {
   color: #2f3b66;
-  font-size: 1.04rem;
+  font-size: 1.18rem;
   letter-spacing: -0.035em;
 }
 
 .shiftPlanStatus span {
   color: #6d7897;
-  font-size: 0.7rem;
+  font-size: 0.82rem;
   line-height: 1.45;
 }
 
@@ -111,13 +111,13 @@
 .shiftPriorityHeading h2 {
   margin: 7px 0 3px;
   color: #20284c;
-  font-size: clamp(1.5rem, 2.4vw, 2.1rem);
+  font-size: clamp(1.7rem, 2.7vw, 2.35rem);
   letter-spacing: -0.055em;
 }
 
 .shiftPriorityHeading > div > small {
   color: #7883a0;
-  font-size: 0.72rem;
+  font-size: 0.82rem;
 }
 
 .shiftScore {
@@ -136,13 +136,13 @@
 
 .shiftScore small {
   color: #c6cdee;
-  font-size: 0.59rem;
+  font-size: 0.67rem;
 }
 
 .shiftScore b {
   margin-top: 4px;
   color: #d8f550;
-  font-size: 1.55rem;
+  font-size: 1.78rem;
   letter-spacing: -0.06em;
 }
 
@@ -168,7 +168,7 @@
   margin-bottom: 5px;
   color: #6d8390;
   font:
-    700 0.56rem "DM Mono",
+    700 0.63rem "DM Mono",
     monospace;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -177,7 +177,7 @@
 .shiftPriorityFacts b {
   overflow: hidden;
   color: #3d486e;
-  font-size: 0.68rem;
+  font-size: 0.8rem;
   line-height: 1.35;
   text-overflow: ellipsis;
 }
@@ -192,7 +192,7 @@
 .shiftAction p {
   margin: 0 0 11px;
   color: #39456d;
-  font-size: 0.77rem;
+  font-size: 0.9rem;
   font-weight: 700;
   line-height: 1.45;
 }
@@ -204,7 +204,7 @@
   background: linear-gradient(135deg, #4894d6, #7d65e8);
   color: #fff;
   font:
-    700 0.75rem Manrope,
+    700 0.86rem Manrope,
     sans-serif;
   padding: 12px;
 }
@@ -218,7 +218,7 @@
   display: block;
   margin-top: 9px;
   color: #5d6b8c;
-  font-size: 0.64rem;
+  font-size: 0.75rem;
   line-height: 1.4;
 }
 
@@ -237,7 +237,7 @@
 .shiftSectionHeading h2 {
   margin: 5px 0 0;
   color: #20284c;
-  font-size: 1.16rem;
+  font-size: 1.34rem;
   letter-spacing: -0.045em;
 }
 
@@ -249,7 +249,7 @@
   border-radius: 999px;
   background: #fff0ba;
   color: #846124;
-  font-size: 0.6rem;
+  font-size: 0.7rem;
   font-weight: 700;
 }
 
@@ -275,7 +275,7 @@
   padding: 10px 0;
   color: #74809b;
   font:
-    700 0.56rem "DM Mono",
+    700 0.63rem "DM Mono",
     monospace;
   letter-spacing: 0.07em;
   text-transform: uppercase;
@@ -285,20 +285,20 @@
   min-height: 58px;
   border-top: 1px solid #e4e5f0;
   color: #596581;
-  font-size: 0.69rem;
+  font-size: 0.8rem;
 }
 
 .shiftRotationCaption {
   max-width: 680px;
   margin: 12px 0 0;
   color: #6b7896;
-  font-size: 0.65rem;
+  font-size: 0.76rem;
   line-height: 1.45;
 }
 
 .shiftRotationRow b {
   color: #2d3962;
-  font-size: 0.72rem;
+  font-size: 0.83rem;
 }
 
 .shiftRotationAction b,
@@ -308,18 +308,18 @@
 
 .shiftRotationAction b {
   color: #364269;
-  font-size: 0.71rem;
+  font-size: 0.82rem;
 }
 
 .shiftRotationAction small {
   margin-top: 3px;
   color: #74809b;
-  font-size: 0.61rem;
+  font-size: 0.71rem;
 }
 
 .shiftRotationReason {
   color: #715bd9;
-  font-size: 0.66rem;
+  font-size: 0.76rem;
   font-weight: 800;
 }
 
@@ -344,7 +344,7 @@
 .shiftReasoningHeading h2 {
   margin: 6px 0 0;
   color: #20284c;
-  font-size: 1.28rem;
+  font-size: 1.46rem;
   letter-spacing: -0.05em;
 }
 
@@ -376,7 +376,7 @@
   margin: 0 0 10px;
   color: #647a87;
   font:
-    700 0.57rem "DM Mono",
+    700 0.64rem "DM Mono",
     monospace;
   letter-spacing: 0.08em;
 }
@@ -384,7 +384,7 @@
 .shiftReasoningCard strong {
   display: block;
   color: #344168;
-  font-size: 0.72rem;
+  font-size: 0.84rem;
   line-height: 1.38;
 }
 
@@ -392,7 +392,7 @@
   display: block;
   margin-top: 8px;
   color: #596784;
-  font-size: 0.62rem;
+  font-size: 0.73rem;
   line-height: 1.42;
 }
 
@@ -407,7 +407,7 @@
 .shiftReasoningDetails summary {
   color: #51449c;
   cursor: pointer;
-  font-size: 0.66rem;
+  font-size: 0.76rem;
   font-weight: 800;
 }
 
@@ -417,7 +417,7 @@
   margin: 10px 0 0;
   padding: 0;
   color: #596784;
-  font-size: 0.63rem;
+  font-size: 0.74rem;
   line-height: 1.4;
   list-style: none;
 }
@@ -454,7 +454,7 @@
 
 .shiftReasoningCard.decision strong {
   display: block;
-  font-size: 0.83rem;
+  font-size: 0.96rem;
   line-height: 1.35;
 }
 
@@ -462,7 +462,7 @@
   display: block;
   margin-top: 13px;
   color: #d5dbf4;
-  font-size: 0.61rem;
+  font-size: 0.71rem;
   line-height: 1.4;
 }
 

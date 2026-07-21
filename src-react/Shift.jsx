@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { api, useData } from "./umbra-data.js";
 import { displayRotationBlocks } from "./rotation-display.js";
 import "./Shift.css";
@@ -445,7 +445,9 @@ function ReasoningChain({ decision, plan, site, worker }) {
 export default function Shift() {
   const { profile, state, setState } = useData();
   const [isApproving, setIsApproving] = useState(false);
+  const [isRebuilding, setIsRebuilding] = useState(false);
   const [message, setMessage] = useState("");
+  const rebuildStarted = useRef(false);
   const plan = useMemo(
     () => primaryPlan(state?.plans, state?.portfolio, state?.workers),
     [state?.plans, state?.portfolio, state?.workers],
@@ -453,6 +455,8 @@ export default function Shift() {
   const site = state?.sites?.find((entry) => entry.id === plan?.siteId);
   const priority = plan?.priorityWorkers?.[0];
   const worker = state?.workers?.find((entry) => entry.id === priority?.id);
+  const priorityWorkerName =
+    worker?.name || priority?.name || "The priority worker";
   const storedDecision = state?.decisions?.find(
     (entry) => entry.planId === plan?.id,
   );
@@ -496,8 +500,33 @@ export default function Shift() {
   const startTime = nextRotation?.window?.split("-")[0] || "the next window";
   const endTime = nextRotation?.window?.split("-")[1] || "";
   const actionCopy = priorityInShade
-    ? `${worker?.name || priority.name} should take a relief break at ${startTime}.`
-    : `${worker?.name || priority.name} should leave direct sun at ${startTime}.`;
+    ? `${priorityWorkerName} should take a relief break at ${startTime}.`
+    : `${priorityWorkerName} should leave direct sun at ${startTime}.`;
+
+  useEffect(() => {
+    if (!state || plan || rebuildStarted.current) return;
+    rebuildStarted.current = true;
+    let cancelled = false;
+    setIsRebuilding(true);
+    api("/api/shift/rebuild", {
+      method: "POST",
+      body: JSON.stringify({ profile }),
+    })
+      .then((data) => {
+        if (!cancelled && data.state) setState(data.state);
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          setMessage(error.message || "Unable to rebuild the morning plan.");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setIsRebuilding(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [plan, profile, setState, state]);
 
   const approvePlan = async () => {
     if (!plan || isApproved) return;
@@ -535,10 +564,16 @@ export default function Shift() {
       <main className="reactWorkspace shiftWorkspace">
         <section className="shiftEmptyState">
           <p className="eyebrow">SHIFT / MORNING BRIEF</p>
-          <h1>A morning plan is not ready yet.</h1>
+          <h1>
+            {isRebuilding
+              ? "Rebuilding the morning plan…"
+              : "A morning plan is not ready yet."}
+          </h1>
           <p>
-            Record external conditions and apply at least one protection update.
-            Umbra will then build the crew's first validated rotation plan.
+            {isRebuilding
+              ? "Umbra is validating the latest worksite, placement, protection, and coverage information."
+              : message ||
+                "Record external conditions and apply at least one protection update. Umbra will then build the crew's first validated rotation plan."}
           </p>
         </section>
       </main>
