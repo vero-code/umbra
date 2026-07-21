@@ -4,6 +4,19 @@ Umbra is a B2B UV-safety planning MVP for outdoor crews. It turns worksite evide
 
 It was built for the OpenAI Build Week **Work and Productivity** track. The product question is simple: **who should leave direct sun first, when, and why?**
 
+## Built with Codex and GPT-5.6
+
+Umbra was created end to end with Codex and GPT-5.6 during OpenAI Build Week: from the original product concept and system architecture through the React interface, Node.js API, deterministic safety engine, image-assessment demo, workflow design, debugging, and documentation.
+
+Development used:
+
+- the Codex desktop app on Windows 11 for the initial build;
+- the **Codex – OpenAI's coding agent** extension in Visual Studio Code for later development;
+- GPT-5.6 Terra as the primary development model, with GPT-5.6 Luna used when Terra was unavailable;
+- progressively deeper reasoning effort: **Light**, then **High**, then **Ultra**, as the workflow, data model, and implementation became more complex.
+
+All available hackathon Codex credits were used to build and refine the project. Thank you to the organizers for the opportunity to test Codex and GPT-5.6 in a complete product workflow.
+
 ## What the MVP does
 
 Umbra guides a foreman through one operational workflow:
@@ -93,6 +106,16 @@ npm run dev:ui    # Vite UI only, port 3000
 npm run dev:api   # Node API only, port 3001
 npm run build     # production frontend build into dist/
 ```
+
+## Demo and sample data
+
+No separate sample-data download is required. A fresh clone starts with the foreman onboarding screen, an empty team, and seeded template worksites for the guided demo flow.
+
+- `data/workers.example.json` documents the local team-data shape.
+- `data/objects.example.json` documents the saved object-evidence shape.
+- Add your own two worksite photos in **External Factors** to create a real demo assessment record for the local workspace.
+
+Runtime data is created locally as you use the app and is intentionally excluded from Git; see [Persistence and privacy](#persistence-and-privacy).
 
 ## OpenAI and demo modes
 
