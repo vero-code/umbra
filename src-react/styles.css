@@ -9,6 +9,16 @@ body {
   color: #1e274d;
   font-family: Manrope, sans-serif;
 }
+.appShell {
+  display: flex;
+  min-height: 100dvh;
+  flex-direction: column;
+}
+.appShell__content {
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+}
 .appHeader {
   max-width: 1120px;
   margin: auto;
@@ -507,7 +517,7 @@ body {
 /* The Team page deliberately reuses the established static page geometry. */
 main.reactWorkspace {
   max-width: 1220px;
-  margin: auto;
+  margin: 0 auto;
   padding: 28px 30px 80px;
 }
 #teamMode .teamProfilePanel form {
@@ -2461,5 +2471,141 @@ body {
 
   .welcomeCapabilities {
     gap: 14px;
+  }
+}
+
+/* Authenticated workflow footer: quiet product context without competing with decisions. */
+.appFooter {
+  margin-top: 0;
+  border-top: 1px solid var(--line);
+  background: linear-gradient(
+    135deg,
+    #fffdf9e6 0%,
+    #f5f1ffe0 54%,
+    #effbffe6 100%
+  );
+}
+
+.appFooter__inner,
+.appFooter__meta {
+  width: min(1220px, calc(100% - 60px));
+  margin: 0 auto;
+}
+
+.appFooter__inner {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(260px, 1.1fr) minmax(
+      220px,
+      0.9fr
+    );
+  gap: 30px;
+  align-items: start;
+  padding: 30px 0 24px;
+}
+
+.appFooter__brand {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.appFooter__brand > span {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 9px;
+  background: var(--lime);
+  color: #453b91;
+  font-size: 1rem;
+}
+
+.appFooter__brand b {
+  color: #1d294d;
+  font:
+    800 0.86rem "DM Mono",
+    monospace;
+  letter-spacing: 0.1em;
+}
+
+.appFooter p {
+  margin: 5px 0 0;
+  color: #66758e;
+  font-size: 0.76rem;
+  line-height: 1.48;
+}
+
+.appFooter__workflow > span,
+.appFooter__trust > span {
+  color: #67807a;
+  font:
+    800 0.62rem "DM Mono",
+    monospace;
+  letter-spacing: 0.1em;
+}
+
+.appFooter__workflow p {
+  color: #384568;
+  font-weight: 800;
+}
+
+.appFooter__workflow i {
+  margin: 0 4px;
+  color: #8066e9;
+  font-style: normal;
+}
+
+.appFooter__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 20px;
+  padding: 14px 0 20px;
+  border-top: 1px solid #dfe3f1;
+  color: #7b88a1;
+  font-size: 0.64rem;
+  line-height: 1.4;
+}
+
+.appFooter__meta span:not(:last-child)::after {
+  margin-left: 20px;
+  color: #bcc5d9;
+  content: "•";
+}
+
+@media (max-width: 900px) {
+  .appFooter__inner {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .appFooter__brand {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 620px) {
+  .appFooter__inner,
+  .appFooter__meta {
+    width: min(100% - 36px, 620px);
+  }
+
+  .appFooter__inner {
+    grid-template-columns: 1fr;
+    gap: 19px;
+    padding: 25px 0 20px;
+  }
+
+  .appFooter__brand {
+    grid-column: auto;
+  }
+
+  .appFooter__meta {
+    display: grid;
+    gap: 6px;
+    padding: 13px 0 22px;
+  }
+
+  .appFooter__meta span:not(:last-child)::after {
+    content: none;
   }
 }

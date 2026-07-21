@@ -47,12 +47,58 @@ async function compactImage(file) {
 function Shell({ children }) {
   const { profile, state } = useData();
   return (
-    <>
+    <div className="appShell">
       <AppHeader profile={profile} state={state} />
-      {children}
-    </>
+      <div className="appShell__content">{children}</div>
+      <AppFooter />
+    </div>
   );
 }
+
+function AppFooter() {
+  return (
+    <footer className="appFooter">
+      <div className="appFooter__inner">
+        <div className="appFooter__brand">
+          <span aria-hidden="true">✺</span>
+          <div>
+            <b>UMBRA</b>
+            <p>Sun-safety operations intelligence for outdoor crews.</p>
+          </div>
+        </div>
+
+        <div className="appFooter__workflow">
+          <span>WORKFLOW</span>
+          <p>
+            Team <i aria-hidden="true">→</i> Site evidence{" "}
+            <i aria-hidden="true">→</i> Protection <i aria-hidden="true">→</i>{" "}
+            Morning plan
+          </p>
+        </div>
+
+        <div className="appFooter__trust">
+          <span>SUPERVISOR CONTROL</span>
+          <p>Umbra recommends; the supervisor approves every plan.</p>
+        </div>
+      </div>
+      <div className="appFooter__meta">
+        <span>
+          © 2026 Umbra by{" "}
+          <a
+            href="https://github.com/vero-code/umbra"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Veronika Kashtanova
+          </a>
+        </span>
+        <span>Built with Codex · GPT-5.6-ready evidence workflow</span>
+        <span>Operational decision support — not medical advice.</span>
+      </div>
+    </footer>
+  );
+}
+
 function AppHeader({ profile, state, showControls = true }) {
   const location = useLocation();
   const navigate = useNavigate();
