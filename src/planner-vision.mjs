@@ -40,15 +40,15 @@ function simulatedPropertyAssessment(context, photos = []) {
         "Partial shade under lower floor slabs; upper decks remain exposed.",
       ],
       operationalImpact:
-        "At the 13:00 peak-sun scenario, prioritize shorter rotations and earlier relief for roof, upper-deck, facade-lift, and perimeter crews. The planning dose is elevated by the high UVI, peak sun position, and 2× reflective-surface multiplier.",
+        "At the 10:00 high-exposure scenario, prioritize earlier relief for roof, upper-deck, facade-lift, and perimeter crews. The planning dose is elevated by rising sun exposure and the 2× reflective-surface multiplier.",
       weatherScenario: {
-        uvi: 9.4,
-        temperatureC: 29,
-        cloudCover: 10,
-        localHour: 13,
+        uvi: 6.1,
+        temperatureC: 23,
+        cloudCover: 5,
+        localHour: 10,
         source: "photo-matched",
         description:
-          "Clear daylight conditions across the upper construction levels.",
+          "Clear morning conditions across the upper construction levels.",
       },
     };
   }
