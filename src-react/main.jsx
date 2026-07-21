@@ -58,6 +58,7 @@ function AppHeader({ profile, state, showControls = true }) {
   const navigate = useNavigate();
   const setProfile = useUmbra((store) => store.setProfile);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const hasForemanProfile = Boolean(profile);
   const hasTeam = Boolean(state?.workers?.length);
   const hasExternalEvidence = Boolean(
     localStorage.getItem(profileKey(profile)),
@@ -67,17 +68,22 @@ function AppHeader({ profile, state, showControls = true }) {
   );
   const hasPlacedEveryCrewMember = hasCompleteCrewPlacement(state);
   const navigation = [
-    { label: "Team", to: "/team", available: true },
-    { label: "External Factors", to: "/external", available: hasTeam },
+    { label: "Team", to: "/team", available: hasForemanProfile },
+    {
+      label: "External Factors",
+      to: "/external",
+      available: hasForemanProfile && hasTeam,
+    },
     {
       label: "Behavioral Factors",
       to: "/behavioral",
-      available: hasTeam && hasExternalEvidence,
+      available: hasForemanProfile && hasTeam && hasExternalEvidence,
     },
     {
       label: "Shift / Morning Brief",
       to: "/shift",
       available:
+        hasForemanProfile &&
         hasTeam &&
         hasExternalEvidence &&
         hasPlacedEveryCrewMember &&
@@ -121,9 +127,7 @@ function AppHeader({ profile, state, showControls = true }) {
               <NavLink
                 key={item.to}
                 to={item.to}
-                className={({ isActive }) =>
-                  isActive || (!profile && item.to === "/team") ? "active" : ""
-                }
+                className={({ isActive }) => (isActive ? "active" : "")}
               >
                 {item.label}
               </NavLink>

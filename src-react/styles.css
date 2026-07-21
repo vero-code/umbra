@@ -244,23 +244,23 @@ body {
     var(--canvas);
 }
 .reactHeaderWrap {
-  max-width: 1220px;
+  max-width: 1340px;
   margin: auto;
-  padding: 28px 30px 0;
+  padding: 34px 38px 0;
 }
 .reactHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 18px;
+  gap: 24px;
 }
 .headerProfileSpacer {
-  width: 146px;
+  width: 166px;
 }
 .brand {
   color: #162322;
   font:
-    800 0.9rem "DM Mono",
+    800 1.05rem "DM Mono",
     monospace;
   letter-spacing: 0.1em;
   white-space: nowrap;
@@ -268,36 +268,36 @@ body {
 .brand::before {
   content: "✺";
   display: inline-grid;
-  width: 24px;
-  height: 24px;
-  margin-right: 7px;
+  width: 28px;
+  height: 28px;
+  margin-right: 8px;
   place-items: center;
-  border-radius: 9px;
+  border-radius: 10px;
   background: var(--lime);
   color: #453b91;
-  font-size: 1rem;
+  font-size: 1.1rem;
   vertical-align: middle;
 }
 .brand span {
-  margin-left: 10px;
+  margin-left: 12px;
   color: #71807c;
-  font-size: 0.65rem;
+  font-size: 0.72rem;
 }
 .reactHeader .modeNav {
   display: flex;
-  gap: 4px;
-  padding: 3px;
+  gap: 5px;
+  padding: 4px;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: #fff9;
 }
 .reactHeader .modeNav a,
 .reactHeader .modeNav span {
-  padding: 7px 9px;
+  padding: 9px 12px;
   border-radius: 999px;
   color: #71807c;
   font:
-    600 0.68rem Manrope,
+    700 0.76rem Manrope,
     sans-serif;
   text-decoration: none;
   white-space: nowrap;
@@ -316,13 +316,13 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 5px 10px 5px 5px;
+  padding: 6px 12px 6px 6px;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: #fffdf8;
   color: #4f5878;
   font:
-    700 0.7rem "DM Mono",
+    700 0.76rem "DM Mono",
     monospace;
   letter-spacing: 0.04em;
   cursor: pointer;
@@ -390,7 +390,7 @@ body {
   display: block;
   margin-top: 2px;
   color: #7b82a2;
-  font-size: 0.58rem;
+  font-size: 0.63rem;
 }
 .foremanOnboarding {
   max-width: 760px;
@@ -1676,6 +1676,26 @@ body {
   min-height: 56px;
   padding-inline: 28px;
   font-size: 0.94rem;
+}
+
+@media (max-width: 1180px) {
+  .reactHeaderWrap {
+    padding: 28px 28px 0;
+  }
+
+  .reactHeader {
+    gap: 14px;
+  }
+
+  .headerProfileSpacer {
+    width: 0;
+  }
+
+  .reactHeader .modeNav a,
+  .reactHeader .modeNav span {
+    padding: 8px 9px;
+    font-size: 0.68rem;
+  }
 }
 
 @media (max-width: 700px) {
