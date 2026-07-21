@@ -1,84 +1,140 @@
 # Umbra
 
-Umbra is an operations safety co-pilot for outdoor crews. It turns live UV/heat conditions, worksite context, crew exposure tiers, and optional site photos into a supervisor-approved rotation plan.
+Umbra is a B2B UV-safety planning MVP for outdoor crews. It turns worksite evidence, current weather, self-reported worker context, PPE, sunscreen, and shade placement into an explainable, supervisor-approved relief plan.
 
-Umbra monitors the current operational state, but rebuilds recommendations only when new evidence is submitted or the supervisor requests a replan. The completed MVP flow is **Foreman profile → Team → External Factors → Behavioral Factors → Shift / Morning Brief**. Live Incident and Reports are intentionally disabled while the one-week demo concentrates on this core workflow.
+It was built for the OpenAI Build Week **Work and Productivity** track. The product question is simple: **who should leave direct sun first, when, and why?**
 
-## Run locally
+## What the MVP does
 
-Requires Node.js 20+.
+Umbra guides a foreman through one operational workflow:
+
+1. **Create a foreman profile** — a foreman name and company create a local team workspace.
+2. **Build the team** — add, edit, or remove employee profiles with age, self-reported sensitivity, self-reported Fitzpatrick skin type, optional occupational-health markers, and acknowledgement.
+3. **Assess external factors** — add an object name, location, optional notes, and at least two site photos. Umbra retrieves current weather where possible, evaluates the recorded site context, and calculates the planning dose.
+4. **Set protection and placement** — for every crew member, record PPE/UPF, SPF, time since application, shade access, and a position on the worksite image.
+5. **Review the Morning Brief** — Umbra ranks exposure risk, schedules protected 20-minute relief breaks, shows the planned relief route, explains the decision, and asks for supervisor approval.
+
+The current UI intentionally keeps **Live Incident** and **Reports** disabled. They are planned follow-on areas, not claimed as completed MVP features.
+
+## Decision model
+
+The deterministic exposure engine is authoritative. It calculates the planning external dose as:
+
+```text
+dose index = UV index × sun/time factor × cloud factor × albedo factor
+```
+
+It applies these operational rules:
+
+- Peak sun window, 11:00–16:00: `1.35×`
+- Shoulder windows, 09:00–11:00 and 16:00–17:00: `1.08×`
+- Other hours: `0.65×`
+- Light cloud or haze: `1.08×`; 50–69% cloud cover: `0.75×`; dense cloud cover reduces the factor toward `0.1×`
+- Surface settings: shaded `0.85×`, mixed `1.1×`, open `1.2×`, uncertain `1.25×`, reflective `2×`
+
+The worker score additionally considers heat, crew availability, self-reported age/sensitivity/Fitzpatrick context, PPE/UPF, SPF freshness, and shade. A plan cannot rotate the whole active crew out at once, and rotations are at least 15 minutes long.
+
+Umbra is operational decision support, not a medical diagnosis, legal guarantee, or replacement for site safety judgement. Medical markers remain self-reported occupational-health context; no physiological traits are inferred from a photo.
+
+## Explainability and approval
+
+Every Morning Brief exposes the reasoning behind its next break:
+
+- site conditions: UV, temperature, cloud cover, time, materials, and albedo;
+- worker risk: current protection and placement;
+- operational trade-off: the proposed relief versus a lower-risk alternative and remaining crew availability;
+- decision: who is scheduled to enter shaded relief, for how long, and why now.
+
+Supervisor approval records the scheduled break. It does not silently move a worker marker; map positions represent a separate crew position check-in.
+
+## Architecture
+
+```text
+React + Vite UI (:3000)
+        │ /api proxy
+        ▼
+Node.js ESM API (:3001)
+        ├── deterministic exposure, rotation, event, and evidence modules
+        ├── local JSON persistence for teams, objects, and operations
+        ├── Open-Meteo forecast refresh with a safe fallback
+        └── optional OpenAI Responses API integration
+```
+
+### Technology stack
+
+- React 19, React Router, Zustand, and Vite
+- Node.js native HTTP server using ES modules
+- Open-Meteo for weather refreshes
+- Local JSON files for the demo persistence layer
+- Optional OpenAI Responses API integration with structured JSON and approved server-side tools
+
+## Local development
+
+Prerequisite: Node.js 20 or later.
 
 ```bash
+npm install
 npm run dev
 ```
 
-Open `http://localhost:3000`. This is the React application. Its local API runs on
-port `3001`; Vite proxies `/api` calls automatically. The default experience uses
-reproducible seeded data and requires no API keys.
+`npm run dev` starts both processes:
 
-Port `3001` is API-only; it does not host a second UI.
+| Service   | URL                     | Purpose                                                  |
+| --------- | ----------------------- | -------------------------------------------------------- |
+| React UI  | `http://localhost:3000` | The Umbra application                                    |
+| Local API | `http://localhost:3001` | Planning, persistence, weather, and optional model calls |
 
-Select **Refresh conditions** to retrieve hourly UV index, temperature, and cloud cover for each seeded site from Open-Meteo. If that provider is unavailable, Umbra retains and visibly records the last-known forecast instead of fabricating a result.
+The Vite UI proxies `/api/*` requests to port `3001`. Port `3001` is the API service only; it does not serve the React app.
 
-## Environmental exposure calculation
+Other useful commands:
 
-Umbra's deterministic planning dose index uses four visible inputs: the reported UV
-Index, a time-of-day modifier (highest from 11:00–16:00), cloud-cover context, and
-the site’s qualitative albedo modifier. Reflective surfaces use a 2.0× planning
-multiplier; dense cloud cover (70%+) reduces the modifier, while light/intermittent
-cloud has a small scattering-context modifier. The weather provider's UVI already
-reflects sky conditions, so the cloud adjustment is deliberately modest to avoid
-double-counting. This is an operational prioritization proxy, not a sunburn or
-medical prediction.
+```bash
+npm run dev:ui    # Vite UI only, port 3000
+npm run dev:api   # Node API only, port 3001
+npm run build     # production frontend build into dist/
+```
 
-## GPT-5.6 and deterministic demo reasoning
+## OpenAI and demo modes
 
-Codex and GPT-5.6 informed the product design, structured decision objects, and
-multimodal evidence workflow. The runtime demo intentionally uses deterministic,
-reproducible simulated assessments, so it needs no paid API key and never implies
-that an unmade model call occurred. The safety engine remains authoritative: it
-calculates the dose, ranks workers, and preserves the supervisor approval step.
+The app runs without an API key.
 
-## Demo path
+- **No API key:** Umbra uses the deterministic safety engine and a reproducible demo assessment for supplied worksite evidence. It must not be interpreted as live GPT-5.6 Vision analysis.
+- **With a server-side API key:** the API can use the OpenAI Responses API for structured evidence and vision assessments. The configured defaults are `gpt-5.6-sol` for strategic cross-site reasoning and `gpt-5.6-luna` for routine/vision work.
 
-1. Create the foreman profile and add the crew's self-reported risk context.
-2. Upload two worksite photos and save the external dose assessment.
-3. Place each worker on the site, select their PPE, SPF, and shade conditions, then apply the protection plan.
-4. Open **Shift / Morning Brief** to see who should take the first protected break and why.
-5. Approve the scheduled break while the map remains a truthful record of the last crew placement.
+The browser never receives an OpenAI key. Set the following variables in the environment that starts the API if live integration is enabled:
 
-## Property evidence and crew placement
+```text
+OPENAI_API_KEY=...
+OPENAI_STRATEGIC_MODEL=gpt-5.6-sol
+OPENAI_ROUTINE_MODEL=gpt-5.6-luna
+```
 
-The external-factors view supports a multi-angle property submission with a supervisor-supplied location/work-zone description. Its deterministic demo assessment returns visually grounded operational observations: reflective materials such as concrete or glass, visible water, shade, and open exposure. Saving the assessment emits new evidence and recalculates the site's recommendation.
+The model can only request approved server tools: refresh weather, read worker conditions, read photo evidence, or run a read-only absence simulation. The deterministic plan is created first and remains the safety constraint; model output may explain or compare a plan, but cannot override it.
 
-The site-positioning preview uses the selected property image as an interactive planning surface. Move the time slider to change the illustrative sun direction, drag crew icons, and review the relative exposure warning. It is a visual planning approximation, not an engineering-grade sun/shadow survey.
+## Persistence and privacy
 
-New team members can be added individually or from CSV. The individual form requires role, assigned site, operational priority tier, self-reported photosensitivity, and recent outdoor-exposure history. A workplace accommodation note and profile photo are optional; Umbra does not infer skin tone, health conditions, or medical status from an image.
+Umbra currently has no database or authentication. It is a local demo with JSON persistence:
 
-## Safety boundary
+| File                | Contents                                                                             |
+| ------------------- | ------------------------------------------------------------------------------------ |
+| `data/workers.json` | Foreman/team records, employee profiles, events, decisions, plans, and audit history |
+| `data/objects.json` | Saved worksite evidence, forecasts, assessments, and uploaded image data             |
+| `data/umbra.json`   | Shared local agent metadata and base state                                           |
 
-Umbra is not medical advice, a legal compliance system, or an autonomous worker-management tool. A supervisor must approve each plan. Worker tiers are operational exposure-priority inputs, not health diagnoses.
+Those runtime files are intentionally ignored by Git, as is `.env`. The committed `data/*.example.json` files describe the expected shapes. A matching foreman name and company restore the same local team on that machine; this is not production authentication or multi-tenant isolation.
 
-## Codex and GPT-5.6
+Because these files can contain uploaded site photos and self-reported occupational-health context, do not commit or share them casually.
 
-Codex and GPT-5.6 were used to create the MVP: the product workflow, structured evidence schema, multimodal assessment design, rules engine, React UI, API server, and documentation. At runtime, the hackathon demo uses the reproducible decision engine rather than making a paid API call. The model-inspired reasoning format never controls break constraints directly.
+## Project structure
 
-## Incremental implementation milestones
+```text
+src-react/       React screens, workflow navigation, maps, and UI styles
+src/             deterministic planner, evidence, vision, and workflow modules
+server.mjs       local Node API and JSON persistence
+data/            example schemas plus ignored runtime data
+test/            Node planner and API integration tests
+```
 
-Umbra is delivered in reviewable milestones. Each milestone preserves the
-working application before the next one is started:
+## Current scope
 
-- [x] Navigation and Shift / Morning Brief homepage
-- [x] Recommendation and Evidence → Reasoning → Tradeoffs → Decision presentation
-- [x] Evidence-triggered replanning and structured decision presentation
-- [x] Worksite map with worker placement, shade zones, and planned relief route
-- [x] Team roster and employee-profile workflow
-- [x] External evidence intake and deterministic photo assessment
-- [x] Behavioral protection and work-zone checklist
-- [x] Deterministic, GPT-5.6-inspired reasoning fallback
-- [ ] Live Incident and Reports (intentionally deferred for the hackathon MVP)
-- [x] Visual hierarchy and responsive cleanup
-
-For review, run the app after each milestone with `npm run dev`, walk the
-corresponding navigation view, and confirm that previous views still load and
-that only evidence-changing events or explicit scenarios replan operations.
+This MVP demonstrates a structured evidence-to-decision workflow for construction, agriculture, courier, delivery, and other outdoor operations. Before production use it would need authenticated accounts, a proper database, tenant isolation, secure image storage, permission controls, audit/export workflows, and formal safety/compliance review.
