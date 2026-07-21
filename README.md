@@ -62,6 +62,8 @@ Supervisor approval records the scheduled break. It does not silently move a wor
 
 ## Architecture
 
+For the complete runtime, data-flow, API, and module-level design, see [ARCHITECTURE.md](ARCHITECTURE.md).
+
 ```text
 React + Vite UI (:3000)
         │ /api proxy
