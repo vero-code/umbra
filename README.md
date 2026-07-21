@@ -1,8 +1,22 @@
 # Umbra
 
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=20232A)
+![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-20%2B-339933?logo=node.js&logoColor=white)
+![OpenAI Codex](https://img.shields.io/badge/Built%20with-Codex-412991?logo=openai&logoColor=white)
+![GPT-5.6](https://img.shields.io/badge/GPT--5.6-Ready-412991?logo=openai&logoColor=white)
+
 Umbra is a B2B UV-safety planning MVP for outdoor crews. It turns worksite evidence, current weather, self-reported worker context, PPE, sunscreen, and shade placement into an explainable, supervisor-approved relief plan.
 
 It was built for the OpenAI Build Week **Work and Productivity** track. The product question is simple: **who should leave direct sun first, when, and why?**
+
+## Demo
+
+Watch the product walkthrough:
+
+[![Watch the Umbra demo on YouTube](https://img.youtube.com/vi/KFuh5--OMuY/maxresdefault.jpg)](https://youtu.be/KFuh5--OMuY)
+
+Click the preview above 👆 to watch on YouTube.
 
 ## Built with Codex and GPT-5.6
 
