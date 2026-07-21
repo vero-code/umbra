@@ -2149,3 +2149,317 @@ body {
   padding: 13px;
   font-size: 0.82rem;
 }
+
+/* Product introduction: the first screen explains the operational value before setup. */
+.welcomeScreen {
+  width: min(1240px, calc(100% - 64px));
+  min-height: calc(100dvh - 96px);
+  display: grid;
+  grid-template-columns: minmax(0, 1.18fr) minmax(370px, 0.82fr);
+  gap: clamp(38px, 5vw, 76px);
+  align-items: center;
+  margin: 0 auto;
+  padding: clamp(38px, 6vh, 66px) 0 46px;
+}
+
+.welcomeCopy {
+  max-width: 650px;
+}
+
+.welcomeCopy > .eyebrow {
+  margin: 0;
+  color: #6f857e;
+  font-size: 0.76rem;
+}
+
+.welcomeCopy h1 {
+  max-width: 720px;
+  margin: 15px 0 17px;
+  color: #182148;
+  font-size: clamp(3.05rem, 4.35vw, 4.8rem);
+  line-height: 0.92;
+  letter-spacing: -0.078em;
+}
+
+.welcomeLead {
+  max-width: 620px;
+  margin: 0;
+  color: #5e6d87;
+  font-size: clamp(0.96rem, 1.2vw, 1.08rem);
+  line-height: 1.48;
+}
+
+.welcomeCapabilities {
+  display: grid;
+  gap: 9px;
+  margin: 24px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.welcomeCapabilities li {
+  display: grid;
+  grid-template-columns: 31px minmax(0, 1fr);
+  gap: 13px;
+  align-items: start;
+}
+
+.welcomeCapabilities li > span {
+  display: grid;
+  width: 31px;
+  height: 31px;
+  place-items: center;
+  border-radius: 10px;
+  background: #e6f85c;
+  color: #34445a;
+  font:
+    800 0.65rem "DM Mono",
+    monospace;
+}
+
+.welcomeCapabilities b,
+.welcomeCapabilities small {
+  display: block;
+}
+
+.welcomeCapabilities b {
+  color: #273258;
+  font-size: 0.96rem;
+  letter-spacing: -0.03em;
+}
+
+.welcomeCapabilities small {
+  margin-top: 3px;
+  color: #71809b;
+  font-size: 0.78rem;
+  line-height: 1.42;
+}
+
+.welcomeStart {
+  display: inline-flex;
+  gap: 15px;
+  align-items: center;
+  justify-content: center;
+  min-height: 53px;
+  padding: 0 25px;
+  border: 0;
+  border-radius: 16px;
+  background: #ff8e70;
+  box-shadow: 0 5px 0 #c86158;
+  color: #fff;
+  cursor: pointer;
+  font:
+    800 0.98rem Manrope,
+    sans-serif;
+}
+
+.welcomeStart:hover {
+  transform: translateY(-1px);
+}
+
+.welcomeStart:active {
+  box-shadow: 0 2px 0 #c86158;
+  transform: translateY(3px);
+}
+
+.welcomeStart span {
+  font-size: 1.32rem;
+  line-height: 1;
+}
+
+.welcomeFinePrint {
+  max-width: 450px;
+  margin: 12px 0 0;
+  color: #7c88a1;
+  font-size: 0.74rem;
+  line-height: 1.45;
+}
+
+.welcomeBrief {
+  position: relative;
+  overflow: hidden;
+  min-height: 460px;
+  padding: clamp(27px, 3vw, 38px);
+  border: 1px solid #d7dcef;
+  border-radius: 30px;
+  background:
+    radial-gradient(circle at 91% 7%, #fff0b0 0 6%, transparent 6.1%),
+    linear-gradient(145deg, #f7f5ff 0%, #f2fbff 48%, #fffdf8 100%);
+  box-shadow: 0 28px 82px #25305a16;
+}
+
+.welcomeBrief::after {
+  position: absolute;
+  z-index: 0;
+  right: -72px;
+  bottom: -98px;
+  width: 270px;
+  height: 270px;
+  border-radius: 50%;
+  background: #ddd3ff80;
+  content: "";
+}
+
+.welcomeBrief > * {
+  position: relative;
+  z-index: 1;
+}
+
+.welcomeBriefTop {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.welcomeBriefTop .eyebrow {
+  margin: 0;
+  color: #667e7b;
+  font-size: 0.7rem;
+}
+
+.welcomeBriefTop > span {
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: #e4f761;
+  color: #48501c;
+  font:
+    800 0.61rem "DM Mono",
+    monospace;
+}
+
+.welcomeBrief h2 {
+  max-width: 420px;
+  margin: 20px 0 9px;
+  color: #1f2a51;
+  font-size: clamp(1.9rem, 2.8vw, 2.75rem);
+  line-height: 0.94;
+  letter-spacing: -0.065em;
+}
+
+.welcomeBrief > p {
+  max-width: 430px;
+  margin: 0;
+  color: #64728e;
+  font-size: 0.91rem;
+  line-height: 1.5;
+}
+
+.welcomeEvidenceFlow {
+  display: grid;
+  gap: 7px;
+  margin-top: 20px;
+}
+
+.welcomeEvidenceFlow article {
+  padding: 12px 14px;
+  border: 1px solid #dfe2f4;
+  border-radius: 15px;
+  background: #fffdfbe8;
+}
+
+.welcomeEvidenceFlow article small,
+.welcomeEvidenceFlow article b,
+.welcomeEvidenceFlow article span {
+  display: block;
+}
+
+.welcomeEvidenceFlow article small {
+  margin-bottom: 6px;
+  color: #718589;
+  font:
+    800 0.58rem "DM Mono",
+    monospace;
+  letter-spacing: 0.08em;
+}
+
+.welcomeEvidenceFlow article b {
+  color: #27345d;
+  font-size: 0.88rem;
+  letter-spacing: -0.028em;
+}
+
+.welcomeEvidenceFlow article span {
+  margin-top: 4px;
+  color: #71809d;
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
+.welcomeEvidenceFlow > i {
+  height: 11px;
+  color: #7b64df;
+  font-size: 1rem;
+  font-style: normal;
+  line-height: 0.65;
+  text-align: center;
+}
+
+.welcomeEvidenceFlow .welcomeDecisionPreview {
+  border-color: #282f5b;
+  background: #28305c;
+}
+
+.welcomeEvidenceFlow .welcomeDecisionPreview small,
+.welcomeEvidenceFlow .welcomeDecisionPreview span {
+  color: #dfe5ff;
+}
+
+.welcomeEvidenceFlow .welcomeDecisionPreview b {
+  color: #e3fb60;
+}
+
+.welcomeTrustLine {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 19px;
+  color: #5b6885;
+  font-size: 0.71rem;
+  font-weight: 700;
+}
+
+.welcomeTrustLine i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #e4f761;
+  box-shadow: 0 0 0 5px #e4f76155;
+}
+
+@media (max-width: 900px) {
+  .welcomeScreen {
+    grid-template-columns: 1fr;
+    gap: 40px;
+    padding-top: 62px;
+  }
+
+  .welcomeCopy,
+  .welcomeBrief {
+    max-width: 680px;
+  }
+
+  .welcomeBrief {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 620px) {
+  .welcomeScreen {
+    width: min(100% - 36px, 620px);
+    padding-top: 42px;
+  }
+
+  .welcomeCopy h1 {
+    font-size: clamp(2.8rem, 13vw, 4rem);
+  }
+
+  .welcomeBrief {
+    padding: 26px;
+    border-radius: 24px;
+  }
+
+  .welcomeCapabilities {
+    gap: 14px;
+  }
+}

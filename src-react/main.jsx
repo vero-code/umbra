@@ -229,6 +229,96 @@ function Onboarding() {
     </>
   );
 }
+
+function Welcome({ onContinue }) {
+  return (
+    <>
+      <AppHeader showControls={false} />
+      <main className="welcomeScreen">
+        <section className="welcomeCopy">
+          <p className="eyebrow">OUTDOOR CREW OPERATIONS</p>
+          <h1>Make the sun-safety decision before the shift starts.</h1>
+          <p className="welcomeLead">
+            Umbra turns worksite photos, UV and weather conditions, crew risk
+            profiles, and protection status into one clear answer: who needs to
+            leave direct sun first, when, and why.
+          </p>
+          <ul className="welcomeCapabilities" aria-label="What Umbra does">
+            <li>
+              <span>01</span>
+              <div>
+                <b>See the real worksite</b>
+                <small>
+                  Capture open sky, shade, glass, concrete, metal, and water.
+                </small>
+              </div>
+            </li>
+            <li>
+              <span>02</span>
+              <div>
+                <b>Protect the right person</b>
+                <small>
+                  Combine worker context, PPE, SPF timing, and placement.
+                </small>
+              </div>
+            </li>
+            <li>
+              <span>03</span>
+              <div>
+                <b>Approve an explainable plan</b>
+                <small>
+                  Keep coverage while scheduling the next relief break.
+                </small>
+              </div>
+            </li>
+          </ul>
+          <button type="button" className="welcomeStart" onClick={onContinue}>
+            Set up today&apos;s crew <span aria-hidden="true">→</span>
+          </button>
+          <p className="welcomeFinePrint">
+            Built for outdoor teams in construction, agriculture, courier, and
+            delivery operations.
+          </p>
+        </section>
+
+        <aside className="welcomeBrief" aria-label="Umbra decision preview">
+          <div className="welcomeBriefTop">
+            <p className="eyebrow">UMBRA MORNING BRIEF</p>
+            <span>Evidence ready</span>
+          </div>
+          <h2>Who needs shade first?</h2>
+          <p>
+            Umbra compares the operational picture before recommending a
+            protected rotation.
+          </p>
+          <div className="welcomeEvidenceFlow">
+            <article>
+              <small>WORKSITE EVIDENCE</small>
+              <b>UV + weather + site photos</b>
+              <span>Surface reflectivity and available shade</span>
+            </article>
+            <i aria-hidden="true">↓</i>
+            <article>
+              <small>CREW CONTEXT</small>
+              <b>Risk profile + PPE + placement</b>
+              <span>Protection gaps and coverage constraints</span>
+            </article>
+            <i aria-hidden="true">↓</i>
+            <article className="welcomeDecisionPreview">
+              <small>SUPERVISOR DECISION</small>
+              <b>Schedule the next shaded relief break</b>
+              <span>Explain the trade-off before approval</span>
+            </article>
+          </div>
+          <div className="welcomeTrustLine">
+            <i aria-hidden="true" />
+            <span>Evidence → reasoning → decision → approval</span>
+          </div>
+        </aside>
+      </main>
+    </>
+  );
+}
 function Team() {
   const { profile, state, setState } = useData();
   const [message, setMessage] = useState("");
@@ -938,11 +1028,16 @@ function External() {
 }
 function App() {
   const profile = useUmbra((store) => store.profile);
+  const [showWelcome, setShowWelcome] = useState(true);
   return (
     <BrowserRouter>
       <ScrollToTop />
       {!profile ? (
-        <Onboarding />
+        showWelcome ? (
+          <Welcome onContinue={() => setShowWelcome(false)} />
+        ) : (
+          <Onboarding />
+        )
       ) : (
         <Routes>
           <Route path="/team" element={<Team />} />
