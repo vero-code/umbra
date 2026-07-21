@@ -828,7 +828,7 @@ function External() {
                         {weather.cloudCover}% cloud cover ·{" "}
                         {String(weather.localHour).padStart(2, "0")}:00
                         {weather.source === "photo-matched" && (
-                          <small>{weather.description}</small>
+                          <small>{` ${weather.description}`}</small>
                         )}
                       </dd>
                     </div>
@@ -871,10 +871,10 @@ function External() {
                       onClick={confirmDraft}
                       disabled={draft.saved}
                       aria-label={
-                        draft.saved ? "Saved below" : "OK — save object"
+                        draft.saved ? "Saved below" : "Save assessment"
                       }
                     >
-                      OK — save &amp; continue
+                      {draft.saved ? "Saved below" : "Save assessment"}
                     </button>
                     <button
                       type="button"

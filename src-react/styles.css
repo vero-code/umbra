@@ -654,22 +654,9 @@ main.reactWorkspace {
   color: #536080;
 }
 
-.parserActions .saveObjectButton {
-  font-size: 0;
-}
-
-.parserActions .saveObjectButton::before {
-  content: "OK — save object";
-  font-size: 0.73rem;
-}
-
 .parserActions .saveObjectButton:disabled {
   cursor: default;
   opacity: 0.72;
-}
-
-.parserActions .saveObjectButton:disabled::before {
-  content: "Saved below";
 }
 
 .savedEvidenceTable {
